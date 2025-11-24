@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hakkımda</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
+    header{max-width:1080px;margin:0 auto;padding:26px 16px 10px;display:flex;align-items:center;gap:12px;}
+    h1{margin:0;font-size:30px;}
+    .panel{max-width:1080px;margin:0 auto 24px;padding:18px;background:var(--panel);border:1px solid rgba(255,255,255,0.08);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,0.35);}
+    .flex{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+    .avatar{width:96px;height:96px;border-radius:50%;border:2px solid rgba(34,211,238,0.5);object-fit:cover;}
+    .links a{display:inline-flex;align-items:center;gap:8px;margin-right:12px;padding:10px 14px;border-radius:999px;border:1px solid rgba(34,211,238,0.35);color:#7dd3fc;text-decoration:none;transition:.2s;font-size:15px;}
+    .links a:hover{background:rgba(34,211,238,0.15);}
+    .icon{width:22px;height:22px;object-fit:contain;}
+    .btn-home{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="../index.html" class="btn-home">Ana sayfa</a>
+    <h1>Mehmet Faruk Akbulut</h1>
+  </header>
+  <div class="panel">
+    <div class="flex">
+      <img class="avatar" src="https://avatars.githubusercontent.com/u/78991543" alt="avatar">
+      <div>
+        <p>Full‑stack meraklısı; API koleksiyonu, görselleştirme ve otomasyonla uğraşıyor. Buradaki widget’ların tamamı kişisel denemeler.</p>
+        <div class="links">
+          <a href="https://github.com/MehmetFarukAkbulut" target="_blank" rel="noreferrer"><img class="icon" src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg" alt="">GitHub</a>
+          <a href="https://www.linkedin.com/in/mehmet-faruk-akbulut" target="_blank" rel="noreferrer"><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_initials.png/500px-LinkedIn_logo_initials.png" alt="">LinkedIn</a>
+          <a href="https://www.instagram.com/mfaruk_akbulut/" target="_blank" rel="noreferrer"><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Instagram_logo_2022.svg/2048px-Instagram_logo_2022.svg.png" alt="">Instagram</a>
+          <a href="mailto:mefarukakbulut@gmail.com"><img class="icon" src="https://cdn4.iconfinder.com/data/icons/social-media-logos-6/512/112-gmail_email_mail-512.png" alt="">E-posta</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

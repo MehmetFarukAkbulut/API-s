@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hava Durumu</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
+    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+    input, select{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:160px;}
+    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;position:relative;overflow:hidden;}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
+    .muted{color:var(--muted);}
+    .skeleton{background:linear-gradient(90deg,#0f172a 0%,#141f38 50%,#0f172a 100%);background-size:200% 100%;animation:shine 1.6s linear infinite;border-radius:8px;height:14px;margin:6px 0;}
+    @keyframes shine{to{background-position-x:-200%;}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hava Durumu</h1>
+    <p class="lead">Şehir adına göre bugün/yarın ve anlık bilgiler.</p>
+  </header>
+  <div class="panel">
+    <div class="bar">
+      <a class="btn" href="../index.html">Ana sayfa</a>
+      <select id="cityPreset">
+        <option value="Istanbul">Istanbul</option>
+        <option value="Ankara">Ankara</option>
+        <option value="Izmir">Izmir</option>
+        <option value="London">London</option>
+        <option value="New York">New York</option>
+        <option value="Tokyo">Tokyo</option>
+        <option value="Paris">Paris</option>
+      </select>
+      <input id="city" placeholder="Şehir veya koordinat (örn: Istanbul)">
+      <button class="btn" id="search">Ara</button>
+      <span class="badge" id="status">Hazır</span>
+    </div>
+    <div class="grid" id="cards">
+      <div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
+      <div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
+      <div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const cityEl=document.getElementById("city");
+    const preset=document.getElementById("cityPreset");
+    const cards=document.getElementById("cards");
+    const status=document.getElementById("status");
+    cityEl.value="Istanbul";
+
+    async function geocode(q){
+      const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&language=tr&count=1`;
+      const r=await fetch(url); const j=await r.json();
+      const p=j?.results?.[0]; if(!p) throw new Error("Şehir bulunamadı");
+      return {lat:p.latitude, lon:p.longitude, name:`${p.name}, ${p.country_code}`};
+    }
+    async function fetchWeather(lat,lon){
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&current_weather=true&timezone=auto`;
+      const r=await fetch(url); return r.json();
+    }
+    function render(name,data){
+      const today=data.daily.time[0];
+      const tomorrow=data.daily.time[1];
+      const todayMax=data.daily.temperature_2m_max[0];
+      const todayMin=data.daily.temperature_2m_min[0];
+      const tomorrowMax=data.daily.temperature_2m_max[1];
+      const tomorrowMin=data.daily.temperature_2m_min[1];
+      const current=data.current_weather;
+      const cloud = data.hourly.cloudcover[0];
+      const windNow = data.hourly.windspeed_10m[0];
+      const rainToday = data.daily.precipitation_sum[0];
+      const desc = descForCode(current.weathercode);
+      cards.innerHTML = `
+        <div class="card">
+          <div class="badge">Bugün</div>
+          <h3>${todayMax}/${todayMin}°C ${iconForCode(current.weathercode)}</h3>
+          <div class="muted">${today}</div>
+          <div class="muted">Yağış: ${rainToday || 0} mm</div>
+        </div>
+        <div class="card">
+          <div class="badge">Yarın</div>
+          <h3>${tomorrowMax}/${tomorrowMin}°C</h3>
+          <div class="muted">${tomorrow}</div>
+        </div>
+        <div class="card">
+          <div class="badge">${name}</div>
+          <h3>${current.temperature}°C ${iconForCode(current.weathercode)}</h3>
+          <div class="muted">${desc}</div>
+          <div class="muted">Rüzgar: ${current.windspeed} km/s</div>
+          <div class="muted">Bulut: ${cloud}%</div>
+          <div class="muted">Anlık rüzgar: ${windNow} km/s</div>
+        </div>
+      `;
+    }
+    async function run(){
+      try{
+        status.textContent="Yükleniyor...";
+        cards.classList.add("loading");
+        const q=cityEl.value.trim()||"Istanbul";
+        const g=await geocode(q);
+        const w=await fetchWeather(g.lat,g.lon);
+        render(g.name,w);
+        status.textContent="Hazır";
+      }catch(e){
+        status.textContent="Hata";
+        cards.innerHTML=`<div class="card">Hata: ${e.message}</div>`;
+      }
+    }
+    function iconForCode(code){
+      const map={
+        0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
+        45:"🌫️",48:"🌫️",
+        51:"🌦️",53:"🌦️",55:"🌧️",
+        56:"🌧️",57:"🌧️",
+        61:"🌧️",63:"🌧️",65:"🌧️",
+        66:"🌧️",67:"🌧️",
+        71:"🌨️",73:"🌨️",75:"🌨️",
+        80:"🌧️",81:"🌧️",82:"🌧️",
+        85:"🌨️",86:"🌨️",
+        95:"⛈️",96:"⛈️",99:"⛈️"
+      };
+      return map[code] || "";
+    }
+    function descForCode(code){
+      const map={
+        0:"Açık hava",1:"Hafif bulutlu",2:"Parçalı bulutlu",3:"Kapalı",
+        45:"Sisli",48:"Sisli",
+        51:"Çiseleme",53:"Yağmurlu",55:"Yağmurlu",
+        61:"Hafif yağmur",63:"Yağmur",65:"Kuvvetli yağmur",
+        71:"Hafif kar",73:"Kar",75:"Yoğun kar",
+        80:"Sağanak",81:"Sağanak",82:"Kuvvetli sağanak",
+        85:"Kar sağanağı",86:"Kar sağanağı",
+        95:"Fırtına",96:"Fırtına",99:"Fırtına"
+      };
+      return map[code] || "Hava durumu";
+    }
+    document.getElementById("search").addEventListener("click", run);
+    cityEl.addEventListener("keydown",e=>{if(e.key==="Enter") run();});
+    preset.addEventListener("change", ()=>{ cityEl.value=preset.value; run(); });
+    run();
+  })();
+  </script>
+</body>
+</html>

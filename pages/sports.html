@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maç Skorları</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
+    header{max-width:1200px;margin:0 auto;padding:20px 16px 10px;}
+    h1{margin:0 0 4px;font-size:28px;}
+    p.lead{margin:0;color:var(--muted);}
+    .panel{max-width:1200px;margin:0 auto;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+    button{border:1px solid rgba(255,255,255,0.15);background:#0f172a;color:#e5e7eb;border-radius:10px;padding:8px 12px;cursor:pointer;}
+    button.active{background:rgba(34,211,238,0.15);border-color:#22d3ee;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;}
+    .group{background:#0f182c;border:1px solid #1e293b;border-radius:12px;padding:12px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
+    .group h3{margin:0 0 8px;font-size:15px;color:#cbd5e1;display:flex;align-items:center;gap:8px;}
+    .flag{width:18px;height:12px;object-fit:cover;border:1px solid #1e293b;border-radius:3px;}
+    .league{margin:8px 0 4px;font-weight:600;color:#e2e8f0;}
+    ul{padding-left:16px;margin:0;}
+    li{margin:4px 0;cursor:pointer;}
+    .status-live{color:#22d3ee;}
+    .pill{display:inline-block;background:rgba(34,211,238,0.12);color:#7dd3fc;padding:4px 8px;border-radius:10px;font-size:11px;border:1px solid rgba(34,211,238,0.3);}
+    .detail{font-size:12px;color:var(--muted);margin-top:2px;display:none;}
+    #status{color:var(--muted);}
+  </style>
+</head>
+<body>
+  <header style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <a class="btn" href="../index.html" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;">Ana sayfa</a>
+    <div>
+      <h1>Mac Skorlari</h1>
+      <p class="lead">Guncel ve son 1 gun/yarin maclari, ulke filtreleriyle.</p>
+    </div>
+  </header>
+  <div class="panel">
+    <div class="topbar">
+      <button id="prevDay">&lt;</button>
+      <strong id="dateLabel"></strong>
+      <button id="nextDay">&gt;</button>
+      <span id="status">Hazır</span>
+    </div>
+    <div class="topbar" id="filterBar"></div>
+    <div class="grid" id="groups"></div>
+  </div>
+
+  <script>
+  (function(){
+    const API_KEY = "4263454336cf9f35d8aef752fd4db60b"; // aynı anahtar
+    const metaCountries = [
+      { key: "world", label: "World", flag: null },
+      { key: "Turkey", label: "Türkiye", flag: "https://flagcdn.com/24x18/tr.png" },
+      { key: "England", label: "England", flag: "https://flagcdn.com/24x18/gb-eng.png" },
+      { key: "Spain", label: "Spain", flag: "https://flagcdn.com/24x18/es.png" },
+      { key: "Germany", label: "Germany", flag: "https://flagcdn.com/24x18/de.png" },
+      { key: "France", label: "France", flag: "https://flagcdn.com/24x18/fr.png" },
+      { key: "Italy", label: "Italy", flag: "https://flagcdn.com/24x18/it.png" },
+      { key: "Portugal", label: "Portugal", flag: "https://flagcdn.com/24x18/pt.png" },
+      { key: "Netherlands", label: "Netherlands", flag: "https://flagcdn.com/24x18/nl.png" },
+      { key: "Belgium", label: "Belgium", flag: "https://flagcdn.com/24x18/be.png" },
+      { key: "Scotland", label: "Scotland", flag: "https://flagcdn.com/24x18/gb-sct.png" },
+      { key: "Greece", label: "Greece", flag: "https://flagcdn.com/24x18/gr.png" },
+      { key: "Austria", label: "Austria", flag: "https://flagcdn.com/24x18/at.png" },
+      { key: "Switzerland", label: "Switzerland", flag: "https://flagcdn.com/24x18/ch.png" },
+      { key: "Denmark", label: "Denmark", flag: "https://flagcdn.com/24x18/dk.png" },
+      { key: "Sweden", label: "Sweden", flag: "https://flagcdn.com/24x18/se.png" },
+      { key: "Norway", label: "Norway", flag: "https://flagcdn.com/24x18/no.png" },
+      { key: "Poland", label: "Poland", flag: "https://flagcdn.com/24x18/pl.png" },
+      { key: "Czech Republic", label: "Czech Republic", flag: "https://flagcdn.com/24x18/cz.png" },
+      { key: "Others", label: "Others", flag: null },
+    ];
+    const allowed = new Set(metaCountries.map(c=>c.key));
+
+    const leagueOrder = {
+      Turkey: ["Süper Lig","Super Lig","1. Lig"],
+      England: ["Premier League","Championship","League One","League Two"],
+      Spain: ["La Liga","La Liga 2"],
+      Germany: ["Bundesliga","2. Bundesliga"],
+      France: ["Ligue 1","Ligue 2"],
+      Italy: ["Serie A","Serie B"],
+      Portugal: ["Primeira Liga","Segunda Liga"],
+      Netherlands: ["Eredivisie","Eerste Divisie"],
+      Belgium: ["First Division A","First Division B"],
+      Scotland: ["Premiership","Championship"],
+      Greece: ["Super League"],
+      Austria: ["Bundesliga","2. Liga"],
+      Switzerland: ["Super League","Challenge League"],
+      Denmark: ["Superliga","1st Division"],
+      Sweden: ["Allsvenskan","Superettan"],
+      Norway: ["Eliteserien","OBOS-ligaen"],
+      Poland: ["Ekstraklasa","I Liga"],
+      "Czech Republic": ["First League","National Football League"]
+    };
+
+    const filterBar = document.getElementById("filterBar");
+    const groupsEl = document.getElementById("groups");
+    const dateLabel = document.getElementById("dateLabel");
+    const statusEl = document.getElementById("status");
+    const today = new Date();
+    let currentDate = today;
+    let currentFilter = "allowed";
+    let all = [];
+
+    function formatDate(d){
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+    function clampDate(d){
+      const min=new Date(today.getTime()); min.setDate(min.getDate()-1);
+      const max=new Date(today.getTime()); max.setDate(max.getDate()+1);
+      if (d.getTime()<min.getTime()) return min;
+      if (d.getTime()>max.getTime()) return max;
+      return d;
+    }
+    function isWomen(str){ return (str||"").toLowerCase().includes("women"); }
+    function matchCountry(country, filter){
+      const c=(country||"").toLowerCase();
+      const isWorld = c.includes("world") || c.includes("international");
+      if (filter==="world") return isWorld;
+      if (filter==="others") return !allowed.has(country) && !isWorld;
+      if (filter==="allowed") return allowed.has(country);
+      return c === filter.toLowerCase();
+    }
+    function group(data, filter){
+      const cleaned = data.filter(m => !isWomen(m.league) && !isWomen(m.name)).filter(m => matchCountry(m.country, filter));
+      const obj = {};
+      cleaned.forEach(m=>{
+        const country=m.country||"Other";
+        const league=m.league||"League";
+        obj[country]=obj[country]||{};
+        obj[country][league]=obj[country][league]||[];
+        obj[country][league].push(m);
+      });
+      return obj;
+    }
+    function sortLeagues(country, leaguesObj){
+      const order = leagueOrder[country] || [];
+      const idx = (name) => { const i=order.findIndex(o=>o.toLowerCase()===name.toLowerCase()); return i===-1?999:i; };
+      return Object.entries(leaguesObj).sort((a,b)=>{ const ia=idx(a[0]), ib=idx(b[0]); if(ia!==ib) return ia-ib; return a[0].localeCompare(b[0]); });
+    }
+    function countryOrderKey(c){
+      const idx = metaCountries.findIndex(x=>x.key===c);
+      return idx === -1 ? 999 : idx;
+    }
+    function render(filter){
+      currentFilter = filter;
+      const grouped = group(all, filter);
+      groupsEl.innerHTML="";
+      if(!Object.keys(grouped).length){
+        statusEl.textContent="Bu tarihte veri yok";
+        return;
+      }
+      statusEl.textContent="";
+      Object.entries(grouped).sort((a,b)=>countryOrderKey(a[0])-countryOrderKey(b[0]) || a[0].localeCompare(b[0])).forEach(([country, leagues])=>{
+        const metaCountry = metaCountries.find(x=>x.key===country);
+        const flagSrc = (metaCountry && metaCountry.flag) || (country ? 'https://flagcdn.com/24x18/'+country.slice(0,2).toLowerCase()+'.png' : '');
+        const flagImg = flagSrc ? '<img class="flag" src="'+flagSrc+'" onerror="this.style.display=\'none\'">' : "";
+        const total = Object.values(leagues).reduce((s,a)=>s+a.length,0);
+        const htmlLeagues = sortLeagues(country, leagues).map(([lg,arr])=>{
+          const items = arr.map((m,idx)=>{
+            const detail = m.detail && m.detail.score
+              ? "<div class='detail'>"+m.detail.score+"<br>"+(m.detail.lineup || "")+"</div>"
+              : "<div class='detail'>"+(m.venue || "")+"</div>";
+            return '<li class="'+(m.live ? 'status-live' : '')+'" data-id="'+m.id+'-'+idx+'"><strong>'+m.name+'</strong> - '+m.date+' - '+m.time+' - '+m.status+detail+'</li>';
+          }).join("");
+          return '<div class="league">'+lg+' <span class="pill">'+arr.length+'</span></div><ul>'+items+'</ul>';
+        }).join("");
+        const card=document.createElement('div');
+        card.className='group';
+        card.dataset.country=country;
+        card.innerHTML='<h3>'+flagImg+'<span>'+((metaCountry&&metaCountry.label)||country)+'</span> <span class="pill">'+total+' maç</span></h3>'+htmlLeagues;
+        groupsEl.appendChild(card);
+      });
+      groupsEl.querySelectorAll('li').forEach(li=>{
+        li.addEventListener('click',()=>{
+          const d=li.querySelector('.detail');
+          if(d){ d.style.display = d.style.display==='block'?'none':'block'; }
+        });
+      });
+    }
+    async function fetchDate(d){
+      const clamp = clampDate(d);
+      dateLabel.textContent = formatDate(clamp);
+      statusEl.textContent="Yükleniyor...";
+      try{
+        const res = await fetch('https://v3.football.api-sports.io/fixtures?date='+formatDate(clamp), { headers:{'x-rapidapi-key':API_KEY,'x-rapidapi-host':'v3.football.api-sports.io'} });
+        const json = await res.json();
+        const items = (json?.response || []).map(fixt=>{
+          const name=(fixt.teams?.home?.name||"")+" vs "+(fixt.teams?.away?.name||"");
+          const rawDate=fixt.fixture?.date;
+          const date=rawDate ? rawDate.slice(0,10) : formatDate(clamp);
+          const statusCode=(fixt.fixture?.status?.short||"").toUpperCase();
+          const live=["1H","2H","ET","HT","P","LIVE"].includes(statusCode);
+          return {
+            id:'af-'+(fixt.fixture?.id||''),
+            name,
+            league:fixt.league?.name||'',
+            leagueId:fixt.league?.id,
+            country:fixt.league?.country||'',
+            time: rawDate ? new Date(rawDate).toISOString().split('T')[1]?.slice(0,5) || '' : '',
+            status: fixt.fixture?.status?.long || fixt.fixture?.status?.short || 'NS',
+            venue: fixt.fixture?.venue?.name || '',
+            live,
+            date,
+            detail:{
+              score: (fixt.goals?.home ?? '-')+' : '+(fixt.goals?.away ?? '-'),
+              home: fixt.teams?.home?.name,
+              away: fixt.teams?.away?.name,
+              venue: fixt.fixture?.venue?.name || '',
+              status: fixt.fixture?.status?.long || fixt.fixture?.status?.short || '',
+              time: rawDate ? new Date(rawDate).toISOString().split('T')[1]?.slice(0,5) || '' : ''
+            }
+          };
+        }).filter(Boolean);
+        all = items.filter(m => !isWomen(m.league) && !isWomen(m.name));
+        currentDate = clamp;
+        statusEl.textContent="";
+        render(currentFilter);
+      }catch(e){
+        statusEl.textContent="Hata: "+e;
+      }
+    }
+    document.getElementById('prevDay').addEventListener('click',()=>{
+      const d=new Date(currentDate.getTime()); d.setDate(d.getDate()-1);
+      fetchDate(d);
+    });
+    document.getElementById('nextDay').addEventListener('click',()=>{
+      const d=new Date(currentDate.getTime()); d.setDate(d.getDate()+1);
+      fetchDate(d);
+    });
+    metaCountries.filter(c=>c.key!=="world").forEach(c=>{
+      const b=document.createElement('button');
+      b.className='country';
+      b.dataset.filter=c.key;
+      b.textContent=c.label||c.key;
+      filterBar.appendChild(b);
+    });
+    ["allowed","world","others"].forEach(f=>{
+      const b=document.createElement('button');
+      b.className='country';
+      b.dataset.filter=f;
+      b.textContent=f.charAt(0).toUpperCase()+f.slice(1);
+      filterBar.insertBefore(b, filterBar.firstChild);
+    });
+    filterBar.addEventListener('click',(e)=>{
+      if(e.target.tagName!=="BUTTON") return;
+      filterBar.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      e.target.classList.add('active');
+      render(e.target.dataset.filter);
+    });
+    // başlangıç
+    filterBar.querySelector('button[data-filter="allowed"]').classList.add('active');
+    fetchDate(today);
+  })();
+  </script>
+</body>
+</html>
+

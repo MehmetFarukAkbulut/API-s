@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haber + Trend</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
+    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
+    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .bar{display:flex;gap:10px;flex-wrap:nowrap;align-items:center;margin-bottom:12px;overflow-x:auto;}
+    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:220px;}
+    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
+    .list{display:grid;gap:10px;}
+    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;}
+    a{color:#7dd3fc;text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
+  </style>
+</head>
+<body>
+  <header style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <a class="btn" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>Haber + Trend</h1>
+      <p class="lead">Spaceflight News API ile kategori/preset filtreli haber listesi.</p>
+    </div>
+  </header>
+  <div class="panel">
+    <div class="bar" id="filters" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;"></div>
+    <div class="bar">
+      <input id="q" placeholder="Konu (örn: finance)">
+      <button class="btn" id="go">Ara</button>
+      <span class="badge" id="status">Hazır</span>
+    </div>
+    <div class="list" id="list">
+      <div class="card">Filtre veya arama girin.</div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const qEl=document.getElementById("q");
+    const list=document.getElementById("list");
+    const status=document.getElementById("status");
+    const filters=document.getElementById("filters");
+    const presets=["finance","politics","space","nature","science","technology"];
+    filters.innerHTML = presets.map(p=>`<button class="btn" data-q="${p}" style="padding:8px 12px;font-size:13px">${p}</button>`).join("");
+    async function run(){
+      try{
+        status.textContent="Yükleniyor...";
+        const q=qEl.value.trim()||"";
+        if(!q){ list.innerHTML="<div class='card'>Filtre veya arama girin.</div>"; status.textContent="Hazır"; return; }
+        const url=`https://api.spaceflightnewsapi.net/v4/articles/?limit=12&search=${encodeURIComponent(q)}`;
+        const r=await fetch(url); const j=await r.json();
+        const items=j.results||[];
+        if(!items.length){ list.innerHTML="<div class='card'>Sonuç yok</div>"; status.textContent="Hazır"; return; }
+        list.innerHTML = items.map(it=>`
+          <div class="card">
+            <div class="badge">${it.site || "Haber"}</div>
+            <h3>${it.title}</h3>
+            <p>${(it.summary||"").slice(0,180)}...</p>
+            <a href="${it.url}" target="_blank" rel="noreferrer">Oku</a>
+          </div>
+        `).join("");
+        status.textContent="Hazır";
+      }catch(e){
+        status.textContent="Hata";
+        list.innerHTML="<div class='card'>Veri alınamadı</div>";
+      }
+    }
+    document.getElementById("go").addEventListener("click", run);
+    qEl.addEventListener("keydown",e=>{if(e.key==="Enter") run();});
+    filters.addEventListener("click",(e)=>{
+      if(e.target.dataset.q){
+        qEl.value=e.target.dataset.q;
+        run();
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

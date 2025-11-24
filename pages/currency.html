@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kur / Döviz</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
+    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
+    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+    input, select{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:140px;}
+    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
+    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;margin-bottom:10px;}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
+    .muted{color:var(--muted);}
+    .rates{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Kur / Döviz</h1>
+    <p class="lead">Frankfurter API ile baz kur, tarih ve miktar dönüştürme.</p>
+  </header>
+  <div class="panel">
+    <div class="bar">
+      <a class="btn" href="../index.html">Ana sayfa</a>
+      <select id="base">
+        <option>USD</option><option>EUR</option><option>GBP</option><option>TRY</option><option>CHF</option><option>CAD</option><option>AUD</option>
+      </select>
+      <input type="date" id="date">
+      <input type="number" id="amt" value="100" min="1" step="1" placeholder="Miktar">
+      <button class="btn" id="go">Hesapla</button>
+      <span class="badge" id="status">Hazır</span>
+    </div>
+    <div class="bar">
+      <button class="btn btn-range" data-range="1g">1G</button>
+      <button class="btn btn-range" data-range="5g">5G</button>
+      <button class="btn btn-range" data-range="1m">1 Ay</button>
+    </div>
+    <div id="result" class="card"></div>
+    <div class="rates" id="rates"></div>
+  </div>
+  <script>
+  (function(){
+    const baseEl=document.getElementById("base");
+    const dateEl=document.getElementById("date");
+    const amtEl=document.getElementById("amt");
+    const resEl=document.getElementById("result");
+    const ratesEl=document.getElementById("rates");
+    const status=document.getElementById("status");
+    const today=new Date();
+    dateEl.value=today.toISOString().slice(0,10);
+    dateEl.max=today.toISOString().slice(0,10);
+
+    function friendly(code){
+      const map={USD:"US Dollar",EUR:"Euro",TRY:"Turkish Lira",GBP:"Pound",CHF:"Swiss Franc",CAD:"Canadian Dollar",AUD:"Australian Dollar"};
+      return map[code]||code;
+    }
+    async function fetchRates(base,date){
+      const url=date?`https://api.frankfurter.app/${date}?from=${base}`:`https://api.frankfurter.app/latest?from=${base}`;
+      const r=await fetch(url); return r.json();
+    }
+    async function compare(base,date,deltaDays){
+      const target = date ? new Date(date) : new Date();
+      target.setDate(target.getDate()-deltaDays);
+      const refDate = target.toISOString().slice(0,10);
+      const ref = await fetchRates(base, refDate);
+      return { refDate, refRates: ref.rates || {} };
+    }
+    async function run(range){
+      try{
+        status.textContent="Yükleniyor...";
+        const base=baseEl.value||"USD";
+        const date=dateEl.value?dateEl.value:"";
+        const amt=parseFloat(amtEl.value)||1;
+        const j=await fetchRates(base,date);
+        const rates=j.rates||{};
+        let refDateLabel="", refRates={};
+        if(range){
+          const delta = range==="1g"?1: range==="5g"?5:30;
+          const cmp = await compare(base, date||j.date, delta);
+          refDateLabel = cmp.refDate;
+          refRates = cmp.refRates;
+        }
+        resEl.innerHTML=`<div class="badge">Baz: ${base} ${date||j.date||""}</div>
+          <div class="muted">Toplam kur: ${Object.keys(rates).length}</div>`;
+        const html=Object.entries(rates).map(([k,v])=>{
+          const conv=(v*amt).toFixed(4);
+          let deltaHtml="";
+          if(refRates[k]){
+            const diff = v - refRates[k];
+            const perc = ((diff/refRates[k])*100).toFixed(2);
+            const arrow = diff>=0 ? "↑" : "↓";
+            const color = diff>=0 ? "#22c55e" : "#ef4444";
+            deltaHtml = `<div class="muted" style="color:${color}">${refDateLabel}: ${refRates[k].toFixed(4)} | ${arrow} ${perc}%</div>`;
+          }
+          return `<div class="card"><div class="badge">${k}</div><div>${friendly(k)}: ${v.toFixed(4)}</div><div class="muted">${amt} ${base} → ${conv} ${k}</div>${deltaHtml}</div>`;
+        }).join("");
+        ratesEl.innerHTML=html;
+        status.textContent="Hazır";
+      }catch(e){
+        status.textContent="Hata";
+        resEl.innerHTML="Veri alınamadı";
+        ratesEl.innerHTML="";
+      }
+    }
+    document.getElementById("go").addEventListener("click", ()=>run(null));
+    [baseEl,dateEl,amtEl].forEach(el=>el.addEventListener("change", ()=>run(null)));
+    document.querySelectorAll(".btn-range").forEach(btn=>{
+      btn.addEventListener("click", ()=>run(btn.dataset.range));
+    });
+    run(null);
+  })();
+  </script>
+</body>
+</html>

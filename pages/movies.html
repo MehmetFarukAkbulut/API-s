@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dizi / Film</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
+    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
+    h1{margin:0;font-size:30px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:220px;}
+    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+    .chip{padding:8px 12px;border-radius:999px;background:rgba(34,211,238,0.12);color:#7dd3fc;border:1px solid rgba(34,211,238,0.3);cursor:pointer;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
+    .card{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;display:flex;flex-direction:column;gap:6px;}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
+    .muted{color:var(--muted);}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dizi / Film</h1>
+    <p class="lead">TVMaze ile arama; tür filtreleri ve puanlar.</p>
+  </header>
+  <div class="panel">
+    <div class="bar">
+      <a class="btn" href="../index.html">Ana sayfa</a>
+      <input id="q" placeholder="Dizi/film adı (örn: Lost)">
+      <button class="btn" id="go">Ara</button>
+      <span class="badge" id="status">Hazır</span>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"><div class="card">Arama yapın veya tür seçin.</div></div>
+  </div>
+  <script>
+  (function(){
+    const chips=document.getElementById("chips");
+    const grid=document.getElementById("grid");
+    const status=document.getElementById("status");
+    const q=document.getElementById("q");
+    const genres=["Drama","Comedy","Science-Fiction","Documentary","Anime","Action","Fantasy"];
+    chips.innerHTML=genres.map(g=>`<span class="chip" data-genre="${g}">${g}</span>`).join("");
+    chips.addEventListener("click",e=>{const g=e.target.dataset.genre;if(g) filterGenre(g);});
+
+    document.getElementById("go").addEventListener("click",()=>load(q.value.trim(),null));
+    q.addEventListener("keydown",e=>{if(e.key==="Enter") load(q.value.trim(),null);});
+
+    function stripTags(str){return (str||"").replace(/<[^>]*>/g,"");}
+
+    let baseList=[];
+    async function load(term){
+      try{
+        status.textContent="Yükleniyor...";
+        let url="";
+        if(term){ url=`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(term)}`; }
+        else { url="https://api.tvmaze.com/shows?page=1"; }
+        const res=await fetch(url);
+        const data=await res.json();
+        const shows = Array.isArray(data) ? (term ? data.map(s=>s.show) : data.slice(0,200)) : [];
+        baseList=shows;
+        render(shows);
+        status.textContent="Hazır";
+      }catch(err){
+        status.textContent="Hata";
+        grid.innerHTML="<div class='card'>Veri alınamadı.</div>";
+      }
+    }
+
+    function render(list){
+      if(!list.length){grid.innerHTML="<div class='card'>Sonuç yok</div>";return;}
+      const finalList=list.sort((a,b)=>(b.rating?.average||0)-(a.rating?.average||0)).slice(0,20);
+      grid.innerHTML=finalList.map(show=>`
+          <div class="card">
+            <div class="badge">${show.genres?.[0]||"Tür"}</div>
+            <strong>${show.name||""}</strong>
+            <div class="muted">Puan: ${show.rating?.average ?? "?"}</div>
+            <p class="muted">${stripTags(show.summary).slice(0,140)}...</p>
+            ${show.url ? `<a class="btn" href="${show.url}" target="_blank" rel="noreferrer">Detay</a>` : ""}
+          </div>
+        `).join("");
+    }
+
+    function filterGenre(g){
+      if(!baseList.length){load();return;}
+      const filtered=baseList.filter(s=>s.genres?.some(x=>x.toLowerCase().includes(g.toLowerCase())));
+      render(filtered.length?filtered:baseList);
+    }
+  })();
+  </script>
+</body>
+</html>

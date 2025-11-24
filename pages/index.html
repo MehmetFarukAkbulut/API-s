@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MFA TCMB Widget</title>
+  <style>
+    :root { --bg:#0b1221; --bg2:#0f172a; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{max-width:1080px;margin:0 auto;padding:28px 16px 8px;}
+    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{
+      max-width:1080px;
+      margin:0 auto 28px;
+      padding:18px;
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,0.05);
+      border-radius:14px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.35);
+    }
+    .bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center;}
+    .bar input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:160px;}
+    .btn{border:none;padding:10px 14px;border-radius:10px;background:rgba(34,211,238,0.15);color:#fff;cursor:pointer;transition:all .2s;}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(34,211,238,0.25);}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+    .card{background:#0f182c;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.15);color:#7dd3fc;font-size:12px;border:1px solid rgba(34,211,238,0.35);}
+    .muted{color:var(--muted);}
+  </style>
+</head>
+<body>
+  <header style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <a class="btn" href="../index.html" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(34,211,238,0.12);text-decoration:none;">Ana sayfa</a>
+    <div>
+      <h1>TCMB Kurlari</h1>
+      <p class="lead">Guncel kur bilgisi, tarih ve TL miktariyla birlikte.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="bar">
+      <input type="date" id="dateInput">
+      <input type="number" id="amountInput" value="1000" min="1" step="1" placeholder="TL miktarı">
+      <button class="btn" id="btnLatest">Güncel</button>
+      <button class="btn" id="btnFetch">Ara</button>
+      <span class="badge" id="status">Hazır</span>
+    </div>
+    <div id="resultDate" class="badge muted" style="margin-bottom:10px;display:inline-block;"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <script>
+  (function(){
+    const obf = "aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9NZWhtZXRGYXJ1a0FrYnVsdXQvNWViNGY4MjhlMGJiMTczZWNjNTljZTE1OWVhYTE5ZDMvcmF3L3RjbWIuanNvbg==";
+    const TCMB_URL = (typeof window !== "undefined" && window.__TCMB_JSON_URL__) || atob(obf);
+
+    const dateInput = document.getElementById("dateInput");
+    const amountInput = document.getElementById("amountInput");
+    const cards = document.getElementById("cards");
+    const status = document.getElementById("status");
+    const resultDate = document.getElementById("resultDate");
+
+    const CODES = ["USD","EUR","GBP","CHF","CAD","AUD","DKK","SEK","NOK","SAR","JPY","BGN","RON","RUB","CNY","PKR","QAR"];
+    const NAMES = {
+      USD:"ABD DOLARI", EUR:"EURO", GBP:"INGILIZ STERLINI", CHF:"ISVICRE FRANGI",
+      CAD:"KANADA DOLARI", AUD:"AVUSTRALYA DOLARI", DKK:"DANIMARKA KRONU", SEK:"ISVEC KRONU",
+      NOK:"NORVEC KRONU", SAR:"SUUDI RIYALI", JPY:"JAPON YENI", BGN:"BULGAR LEVASI",
+      RON:"RUMEN LEYI", RUB:"RUS RUBLESI", CNY:"CIN YUANI", PKR:"PAKISTAN RUPISI", QAR:"KATAR RIYALI"
+    };
+
+    function parseDate(str){
+      if(!str) return null;
+      const d=new Date(str);
+      return isNaN(d.getTime())?null:d;
+    }
+    function formatYMD(d){
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+    function pickRecord(rows, target){
+      const toDate = s => {
+        const parts=s.split("-").map(Number);
+        if(parts[0]>1900) return new Date(parts[0],parts[1]-1,parts[2]);
+        return new Date(parts[2],parts[1]-1,parts[0]);
+      };
+      rows.sort((a,b)=>toDate(a.TARIH)-toDate(b.TARIH));
+      if(target){
+        const sel=rows.find(r=>r.TARIH===target);
+        if(sel) return sel;
+        const firstD = toDate(rows[0].TARIH);
+        const lastD = toDate(rows[rows.length-1].TARIH);
+        const tDate = toDate(target);
+        if (tDate && tDate.getTime() < firstD.getTime()) return rows[0];
+        if (tDate && tDate.getTime() > lastD.getTime()) return rows[rows.length-1];
+        const fallback=rows.filter(r=>toDate(r.TARIH)<=tDate);
+        if(fallback.length) return fallback[fallback.length-1];
+      }
+      return rows[rows.length-1];
+    }
+
+    async function load(){
+      try{
+        status.textContent="Yükleniyor...";
+        const res=await fetch(TCMB_URL);
+        const rows=await res.json();
+        const targetDate = dateInput.value ? dateInput.value.split("-").reverse().join("-") : null; // dd-mm-yyyy
+        const rec = pickRecord(rows, targetDate);
+        render(rec);
+        status.textContent="Hazır";
+      }catch(e){
+        status.textContent="Hata";
+        cards.innerHTML = "<div class='card'>Veri alınamadı.</div>";
+      }
+    }
+
+    function render(rec){
+      if(!rec){ cards.innerHTML="<div class='card'>Veri yok</div>"; return;}
+      const amount = parseFloat(amountInput.value)||1000;
+      resultDate.textContent = rec.TARIH || "-";
+      const html = CODES.map(code=>{
+        const buy=parseFloat(rec[code+"_ALIS"]||"0");
+        const sell=parseFloat(rec[code+"_SATIS"]||"0");
+        if(!buy && !sell) return "";
+        const conv = sell? (amount/sell).toFixed(2):"";
+        return `<div class="card">
+          <div class="badge">${code}/TRY (${NAMES[code]||code})</div>
+          <div>Alış: ${buy.toFixed(4)} | Satış: ${sell.toFixed(4)}</div>
+          <div class="muted">${amount} TL ≈ ${conv} ${code}</div>
+        </div>`;
+      }).filter(Boolean).join("");
+      cards.innerHTML = html;
+    }
+
+    document.getElementById("btnFetch").addEventListener("click", load);
+    document.getElementById("btnLatest").addEventListener("click", ()=>{ dateInput.value=""; load(); });
+    // tarih için min/max (gelecek tarih engeli)
+    const today = new Date();
+    dateInput.value = formatYMD(today);
+    dateInput.max = formatYMD(today);
+    dateInput.addEventListener("change", ()=>{
+      const picked = parseDate(dateInput.value);
+      if (picked && picked.getTime() > today.getTime()) {
+        dateInput.value = formatYMD(today);
+      }
+    });
+    load();
+  })();
+  </script>
+</body>
+</html>
+
+

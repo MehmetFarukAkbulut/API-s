@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hesaplamalar</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
+    header{max-width:1180px;margin:0 auto;padding:28px 16px 8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .btn-home{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;}
+    h1{margin:0;font-size:32px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:1180px;margin:0 auto 26px;padding:18px;background:var(--panel);border:1px solid rgba(255,255,255,0.08);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,0.35);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
+    .card{background:#0f182c;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;position:relative;overflow:hidden;}
+    .card::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent 60%);pointer-events:none;}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.15);color:#7dd3fc;font-size:12px;border:1px solid rgba(34,211,238,0.35);}
+    .muted{color:var(--muted);}
+    input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;margin:6px 0;}
+    .result{margin-top:8px;font-size:18px;}
+    .note{color:var(--muted);font-size:13px;margin-top:4px;}
+    .btn{display:inline-block;padding:8px 12px;border-radius:10px;border:1px solid rgba(34,211,238,0.4);color:#7dd3fc;background:rgba(34,211,238,0.12);cursor:pointer;}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn-home" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>Hesaplamalar</h1>
+      <p class="lead">Sık kullanılan hesaplar, hızlı sonuç + yorum.</p>
+    </div>
+  </header>
+  <div class="panel">
+    <div class="grid" id="grid"></div>
+  </div>
+  <script>
+  (function(){
+    const calculators=[
+      { id:"exam", title:"Vize/Final Ortalaması", fields:["vize","vizeAgirlik","final","finalAgirlik"], labels:["Vize","Vize %","Final","Final %"], fn:examFn },
+      { id:"kdv", title:"KDV Hesaplama", fields:["tutar","oran"], labels:["Tutar","KDV %"], fn:kdvFn },
+      { id:"bmi", title:"Vücut Kitle İndeksi", fields:["kilo","boy"], labels:["Kilo (kg)","Boy (cm)"], fn:bmiFn },
+      { id:"faiz", title:"Basit Faiz", fields:["anapara","oran","gun"], labels:["Anapara","%","Gün"], fn:f=>((f.anapara*f.oran/100*f.gun)/365).toFixed(2) },
+      { id:"taksit", title:"Kredi Taksit", fields:["anapara","oran","ay"], labels:["Anapara","Aylık %","Ay"], fn:f=>{const r=f.oran/100;const n=f.ay;if(r===0) return (f.anapara/n).toFixed(2);const pay=r*Math.pow(1+r,n);const payda=Math.pow(1+r,n)-1;return (f.anapara*pay/payda).toFixed(2);} },
+      { id:"indir", title:"İndirimli Fiyat", fields:["fiyat","indirim"], labels:["Fiyat","İndirim %"], fn:f=>(f.fiyat*(1-f.indirim/100)).toFixed(2) },
+      { id:"speed", title:"Ortalama Hız", fields:["mesafe","sure"], labels:["Mesafe (km)","Süre (saat)"], fn:f=>(f.mesafe/f.sure).toFixed(2) },
+      { id:"fuel", title:"Yakıt Tüketimi", fields:["km","litre"], labels:["Gidilen km","Harcanan litre"], fn:f=>(f.litre/f.km*100).toFixed(2)+" L/100km" }
+    ];
+
+    const grid=document.getElementById("grid");
+    grid.innerHTML=calculators.map(calc=>renderCard(calc)).join("");
+
+    function renderCard(calc){
+      const inputs=calc.fields.map((f,i)=>`<label class="muted">${calc.labels[i]}</label><input data-field="${f}" data-id="${calc.id}" type="number" step="0.01">`).join("");
+      return `<div class="card" data-id="${calc.id}">
+        <div class="badge">${calc.title}</div>
+        ${inputs}
+        <div class="result muted">Sonuç bekleniyor</div>
+        <button class="btn" data-run="${calc.id}">Hesapla</button>
+      </div>`;
+    }
+
+    grid.addEventListener("click",e=>{
+      const id=e.target.dataset.run;
+      if(!id) return;
+      const card=e.target.closest(".card");
+      const calc=calculators.find(c=>c.id===id);
+      if(!calc) return;
+      const values={};
+      calc.fields.forEach(f=>{
+        const val=parseFloat(card.querySelector(`[data-field='${f}']`).value||"0");
+        values[f]=isNaN(val)?0:val;
+      });
+      const out=calc.fn(values);
+      card.querySelector(".result").textContent=out;
+    });
+
+    function examFn(f){
+      const score = f.vize*(f.vizeAgirlik/100)+f.final*(f.finalAgirlik/100);
+      const passLine=60;
+      if(score>=passLine) return `${score.toFixed(2)} · Geçtiniz 🎉`;
+      const need = (passLine - f.vize*(f.vizeAgirlik/100)) * 100 / (f.finalAgirlik||1);
+      return `${score.toFixed(2)} · Kalır. Finalde en az ${Math.max(0,need).toFixed(1)} almalısınız.`;
+    }
+    function kdvFn(f){
+      const br=f.tutar||0, oran=f.oran||20;
+      const kdv=br*oran/100, toplam=br+kdv;
+      return `${toplam.toFixed(2)} (KDV: ${kdv.toFixed(2)} | oran ${oran}%)`;
+    }
+    function bmiFn(f){
+      const bmi = (f.kilo/((f.boy/100)**2));
+      const txt = bmi<18.5?"Zayıf":bmi<25?"Normal":bmi<30?"Kilolu":"Obez";
+      const min = 18.5*((f.boy/100)**2), max=24.9*((f.boy/100)**2);
+      return `${bmi.toFixed(2)} · ${txt} · Normal kilo aralığı: ${min.toFixed(1)} - ${max.toFixed(1)} kg`;
+    }
+  })();
+  </script>
+</body>
+</html>
