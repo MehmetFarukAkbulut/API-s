@@ -851,7 +851,23 @@
         padding:10px 10px 11px;
       }
     }
-  </style>
+  
+/* --- mobile-shared-opt --- */
+@media(max-width:768px){
+  .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
+    flex-wrap:nowrap !important;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:8px;
+    padding-bottom:6px;
+  }
+  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
+}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
+}
+/* --- end mobile-shared-opt --- */
+</style>
 </head>
 <body>
   <div class="bg-orb"></div>
@@ -997,10 +1013,10 @@
       };
 
       const HOUSE_IMAGES = {
-        Gryffindor:"https://static.wikia.nocookie.net/harrypotter/images/b/b1/Gryffindor_ClearBG.png/revision/latest?cb=20190222162949",
-        Ravenclaw:"https://static.wikia.nocookie.net/harrypotter/images/7/71/Ravenclaw_ClearBG.png/revision/latest?cb=20161020182442",
-        Hufflepuff:"https://static.wikia.nocookie.net/harrypotter/images/0/06/Hufflepuff_ClearBG.png/revision/latest?cb=20161020182518",
-        Slytherin:"https://static.wikia.nocookie.net/harrypotter/images/0/00/Slytherin_ClearBG.png/revision/latest?cb=20161020182557"
+        Gryffindor:"https://insighteditions.com/cdn/shop/products/82450-88465-cover_1024x1024.jpg?v=1600373018",
+        Ravenclaw:"https://sw6.elbenwald.de/media/ef/76/59/1633452254/E1056446_8.jpg",
+        Hufflepuff:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjK1JTFdnUC7lJJFKuY231BnqXbvd2W9nQGw&s",
+        Slytherin:"https://m.media-amazon.com/images/I/81mUqWd-q7L._AC_UF894,1000_QL80_.jpg"
       };
 
       const GENERIC_IMAGES = {

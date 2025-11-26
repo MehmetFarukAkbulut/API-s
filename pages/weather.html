@@ -415,7 +415,23 @@
       .btn{width:auto;}
       .city-grid{grid-template-columns:repeat(1,minmax(0,1fr));}
     }
-  </style>
+  
+/* --- mobile-shared-opt --- */
+@media(max-width:768px){
+  .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
+    flex-wrap:nowrap !important;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:8px;
+    padding-bottom:6px;
+  }
+  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
+}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
+}
+/* --- end mobile-shared-opt --- */
+</style>
 </head>
 <body>
   <header>

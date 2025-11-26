@@ -18,7 +18,23 @@
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;}
     .card{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;}
     .muted{color:var(--muted);}
-  </style>
+  
+/* --- mobile-shared-opt --- */
+@media(max-width:768px){
+  .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
+    flex-wrap:nowrap !important;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:8px;
+    padding-bottom:6px;
+  }
+  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
+}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
+}
+/* --- end mobile-shared-opt --- */
+</style>
 </head>
 <body>
   <header>
