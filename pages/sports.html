@@ -375,10 +375,10 @@
 
   <!-- HEADER -->
   <header id="pageHeader">
-    <a class="btn" href="../index.html">Ana Sayfa</a>
+    <a class="btn" href="../index.html" id="homeBtn">Ana Sayfa</a>
     <div>
-      <h1>Maç Skorları</h1>
-      <p class="lead">Güncel, dün ve yarın – canlı & ülke filtreleriyle</p>
+      <h1 id="pageTitle">Maç Skorları</h1>
+      <p class="lead" id="pageLead">Güncel, dün ve yarın – canlı & ülke filtreleriyle</p>
     </div>
   </header>
 
@@ -415,6 +415,66 @@
   <script>
   (function(){
 
+    // Dil tercih okuma (TR / EN)
+    const pref = (typeof localStorage!=="undefined" && localStorage.getItem("prefLang")) || "en";
+    const lang = pref==="tr" ? "tr" : "en";
+    document.documentElement.lang = lang;
+
+    const TXT = {
+      tr:{
+        title:"Maç Skorları",
+        heading:"Maç Skorları",
+        lead:"Güncel, dün ve yarın – canlı & ülke filtreleriyle",
+        home:"Ana Sayfa",
+        statusReady:"Hazır",
+        statusLoading:"Yükleniyor...",
+        statusNoLive:"Şu anda canlı maç yok",
+        statusNoData:"Bu tarihte veri yok",
+        errorPrefix:"Hata",
+        filterAllowed:"BAŞLICA",
+        filterWorld:"WORLD",
+        filterOthers:"DİĞERLERİ",
+        filterLive:"CANLI",
+        matchWord:"maç",
+        modalInfoSeparator:" · ",
+        noVenue:"",
+        scoreLabel:"Skor",
+        venueLabel:"Stad"
+      },
+      en:{
+        title:"Match Scores",
+        heading:"Match Scores",
+        lead:"Today, yesterday and tomorrow – with live & country filters",
+        home:"Home",
+        statusReady:"Ready",
+        statusLoading:"Loading...",
+        statusNoLive:"No live matches at the moment",
+        statusNoData:"No data for this date",
+        errorPrefix:"Error",
+        filterAllowed:"MAJOR",
+        filterWorld:"WORLD",
+        filterOthers:"OTHERS",
+        filterLive:"LIVE",
+        matchWord:"matches",
+        modalInfoSeparator:" · ",
+        noVenue:"",
+        scoreLabel:"Score",
+        venueLabel:"Stadium"
+      }
+    }[lang];
+
+    // Statik metinleri güncelle
+    document.title = TXT.title;
+    const pageTitle = document.getElementById("pageTitle");
+    const pageLead  = document.getElementById("pageLead");
+    const homeBtn   = document.getElementById("homeBtn");
+    const statusEl  = document.getElementById("status");
+
+    if(pageTitle) pageTitle.textContent = TXT.heading;
+    if(pageLead)  pageLead.textContent  = TXT.lead;
+    if(homeBtn)   homeBtn.textContent   = TXT.home;
+    if(statusEl)  statusEl.textContent  = TXT.statusReady;
+
     const API_KEY = "4263454336cf9f35d8aef752fd4db60b";
 
     const metaCountries=[
@@ -444,7 +504,6 @@
     const filterBar=document.getElementById("filterBar");
     const groupsEl=document.getElementById("groups");
     const dateLabel=document.getElementById("dateLabel");
-    const statusEl=document.getElementById("status");
 
     const modal=document.getElementById("leagueModal");
     const modalTitle=document.getElementById("modalTitle");
@@ -481,28 +540,39 @@
     function groupData(list,f){
       const obj={};
       list
-      .filter(m=>!isWomen(m.league)&&!isWomen(m.name))
-      .filter(m=>!isNon(m.league)&&!isNon(m.name))
-      .filter(m=>matchCountry(m.country,f))
-      .forEach(m=>{
-        const co=m.country||"Other";
-        const lg=m.league||"Lig";
-        (obj[co]??=(obj[co]||{}))[lg]??=[];
-        obj[co][lg].push(m);
-      });
+        .filter(m=>!isWomen(m.league)&&!isWomen(m.name))
+        .filter(m=>!isNon(m.league)&&!isNon(m.name))
+        .filter(m=>matchCountry(m.country,f))
+        .forEach(m=>{
+          const co=m.country||"Other";
+          const lg=m.league||"League";
+          (obj[co]??=(obj[co]||{}))[lg]??=[];
+          obj[co][lg].push(m);
+        });
       return obj;
     }
 
     function openModal(country,league,matches){
       modalTitle.textContent=(country+" – "+league).toUpperCase();
-      modalInfo.textContent=matches.length+" maç · "+formatDate(currentDate);
+      modalInfo.textContent=matches.length+" "+TXT.matchWord+TXT.modalInfoSeparator+formatDate(currentDate);
       modalBody.innerHTML="";
       matches.forEach(m=>{
         const div=document.createElement("div");
         div.className="modal-match"+(m.live?" status-live":"");
+
+        const scoreLabel = TXT.scoreLabel || "Skor";
+        const venueLabel = TXT.venueLabel || "Stad";
+        const venueBlock = m.venue ? `<br>${venueLabel}: ${m.venue}` : TXT.noVenue;
+
         div.innerHTML=`${m.name} - ${m.date} - ${m.time} - ${m.status}
-          <div class="modal-detail">Skor: ${m.detail.score}${m.venue?`<br>Stad: ${m.venue}`:""}</div>`;
-        div.onclick=()=>div.querySelector(".modal-detail").classList.toggle("modal-detail-open");
+          <div class="modal-detail">
+            ${scoreLabel}: ${m.detail.score}
+            ${venueBlock}
+          </div>`;
+        div.onclick=()=>{
+          const detail=div.querySelector(".modal-detail");
+          detail.classList.toggle("modal-detail-open");
+        };
         modalBody.appendChild(div);
       });
       modal.classList.remove("hidden");
@@ -526,10 +596,11 @@
       groupsEl.innerHTML="";
 
       if(!Object.keys(grouped).length){
-        statusEl.textContent=filter==="live"?"Şu anda canlı maç yok":"Bu tarihte veri yok";
+        statusEl.textContent = filter==="live" ? TXT.statusNoLive : TXT.statusNoData;
         return;
       }
 
+      statusEl.textContent = ""; // ekran doluyken uyarı yazmasın
       let index=0;
       Object.entries(grouped).forEach(([country,leagues])=>{
         const card=document.createElement("div");
@@ -540,13 +611,13 @@
         const flag=meta?.flag?`<img src="${meta.flag}" class="flag">`:"";
 
         const total=Object.values(leagues).reduce((a,b)=>a+b.length,0);
-        card.innerHTML=`<h3>${flag}${meta?.label||country}<span class="pill">${total} maç</span></h3>`;
+        card.innerHTML=`<h3>${flag}${meta?.label||country}<span class="pill">${total} ${TXT.matchWord}</span></h3>`;
 
         const container=document.createElement("div");
         Object.entries(leagues).forEach(([lg,arr])=>{
           const row=document.createElement("div");
           row.className="league-row";
-          row.innerHTML=`<span>${lg}</span><span class="pill">${arr.length} maç</span>`;
+          row.innerHTML=`<span>${lg}</span><span class="pill">${arr.length} ${TXT.matchWord}</span>`;
           row.onclick=()=>openModal(meta?.label||country,lg,arr);
           container.appendChild(row);
         });
@@ -563,7 +634,7 @@
       d=clampDate(d);
       currentDate=d;
       dateLabel.textContent=formatDate(d);
-      statusEl.textContent="Yükleniyor...";
+      statusEl.textContent=TXT.statusLoading;
 
       try{
         const res=await fetch("https://v3.football.api-sports.io/fixtures?date="+formatDate(d),{
@@ -592,23 +663,28 @@
           };
         });
 
-        statusEl.textContent="";
-        render(filterBar.querySelector(".active")?.dataset.filter||"allowed");
+        const activeFilter = filterBar.querySelector(".active")?.dataset.filter || "allowed";
+        render(activeFilter);
       }catch(e){
-        statusEl.textContent="Hata: "+e;
+        statusEl.textContent = TXT.errorPrefix + ": " + e;
       }
     }
 
     document.getElementById("prevDay").onclick=()=>fetchDate(new Date(currentDate.getTime()-86400000));
     document.getElementById("nextDay").onclick=()=>fetchDate(new Date(currentDate.getTime()+86400000));
 
+    // Üst filtre butonları
     ["allowed","world","others","live"].forEach(f=>{
       const b=document.createElement("button");
       b.dataset.filter=f;
-      b.textContent=f==="live"?"CANLI":f.toUpperCase();
+      if(f==="allowed")      b.textContent = TXT.filterAllowed;
+      else if(f==="world")   b.textContent = TXT.filterWorld;
+      else if(f==="others")  b.textContent = TXT.filterOthers;
+      else if(f==="live")    b.textContent = TXT.filterLive;
       filterBar.appendChild(b);
     });
 
+    // Ülke bazlı filtreler
     metaCountries.forEach(c=>{
       if(c.key!=="world"){
         const b=document.createElement("button");
@@ -625,10 +701,18 @@
       render(e.target.dataset.filter);
     });
 
-    filterBar.querySelector("button[data-filter='allowed']").classList.add("active");
+    // Varsayılan (başlıca ülkeler) aktif
+    const defaultBtn = filterBar.querySelector("button[data-filter='allowed']");
+    if(defaultBtn){
+      defaultBtn.classList.add("active");
+    }
+
+    // İlk açılış: bugün
     fetchDate(today);
 
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

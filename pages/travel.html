@@ -36,7 +36,6 @@
       animation:gradientShift 26s ease-in-out infinite;
     }
 
-    /* Arka plan grid + noise + glow orblar */
     .bg-grid{
       position:fixed;
       inset:0;
@@ -90,7 +89,6 @@
       100%{transform:translate3d(5%,25%,0);}
     }
 
-    /* Hover ile parlayan imleç efekti */
     .cursor-glow{
       position:fixed;
       width:260px;
@@ -209,6 +207,11 @@
       backdrop-filter:blur(18px);
     }
 
+    .panel > .bar{
+      flex-wrap:wrap !important;
+      overflow:visible !important;
+    }
+
     .panel::before{
       content:"";
       position:absolute;
@@ -287,6 +290,7 @@
       position:relative;
       overflow:hidden;
       text-shadow:0 1px 4px rgba(15,23,42,0.8);
+      white-space:nowrap;
     }
 
     .btn::after{
@@ -312,6 +316,11 @@
       transform:translateX(120%);
     }
 
+    .btn:active{
+      transform:translateY(0) scale(0.99);
+      box-shadow:0 8px 20px rgba(15,23,42,0.9);
+    }
+
     .badge{
       display:inline-block;
       padding:4px 9px;
@@ -332,22 +341,42 @@
 
     .chips{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      gap:10px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:6px;
       margin-bottom:12px;
       position:relative;
       z-index:1;
+      cursor:grab;
+      user-select:none;
+    }
+    .chips.dragging{cursor:grabbing;}
+    .chips::-webkit-scrollbar{display:none;}
+    .chips .btn{
+      min-width:max-content;
+      justify-content:center;
+      padding:10px 14px;
+      font-size:13px;
+      border-width:1px;
+      white-space:nowrap;
+      flex:0 0 auto;
     }
 
     .chip{
-      padding:7px 11px;
+      padding:9px 12px;
       border-radius:999px;
       background:rgba(15,23,42,0.9);
       color:#7dd3fc;
       border:1px solid rgba(56,189,248,0.55);
       cursor:pointer;
       transition:all .18s ease-out;
-      font-size:12px;
+      font-size:13px;
+      min-width:max-content;
+      white-space:nowrap;
+      flex:0 0 auto;
       position:relative;
       overflow:hidden;
     }
@@ -499,7 +528,6 @@
       font-size:13px;
     }
 
-    /* Scroll reveal efektleri */
     .reveal-init{
       opacity:0;
       transform:translateY(12px) scale(0.985);
@@ -516,7 +544,6 @@
       filter:blur(0);
     }
 
-    /* Küçük ekran uyumu */
     @media (max-width:640px){
       header{
         padding-top:18px;
@@ -538,26 +565,34 @@
         order:2;
       }
     }
-  
-/* --- mobile-shared-opt --- */
-@media(max-width:768px){
-  .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
-    flex-wrap:nowrap !important;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    gap:8px;
-    padding-bottom:6px;
-  }
-  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
-}
-@media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
-}
-/* --- end mobile-shared-opt --- */
-</style>
+
+    @media(max-width:768px){
+      .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
+        flex-wrap:nowrap !important;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        gap:8px;
+        padding-bottom:6px;
+      }
+      .bar::-webkit-scrollbar,
+      .chips::-webkit-scrollbar,
+      .hero-actions::-webkit-scrollbar,
+      .topbar::-webkit-scrollbar,
+      .tab-bar::-webkit-scrollbar,
+      .filter-bar::-webkit-scrollbar{
+        display:none;
+      }
+    }
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation:none !important;
+        transition:none !important;
+        scroll-behavior:auto !important;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- Arka plan efektleri -->
   <div class="bg-grid"></div>
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
@@ -565,15 +600,15 @@
 
   <header class="reveal-init">
     <a class="btn-home" href="../index.html">
-      <span>← Ana sayfa</span>
+      <span id="homeLabel">← Ana sayfa</span>
     </a>
     <div>
-      <h1>Seyahat Planlayıcı</h1>
-      <p class="lead">Şehir, rota, harita; popüler yerler için günlük öneri.</p>
+      <h1 id="pageTitle">Seyahat Planlayıcı</h1>
+      <p class="lead" id="pageLead">Şehir, rota, harita; popüler yerler için günlük öneri.</p>
     </div>
   </header>
 
-  <div class="panel reveal-init">
+  <div class="panel reveal-init" id="panel">
     <div class="bar">
       <input id="city" placeholder="Şehir veya ülke (örn: Tokyo)">
       <input id="dest" placeholder="Varış (opsiyonel)">
@@ -582,25 +617,25 @@
     </div>
     <div class="chips" id="preset"></div>
     <div class="grid" id="cards">
-      <div class="card reveal-init">Şehir seçin.</div>
+      <div class="card reveal-init" id="initialCard">Şehir seçin.</div>
     </div>
     <div class="card reveal-init" style="margin-top:12px;">
-      <div class="badge">Harita & Mesafe</div>
+      <div class="badge" id="mapBadge">Harita &amp; Mesafe</div>
       <div id="map"></div>
       <div class="muted" id="routeInfo"></div>
     </div>
     <div class="card reveal-init" id="planCard" style="margin-top:12px;">
-      <div class="badge">Günlük Plan</div>
+      <div class="badge" id="planBadge">Günlük Plan</div>
       <ol id="planList" class="muted"></ol>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-  // Pointer glow & hafif parallax
+  // Arka plan / hover animasyonları
   (function(){
     const glow = document.querySelector('.cursor-glow');
-    const panel = document.querySelector('.panel');
+    const panel = document.getElementById('panel');
 
     window.addEventListener('pointermove', (e) => {
       glow.style.transform = 'translate3d(' + (e.clientX) + 'px,' + (e.clientY) + 'px,0)';
@@ -613,14 +648,14 @@
         const centerY = rect.top + rect.height/2;
         const dx = (e.clientX - centerX) / rect.width;
         const dy = (e.clientY - centerY) / rect.height;
-        panel.style.transform = 'perspective(900px) rotateX(' + (dy * -4) + 'deg) rotateY(' + (dx * 6) + 'deg)';
+        panel.style.transform =
+          'perspective(900px) rotateX(' + (dy * -4) + 'deg) rotateY(' + (dx * 6) + 'deg)';
       });
       panel.addEventListener('pointerleave', () => {
         panel.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg)';
       });
     }
 
-    // Scroll reveal
     const revealEls = document.querySelectorAll('.reveal-init');
     const io = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -634,8 +669,133 @@
     revealEls.forEach(el => io.observe(el));
   })();
 
-  // Asıl uygulama
+  // Asıl uygulama + çok dillilik
   (function(){
+      let LANG = "en";
+      try {
+        const pref = localStorage.getItem("prefLang");
+        if (pref === "tr" || pref === "en") {
+          LANG = pref;
+        }
+      } catch(e) {
+      }
+      document.documentElement.lang = LANG;
+
+    const TEXT = {
+      tr: {
+        home: "← Ana sayfa",
+        title: "Seyahat Planlayıcı",
+        lead: "Şehir, rota, harita; popüler yerler için günlük öneri.",
+        inputCity: "Şehir veya ülke (örn: Tokyo)",
+        inputDest: "Varış (opsiyonel)",
+        btnSearch: "Ara",
+        statusReady: "Hazır",
+        statusLoading: "Yükleniyor...",
+        statusError: "Hata",
+        initialCard: "Şehir seçin.",
+        needCity: "Lütfen şehir yazın.",
+        notFound: "Şehir bulunamadı.",
+        fetchError: "Veri alınamadı.",
+        mapBadge: "Harita & Mesafe",
+        planBadge: "Günlük Plan",
+        todayLabel: "Bugün",
+        tzLabel: "Saat dilimi",
+        popLabel: "Nüfus",
+        currencyLabel: "Para birimi",
+        budgetTitle: "Bütçe Tahmini (günlük)",
+        budgetExplain: "Tahminler şehir popülasyonu ve bölgeye göre kaba hesaplamadır.",
+        budgetLevels: ["Bütçe","Konfor","Lüks"],
+        inspoTitle: "İlham",
+        defaultInspo: [
+          "Eski şehir turu",
+          "Yerel sokak lezzetleri",
+          "Gün batımı manzarası",
+          "Müze/galeri ziyareti",
+          "Parkta yürüyüş"
+        ],
+        distancePrefix: "Mesafe",
+        car: "Araba",
+        train: "Tren",
+        flight: "Uçuş",
+        walk: "Yürüyüş",
+        minutesShort: "dk",
+        noDestRouteInfo: "Varış yazarsanız mesafe ve süreleri görürsünüz.",
+        withDestPlan: (from,to) => `${from} - ${to} arası rota çizildi. Şehir içi planı kendin seçebilirsin.`,
+        noDestPlan: "Varış yazarsan rota çizilir.",
+        markerDefault: "Konum",
+        windAndRain: (wind,rain) => `Rüzgar: ${wind} km/s · Yağış ihtimali: ${rain}%`
+      },
+      en: {
+        home: "← Home",
+        title: "Travel Planner",
+        lead: "City, route, map; daily suggestions for popular spots.",
+        inputCity: "City or country (e.g. Tokyo)",
+        inputDest: "Destination (optional)",
+        btnSearch: "Search",
+        statusReady: "Ready",
+        statusLoading: "Loading...",
+        statusError: "Error",
+        initialCard: "Pick a city.",
+        needCity: "Please enter a city.",
+        notFound: "City not found.",
+        fetchError: "Could not fetch data.",
+        mapBadge: "Map & Distance",
+        planBadge: "Daily Plan",
+        todayLabel: "Today",
+        tzLabel: "Time zone",
+        popLabel: "Population",
+        currencyLabel: "Currency",
+        budgetTitle: "Budget Estimate (per day)",
+        budgetExplain: "Estimates are rough and based on population and region.",
+        budgetLevels: ["Budget","Comfort","Luxury"],
+        inspoTitle: "Inspiration",
+        defaultInspo: [
+          "Old town walk",
+          "Local street food",
+          "Sunset viewpoint",
+          "Museum / gallery visit",
+          "Park walk"
+        ],
+        distancePrefix: "Distance",
+        car: "Car",
+        train: "Train",
+        flight: "Flight",
+        walk: "Walk",
+        minutesShort: "min",
+        noDestRouteInfo: "Add a destination to see distance and durations.",
+        withDestPlan: (from,to) => `Route drawn between ${from} and ${to}. You can choose your own in-city plan.`,
+        noDestPlan: "Add a destination to draw a route.",
+        markerDefault: "Location",
+        windAndRain: (wind,rain) => `Wind: ${wind} km/h · Rain probability: ${rain}%`
+      }
+    };
+
+    const T = TEXT[LANG];
+
+    // UI elementleri
+    const homeLabel = document.getElementById("homeLabel");
+    const pageTitle = document.getElementById("pageTitle");
+    const pageLead  = document.getElementById("pageLead");
+    const cityInput = document.getElementById("city");
+    const destInput = document.getElementById("dest");
+    const searchBtn = document.getElementById("search");
+    const statusEl  = document.getElementById("status");
+    const mapBadge  = document.getElementById("mapBadge");
+    const planBadge = document.getElementById("planBadge");
+    const initialCard = document.getElementById("initialCard");
+
+    // Statik metinleri dile göre ayarla
+    homeLabel.textContent = T.home;
+    pageTitle.textContent = T.title;
+    pageLead.textContent  = T.lead;
+    cityInput.placeholder = T.inputCity;
+    destInput.placeholder = T.inputDest;
+    searchBtn.textContent = T.btnSearch;
+    statusEl.textContent  = T.statusReady;
+    mapBadge.textContent  = T.mapBadge;
+    planBadge.textContent = T.planBadge;
+    if(initialCard) initialCard.textContent = T.initialCard;
+
     const presets=[
       "Istanbul","Ankara","Izmir","London","Paris","Berlin","Madrid","Rome",
       "New York","Los Angeles","Chicago","Toronto","Mexico City","Sao Paulo","Buenos Aires","Rio de Janeiro",
@@ -643,21 +803,25 @@
       "Moscow","Delhi","Mumbai","Bangalore","Beijing","Shanghai","Shenzhen","Guangzhou","Seoul","Tokyo","Osaka","Bangkok","Jakarta","Singapore","Hong Kong"
     ];
     const cards=document.getElementById("cards");
-    const status=document.getElementById("status");
-    const cityInput=document.getElementById("city");
-    const destInput=document.getElementById("dest");
     const presetWrap=document.getElementById("preset");
     const routeInfo=document.getElementById("routeInfo");
     const planList=document.getElementById("planList");
 
+    const scrollChips = (delta) => {
+      if (!presetWrap) return;
+      presetWrap.scrollBy({ left: delta, behavior: "smooth" });
+    };
+
     const weatherIcons={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",51:"🌦️",61:"🌧️",71:"🌨️",80:"🌧️",95:"⛈️"};
-    const poiDb={
+
+    // Şehir-özel Türkçe ilham (sadece TR dilinde kullanacağız)
+    const poiDbTR={
       Istanbul:["Galata Kulesi","Topkapı Sarayı","Ayasofya","Sultanahmet","Karaköy","Kadıköy Çarşısı"],
       Paris:["Eiffel","Louvre","Notre Dame","Montmartre","Luxembourg Park"],
-      Tokyo:["Senso-ji","Shibuya Crossing","Meiji Shrine","Akihabara","Ueno Park"],
-      Rome:["Colosseum","Trevi","Pantheon","Vatican"],
+      Tokyo:["Senso-ji","Shibuya Crossing","Meiji Tapınağı","Akihabara","Ueno Parkı"],
+      Rome:["Kolezyum","Trevi Çeşmesi","Pantheon","Vatikan"],
       London:["Big Ben","London Eye","British Museum","Borough Market"],
-      "New York":["Central Park","Times Square","MoMA","Brooklyn Bridge"]
+      "New York":["Central Park","Times Square","MoMA","Brooklyn Köprüsü"]
     };
 
     function fmt(n){return typeof n==="number"?n.toFixed(1):n;}
@@ -669,14 +833,69 @@
       return 2*R*Math.asin(Math.sqrt(h));
     }
 
-    // Preset chipleri üret
+    // Preset chipleri
     presetWrap.innerHTML=presets.map(p=>`<span class="chip" data-city="${p}">${p}</span>`).join("");
+    presetWrap.querySelectorAll('.chip').forEach(ch => {
+      const len = ch.textContent.trim().length || 1;
+      const min = Math.max(96, len * 9);
+      ch.style.minWidth = min + 'px';
+      ch.style.padding = '9px 14px';
+    });
+
+    presetWrap.addEventListener("wheel", (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        presetWrap.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    (function initChipDrag(){
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+
+      presetWrap.addEventListener("mousedown", e => {
+        isDown = true;
+        presetWrap.classList.add("dragging");
+        startX = e.pageX - presetWrap.offsetLeft;
+        scrollLeft = presetWrap.scrollLeft;
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDown = false;
+        presetWrap.classList.remove("dragging");
+      });
+
+      presetWrap.addEventListener("mouseleave", () => {
+        isDown = false;
+        presetWrap.classList.remove("dragging");
+      });
+
+      presetWrap.addEventListener("mousemove", e => {
+        if(!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - presetWrap.offsetLeft;
+        const walk = (x - startX) * 1.4;
+        presetWrap.scrollLeft = scrollLeft - walk;
+      });
+    })();
+
+    window.addEventListener("keydown", (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        scrollChips(200);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        scrollChips(-200);
+      }
+    });
 
     presetWrap.addEventListener("click",e=>{
       const chip=e.target.closest(".chip");
       if(!chip) return;
 
-      // Aktif chip vurgusu
       presetWrap.querySelectorAll(".chip").forEach(c=>c.classList.remove("chip-active"));
       chip.classList.add("chip-active");
 
@@ -704,7 +923,6 @@
     cityInput.addEventListener("keydown",e=>{if(e.key==="Enter") loadCity(cityInput.value.trim());});
     destInput.addEventListener("keydown",e=>{if(e.key==="Enter") loadCity(cityInput.value.trim());});
 
-    // Leaflet harita
     const map=L.map("map").setView([39,35],5);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
     let markers=[];
@@ -712,7 +930,7 @@
 
     function setMarkers(points){
       markers.forEach(m=>map.removeLayer(m));
-      markers=points.map(p=>L.marker([p.lat,p.lon]).addTo(map).bindPopup(p.name||"Konum"));
+      markers=points.map(p=>L.marker([p.lat,p.lon]).addTo(map).bindPopup(p.name||T.markerDefault));
 
       if(points.length) map.fitBounds(points.map(p=>[p.lat,p.lon]),{padding:[20,20]});
       if(poly){map.removeLayer(poly);}
@@ -727,20 +945,22 @@
 
     async function loadCity(name){
       if(!name){
-        cards.innerHTML="<div class='card reveal-init reveal-visible'>Lütfen şehir yazın.</div>";
+        cards.innerHTML="<div class='card reveal-init reveal-visible'>"+T.needCity+"</div>";
         return;
       }
       try{
-        status.textContent="Yükleniyor...";
-        status.style.borderColor = "rgba(56,189,248,0.95)";
+        statusEl.textContent = T.statusLoading;
+        statusEl.style.borderColor = "rgba(56,189,248,0.95)";
 
-        const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=tr`);
+        const geoLang = LANG === "en" ? "en" : "tr";
+
+        const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=${geoLang}`);
         const geo=await geoRes.json();
         const item=geo?.results?.[0];
         if(!item){
-          cards.innerHTML="<div class='card reveal-init reveal-visible'>Şehir bulunamadı.</div>";
-          status.textContent="Hazır";
-          status.style.borderColor = "rgba(56,189,248,0.8)";
+          cards.innerHTML="<div class='card reveal-init reveal-visible'>"+T.notFound+"</div>";
+          statusEl.textContent = T.statusReady;
+          statusEl.style.borderColor = "rgba(56,189,248,0.8)";
           return;
         }
 
@@ -749,7 +969,7 @@
         let dest=null;
 
         if(destName){
-          const dRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destName)}&count=1&language=tr`);
+          const dRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destName)}&count=1&language=${geoLang}`);
           const dj=await dRes.json();
           dest=dj?.results?.[0] ? {
             lat:dj.results[0].latitude,
@@ -775,46 +995,49 @@
         const currentIcon=weatherIcons[currentCode]||"🌍";
         const todayMax=weather?.daily?.temperature_2m_max?.[0];
         const todayMin=weather?.daily?.temperature_2m_min?.[0];
-        const rainProb=weather?.daily?.precipitation_probability_max?.[0];
+        const rainProb=weather?.daily?.precipitation_probability_max?.[0] ?? "-";
+        const wind=fmt(weather?.current?.wind_speed_10m);
 
-        const pop=countryInfo?.population ? (countryInfo.population/1_000_000).toFixed(1)+"m" : "Bilinmiyor";
+        const pop=countryInfo?.population ? (countryInfo.population/1_000_000).toFixed(1)+"m" : (LANG==="en" ? "Unknown" : "Bilinmiyor");
         const currency=countryInfo?.currencies ? Object.keys(countryInfo.currencies)[0] : "-";
-        const tz=countryInfo?.timezones?.[0] || "Yerel";
+        const tz=countryInfo?.timezones?.[0] || (LANG==="en" ? "Local" : "Yerel");
 
         const budgetBase=60 + (countryInfo?.population? Math.min(countryInfo.population/5_000_000,8)*10:20);
         const budgetCards=[
-          {label:"Bütçe",val:Math.round(budgetBase*0.7)},
-          {label:"Konfor",val:Math.round(budgetBase)},
-          {label:"Lüks",val:Math.round(budgetBase*1.4)}
+          {label:T.budgetLevels[0],val:Math.round(budgetBase*0.7)},
+          {label:T.budgetLevels[1],val:Math.round(budgetBase)},
+          {label:T.budgetLevels[2],val:Math.round(budgetBase*1.4)}
         ];
-        const inspo=poiDb[city] || ["Eski şehir turu","Yerel sokak lezzetleri","Gün batımı manzarası","Müze/galeri ziyareti","Parkta yürüyüş"];
+
+        // İlham listesi: EN modunda her zaman İngilizce default, TR modunda şehir-özel Türkçe varsa onu kullan
+        const inspo = LANG==="en" ? T.defaultInspo : (poiDbTR[city] || T.defaultInspo);
 
         cards.innerHTML=`
           <div class="card floaty reveal-init">
             <div class="badge">${city}, ${country}</div>
             <h2 style="margin:8px 0 6px;font-size:22px;">${currentIcon} ${fmt(weather?.current?.temperature_2m)}°C</h2>
-            <p class="muted">Rüzgar: ${fmt(weather?.current?.wind_speed_10m)} km/s · Yağış ihtimali: ${rainProb ?? "-"}%</p>
+            <p class="muted">${T.windAndRain(wind, rainProb)}</p>
             <div class="flex" style="margin-top:10px;">
               <div class="stat">
-                <div class="muted">Bugün</div>
+                <div class="muted">${T.todayLabel}</div>
                 <strong>${fmt(todayMin)} / ${fmt(todayMax)}°C</strong>
               </div>
               <div class="stat">
-                <div class="muted">Saat dilimi</div>
+                <div class="muted">${T.tzLabel}</div>
                 <strong>${tz}</strong>
               </div>
               <div class="stat">
-                <div class="muted">Nüfus</div>
+                <div class="muted">${T.popLabel}</div>
                 <strong>${pop}</strong>
               </div>
               <div class="stat">
-                <div class="muted">Para birimi</div>
+                <div class="muted">${T.currencyLabel}</div>
                 <strong>${currency}</strong>
               </div>
             </div>
           </div>
           <div class="card reveal-init">
-            <div class="badge">Bütçe Tahmini (günlük)</div>
+            <div class="badge">${T.budgetTitle}</div>
             <div class="flex" style="margin-top:10px;">
               ${budgetCards.map(b=>`
                 <div class="stat">
@@ -823,18 +1046,17 @@
                 </div>`).join("")}
             </div>
             <p class="muted" style="margin-top:8px;font-size:12px;">
-              Tahminler şehir popülasyonu ve bölgeye göre kaba hesaplamadır.
+              ${T.budgetExplain}
             </p>
           </div>
           <div class="card reveal-init">
-            <div class="badge">İlham</div>
+            <div class="badge">${T.inspoTitle}</div>
             <div class="chips" style="margin-top:10px;">
               ${inspo.map(i=>`<span class="chip">${i}</span>`).join("")}
             </div>
           </div>
         `;
 
-        // Yeni kartlara da reveal efekti
         document.querySelectorAll('.card.reveal-init').forEach(el=>{
           el.classList.add('reveal-visible');
         });
@@ -846,33 +1068,37 @@
         if(dest){
           const km=haversine(points[0],points[1]);
           const modes=[
-            {m:"Araba",v:80},
-            {m:"Tren",v:120},
-            {m:"Uçuş",v:700},
-            {m:"Yürüyüş",v:5}
+            {m:T.car,  v:80},
+            {m:T.train,v:120},
+            {m:T.flight,v:700},
+            {m:T.walk, v:5}
           ];
-          routeInfo.textContent=`Mesafe ${km.toFixed(1)} km · ${modes.map(m=>`${m.m}: ${(km/m.v*60).toFixed(0)} dk`).join(" · ")}`;
+          routeInfo.textContent=
+            `${T.distancePrefix} ${km.toFixed(1)} km · ` +
+            modes.map(m=>`${m.m}: ${(km/m.v*60).toFixed(0)} ${T.minutesShort}`).join(" · ");
         }else{
-          routeInfo.textContent="Varış yazarsanız mesafe ve süreleri görürsünüz.";
+          routeInfo.textContent = T.noDestRouteInfo;
         }
 
         planList.innerHTML = dest
-          ? `<li>${city} - ${dest.name} arası rota çizildi. Şehir içi planı kendin seçebilirsin.</li>`
-          : "<li>Varış yazarsan rota çizilir.</li>";
+          ? `<li>${T.withDestPlan(city, dest.name)}</li>`
+          : `<li>${T.noDestPlan}</li>`;
 
-        status.textContent="Hazır";
-        status.style.borderColor = "rgba(56,189,248,0.8)";
+        statusEl.textContent  = T.statusReady;
+        statusEl.style.borderColor = "rgba(56,189,248,0.8)";
       }catch(err){
         console.error(err);
-        status.textContent="Hata";
-        status.style.borderColor = "rgba(239,68,68,0.9)";
-        cards.innerHTML="<div class='card reveal-init reveal-visible'>Veri alınamadı.</div>";
+        statusEl.textContent  = T.statusError;
+        statusEl.style.borderColor = "rgba(239,68,68,0.9)";
+        cards.innerHTML="<div class='card reveal-init reveal-visible'>"+T.fetchError+"</div>";
       }
     }
 
-    // İlk açılışta İstanbul
+    // İlk açılış: İstanbul
     loadCity("Istanbul");
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

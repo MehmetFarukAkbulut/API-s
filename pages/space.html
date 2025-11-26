@@ -24,15 +24,48 @@
       mix-blend-mode:screen;filter:blur(4px);opacity:0.75;z-index:-1;pointer-events:none;
       animation:blobA 22s ease-in-out infinite alternate;
     }
-    body::after{width:520px;height:520px;background:radial-gradient(circle at 70% 70%,rgba(168,85,247,0.33),transparent 60%);animation:blobB 26s ease-in-out infinite alternate;}
-    @keyframes blobA{0%{transform:translate3d(-20%,-10%,0) scale(1);}50%{transform:translate3d(10%,30%,0) scale(1.15);}100%{transform:translate3d(-5%,55%,0) scale(0.9);}}
-    @keyframes blobB{0%{transform:translate3d(40%,-30%,0) scale(1.1);}50%{transform:translate3d(10%,10%,0) scale(0.95);}100%{transform:translate3d(35%,40%,0) scale(1.2);}}
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;animation:fadeDown .7s ease-out forwards;opacity:0;}
-    h1{margin:0;font-size:30px;letter-spacing:0.3px;display:flex;gap:8px;align-items:center;}
-    h1::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(34,211,238,0.5),transparent);opacity:.6;}
+    body::after{
+      width:520px;height:520px;
+      background:radial-gradient(circle at 70% 70%,rgba(168,85,247,0.33),transparent 60%);
+      animation:blobB 26s ease-in-out infinite alternate;
+    }
+    @keyframes blobA{
+      0%{transform:translate3d(-20%,-10%,0) scale(1);}
+      50%{transform:translate3d(10%,30%,0) scale(1.15);}
+      100%{transform:translate3d(-5%,55%,0) scale(0.9);}
+    }
+    @keyframes blobB{
+      0%{transform:translate3d(40%,-30%,0) scale(1.1);}
+      50%{transform:translate3d(10%,10%,0) scale(0.95);}
+      100%{transform:translate3d(35%,40%,0) scale(1.2);}
+    }
+    header{
+      max-width:1100px;margin:0 auto;padding:26px 16px 10px;
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      animation:fadeDown .7s ease-out forwards;opacity:0;
+    }
+    h1{
+      margin:0;font-size:30px;letter-spacing:0.3px;
+      display:flex;gap:8px;align-items:center;
+    }
+    h1::after{
+      content:"";flex:1;height:1px;
+      background:linear-gradient(90deg,rgba(34,211,238,0.5),transparent);
+      opacity:.6;
+    }
     p.lead{margin:6px 0 0;color:var(--muted);font-size:14px;}
-    .btn{padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;cursor:pointer;transition:transform .2s,box-shadow .2s;}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.18);}
+    .btn{
+      padding:9px 12px;border-radius:10px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:rgba(34,211,238,0.12);
+      color:#7dd3fc;
+      text-decoration:none;cursor:pointer;
+      transition:transform .2s,box-shadow .2s;
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 15px 40px rgba(34,211,238,0.18);
+    }
     .panel{
       max-width:1100px;margin:0 auto 26px;padding:16px;
       border-radius:18px;border:1px solid rgba(148,163,184,0.35);
@@ -44,17 +77,83 @@
       backdrop-filter:blur(16px);position:relative;overflow:hidden;
       animation:fadeUp .8s ease-out forwards;opacity:0;
     }
-    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
-    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.6);background:#020617;color:#fff;outline:none;min-width:160px;box-shadow:0 0 0 1px rgba(15,23,42,1);transition:border-color .2s, box-shadow .2s, background .2s, transform .15s;}
-    input:focus{border-color:var(--accent);box-shadow:0 0 0 1px rgba(15,23,42,1),0 0 0 1px rgba(34,211,238,0.7),0 0 20px rgba(34,211,238,0.35);background:#020617;transform:translateY(-1px);}
-    .btn-primary{border:none;padding:10px 14px;border-radius:999px;background:linear-gradient(120deg,rgba(34,211,238,0.9),rgba(168,85,247,0.9));color:#0b1120;cursor:pointer;font-weight:600;font-size:13px;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:6px;transition:transform .2s, box-shadow .2s, filter .2s;box-shadow:0 18px 40px rgba(15,23,42,0.9),0 0 0 1px rgba(15,23,42,1);}
-    .btn-primary:hover{transform:translateY(-1px) scale(1.01);box-shadow:0 22px 50px rgba(8,47,73,0.95),0 0 0 1px rgba(15,23,42,1);filter:saturate(1.05);}
-    .card{padding:14px;border-radius:12px;border:1px solid rgba(148,163,184,0.4);background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.99));box-shadow:0 16px 40px rgba(15,23,42,0.95),0 0 0 1px rgba(15,23,42,1) inset;}
-    img.pic,iframe.pic{width:100%;border-radius:10px;margin:10px 0;min-height:320px;background:#0c1528;}
-    .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;background:rgba(15,23,42,1);border:1px solid rgba(56,189,248,0.65);color:#7dd3fc;font-size:11px;letter-spacing:0.05em;}
+    .panel > .bar{
+      flex-wrap:wrap !important;
+      overflow:visible !important;
+    }
+    .bar{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;
+    }
+    input{
+      padding:10px 12px;border-radius:10px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:#020617;color:#fff;outline:none;min-width:160px;
+      box-shadow:0 0 0 1px rgba(15,23,42,1);
+      transition:border-color .2s, box-shadow .2s, background .2s, transform .15s;
+    }
+    input:focus{
+      border-color:var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,1),
+        0 0 0 1px rgba(34,211,238,0.7),
+        0 0 20px rgba(34,211,238,0.35);
+      background:#020617;
+      transform:translateY(-1px);
+    }
+    .btn-primary{
+      border:none;
+      padding:10px 14px;
+      border-radius:999px;
+      background:linear-gradient(120deg,rgba(34,211,238,0.9),rgba(168,85,247,0.9));
+      color:#0b1120;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+      letter-spacing:0.04em;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:transform .2s, box-shadow .2s, filter .2s;
+      box-shadow:0 18px 40px rgba(15,23,42,0.9),0 0 0 1px rgba(15,23,42,1);
+    }
+    .btn-primary:hover{
+      transform:translateY(-1px) scale(1.01);
+      box-shadow:0 22px 50px rgba(8,47,73,0.95),
+                 0 0 0 1px rgba(15,23,42,1);
+      filter:saturate(1.05);
+    }
+    .card{
+      padding:14px;border-radius:12px;
+      border:1px solid rgba(148,163,184,0.4);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.99));
+      box-shadow:0 16px 40px rgba(15,23,42,0.95),
+                 0 0 0 1px rgba(15,23,42,1) inset;
+    }
+    img.pic,iframe.pic{
+      width:100%;
+      border-radius:10px;
+      margin:10px 0;
+      min-height:320px;
+      background:#0c1528;
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:4px 9px;border-radius:999px;
+      background:rgba(15,23,42,1);
+      border:1px solid rgba(56,189,248,0.65);
+      color:#7dd3fc;
+      font-size:11px;
+      letter-spacing:0.05em;
+    }
     .muted{color:var(--muted);}
-    @keyframes fadeDown{from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:translateY(0);}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes fadeDown{
+      from{opacity:0;transform:translateY(-12px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(14px);}
+      to{opacity:1;transform:translateY(0);}
+    }
   
 /* --- mobile-shared-opt --- */
 @media(max-width:768px){
@@ -65,78 +164,186 @@
     gap:8px;
     padding-bottom:6px;
   }
-  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
+  .bar::-webkit-scrollbar,
+  .chips::-webkit-scrollbar,
+  .hero-actions::-webkit-scrollbar,
+  .topbar::-webkit-scrollbar,
+  .tab-bar::-webkit-scrollbar,
+  .filter-bar::-webkit-scrollbar{display:none;}
 }
 @media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
+  *, *::before, *::after{
+    animation:none !important;
+    transition:none !important;
+    scroll-behavior:auto !important;
+  }
+}
+@media(max-width:768px){
+  .panel > .bar, .panel > .chips{
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+  }
 }
 /* --- end mobile-shared-opt --- */
 </style>
 </head>
 <body>
   <header>
-    <a class="btn" href="../index.html">Ana sayfa</a>
+    <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
     <div>
-      <h1>NASA APOD</h1>
-      <p class="lead">Gunun astronomi gorseli, tarih aramasi ve rastgele secim.</p>
+      <h1 id="pageTitle">NASA APOD</h1>
+      <p class="lead" id="pageLead">Günün astronomi görseli, tarih araması ve rastgele seçim.</p>
     </div>
   </header>
   <div class="panel">
     <div class="bar">
-      <button class="btn-primary" id="today">Bugun</button>
+      <button class="btn-primary" id="today">Bugün</button>
       <button class="btn-primary" id="random">Rastgele</button>
       <input type="date" id="date">
       <button class="btn-primary" id="byDate">Tarihe git</button>
-      <span class="badge" id="status">Hazir</span>
+      <span class="badge" id="status">Hazır</span>
     </div>
-    <div class="card" id="card">Yukleniyor...</div>
+    <div class="card" id="card">Yükleniyor...</div>
   </div>
   <script>
   (function(){
-    const KEY="QmnpDbV64sH8X3PFgCxEiCXJTXhwLYZ4ILZamF4S";
-    const card=document.getElementById("card");
-    const status=document.getElementById("status");
-    const dateInput=document.getElementById("date");
-    const today=new Date(); dateInput.max=today.toISOString().split("T")[0];
+    // Dil tercihi (TR / EN) – diğer sayfalarla aynı yapı
+    const pref = (typeof localStorage!=="undefined" && localStorage.getItem("prefLang")) || "en";
+    const lang = pref==="tr" ? "tr" : "en";
+    document.documentElement.lang = lang;
 
-    const setStatus = (txt)=> status.textContent=txt;
+    const TXT = {
+      tr:{
+        title:"NASA APOD",
+        heading:"NASA APOD",
+        lead:"Günün astronomi görseli, tarih araması ve rastgele seçim.",
+        home:"Ana sayfa",
+        today:"Bugün",
+        random:"Rastgele",
+        byDate:"Tarihe git",
+        statusReady:"Hazır",
+        statusLoading:"Yükleniyor...",
+        statusError:"Hata",
+        statusNoDate:"Tarih seçin",
+        initialCard:"Yükleniyor...",
+        noData:"Veri yok.",
+        apiError:"Veri alınamadı. API anahtarını veya tarih aralığını kontrol edin.",
+        copyrightLabel:"Hak",
+        mediaAlt:"Günün astronomi görseli"
+      },
+      en:{
+        title:"NASA APOD",
+        heading:"NASA APOD",
+        lead:"Astronomy Picture of the Day – today, date search and random picks.",
+        home:"Home",
+        today:"Today",
+        random:"Random",
+        byDate:"Go to date",
+        statusReady:"Ready",
+        statusLoading:"Loading...",
+        statusError:"Error",
+        statusNoDate:"Select a date",
+        initialCard:"Loading...",
+        noData:"No data.",
+        apiError:"Could not load data. Check API key or date range.",
+        copyrightLabel:"Credit",
+        mediaAlt:"Astronomy Picture of the Day"
+      }
+    }[lang];
+
+    // Statik metinleri güncelle
+    document.title = TXT.title;
+    const pageTitle   = document.getElementById("pageTitle");
+    const pageLead    = document.getElementById("pageLead");
+    const homeBtn     = document.getElementById("homeBtn");
+    const todayBtn    = document.getElementById("today");
+    const randomBtn   = document.getElementById("random");
+    const byDateBtn   = document.getElementById("byDate");
+    const statusEl    = document.getElementById("status");
+    const card        = document.getElementById("card");
+
+    if(pageTitle)  pageTitle.textContent  = TXT.heading;
+    if(pageLead)   pageLead.textContent   = TXT.lead;
+    if(homeBtn)    homeBtn.textContent    = TXT.home;
+    if(todayBtn)   todayBtn.textContent   = TXT.today;
+    if(randomBtn)  randomBtn.textContent  = TXT.random;
+    if(byDateBtn)  byDateBtn.textContent  = TXT.byDate;
+    if(statusEl)   statusEl.textContent   = TXT.statusReady;
+    if(card)       card.textContent       = TXT.initialCard;
+
+    const KEY="QmnpDbV64sH8X3PFgCxEiCXJTXhwLYZ4ILZamF4S";
+    const dateInput=document.getElementById("date");
+
+    const today=new Date();
+    if(dateInput){
+      dateInput.max=today.toISOString().split("T")[0];
+    }
+
+    const setStatus = (txt)=>{
+      if(statusEl) statusEl.textContent=txt;
+    };
 
     function render(data){
-      if(!data){card.innerHTML="<p>Veri yok.</p>";return;}
+      if(!data){
+        card.innerHTML=`<p class="muted">${TXT.noData}</p>`;
+        return;
+      }
       const media = data.media_type === "video"
         ? `<iframe class="pic" src="${data.url}" allowfullscreen></iframe>`
-        : `<img class="pic" src="${data.url}" alt="${data.title||""}">`;
-      card.innerHTML=`<div class="badge">${data.date||""}</div>
-        <h3>${data.title||""}</h3>
+        : `<img class="pic" src="${data.url}" alt="${data.title || TXT.mediaAlt}">`;
+
+      card.innerHTML = `
+        <div class="badge">${data.date || ""}</div>
+        <h3>${data.title || ""}</h3>
         ${media}
-        <p class="muted">${data.explanation||""}</p>
-        ${data.copyright ? `<div class="muted">Hak: ${data.copyright}</div>` : ""}`;
+        <p class="muted">${data.explanation || ""}</p>
+        ${
+          data.copyright
+            ? `<div class="muted">${TXT.copyrightLabel}: ${data.copyright}</div>`
+            : ""
+        }
+      `;
     }
 
     async function load(url){
       try{
-        setStatus("Yukleniyor...");
-        const r=await fetch(url);
-        const j=await r.json();
-        const data=Array.isArray(j)?j[0]:j;
+        setStatus(TXT.statusLoading);
+        const r = await fetch(url);
+        const j = await r.json();
+        const data = Array.isArray(j) ? j[0] : j;
         render(data);
-        setStatus("Hazir");
+        setStatus(TXT.statusReady);
       }catch(e){
-        setStatus("Hata");
-        card.innerHTML="Veri alinamadi. API anahtari ya da tarih araligini kontrol edin.";
+        console.error(e);
+        setStatus(TXT.statusError);
+        card.innerHTML = `<p class="muted">${TXT.apiError}</p>`;
       }
     }
 
     const base=`https://api.nasa.gov/planetary/apod?api_key=${KEY}`;
-    document.getElementById("today").addEventListener("click",()=>load(base));
-    document.getElementById("random").addEventListener("click",()=>load(base+"&count=1"));
-    document.getElementById("byDate").addEventListener("click",()=>{
-      const d=dateInput.value;
-      if(!d){setStatus("Tarih secin");return;}
-      load(base+`&date=${d}`);
-    });
+
+    if(todayBtn){
+      todayBtn.addEventListener("click",()=>load(base));
+    }
+    if(randomBtn){
+      randomBtn.addEventListener("click",()=>load(base+"&count=1"));
+    }
+    if(byDateBtn){
+      byDateBtn.addEventListener("click",()=>{
+        const d=dateInput.value;
+        if(!d){
+          setStatus(TXT.statusNoDate);
+          return;
+        }
+        load(base+`&date=${d}`);
+      });
+    }
+
+    // İlk yükleme: bugün
     load(base);
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

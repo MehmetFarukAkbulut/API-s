@@ -22,7 +22,6 @@
 
     *{box-sizing:border-box;}
 
-    /* Arka plan: gradient + noise + hafif glow */
     @keyframes bgShift {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
@@ -66,7 +65,6 @@
       z-index:-1;
     }
 
-    /* Yüzen şekiller (arka planda) */
     .float-orb {
       position:fixed;
       width:220px;
@@ -361,14 +359,26 @@
       100%{ box-shadow:0 0 0 0 rgba(248,113,113,0.0); }
     }
 
+    /* Şehir chip şeridi: tek satır + yatay scroll (masaüstü + mobil) + drag stili */
     .chips{
       display:flex;
       gap:8px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
       margin:10px 0 12px;
+      padding-bottom:6px;
       position:relative;
       z-index:1;
+      cursor:grab;
+      user-select:none;
     }
+    .chips.dragging{
+      cursor:grabbing;
+    }
+    .chips::-webkit-scrollbar{display:none;}
+
     .chip{
       padding:7px 11px;
       border-radius:999px;
@@ -391,6 +401,9 @@
       box-shadow:0 12px 32px rgba(15,23,42,0.9);
       position:relative;
       overflow:hidden;
+
+      flex:0 0 auto;
+      white-space:nowrap;
     }
     .chip::before{
       content:"";
@@ -454,7 +467,6 @@
       transform:translateY(0);
     }
 
-    /* Leaflet defaultleri biraz karart */
     .leaflet-control-attribution{
       background:rgba(15,23,42,0.92) !important;
       color:#9ca3af !important;
@@ -508,29 +520,29 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
-  <!-- Yüzen glow objeleri -->
   <div class="float-orb"></div>
   <div class="float-orb"></div>
   <div class="float-orb"></div>
 
   <header>
     <a class="btn-home" href="../index.html">
-      <span>← Ana sayfa</span>
+      <span>←</span>
+      <span id="homeText">Ana sayfa</span>
     </a>
     <div>
-      <h1>Harita / Konum</h1>
-      <p class="lead">Hızlı arama, konum gösterimi ve favori şehirler.</p>
+      <h1><span id="titleText">Harita / Konum</span></h1>
+      <p class="lead" id="leadText">Hızlı arama, konum gösterimi ve favori şehirler.</p>
     </div>
   </header>
 
   <div class="panel">
     <div class="bar">
       <input id="q" placeholder="Adres, şehir (örn: Berlin)">
-      <button class="btn" id="go">Bul</button>
-      <button class="btn secondary" id="geo">Konumumu bul</button>
+      <button class="btn" id="go"><span id="goText">Bul</span></button>
+      <button class="btn secondary" id="geo"><span id="geoText">Konumumu bul</span></button>
       <span id="status" class="info">Hazır</span>
     </div>
     <div class="chips" id="chips"></div>
@@ -541,6 +553,71 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
   (function(){
+    // Dil tercihini al (site geneliyle uyumlu)
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const texts = {
+      tr:{
+        pageTitle:"Harita / Konum",
+        home:"Ana sayfa",
+        heading:"Harita / Konum",
+        lead:"Hızlı arama, konum gösterimi ve favori şehirler.",
+        placeholder:"Adres, şehir (örn: Berlin)",
+        btnSearch:"Bul",
+        btnGeo:"Konumumu bul",
+        statusReady:"Hazır",
+        statusSearching:"Aranıyor...",
+        statusGeoGetting:"Konum alınıyor...",
+        statusError:"Hata oluştu",
+        statusNotFound:"Bulunamadı",
+        statusEmpty:"Lütfen bir yer yazın.",
+        statusGeoUnsupported:"Tarayıcı konum bilgisini desteklemiyor.",
+        statusGeoFailed:"Konum alınamadı",
+        currentLocation:"Mevcut konum"
+      },
+      en:{
+        pageTitle:"Map / Location",
+        home:"Home",
+        heading:"Map / Location",
+        lead:"Quick search, location display and favorite cities.",
+        placeholder:"Address, city (e.g. Berlin)",
+        btnSearch:"Search",
+        btnGeo:"Find my location",
+        statusReady:"Ready",
+        statusSearching:"Searching...",
+        statusGeoGetting:"Getting location...",
+        statusError:"Error occurred",
+        statusNotFound:"Not found",
+        statusEmpty:"Please type a place.",
+        statusGeoUnsupported:"Browser does not support geolocation.",
+        statusGeoFailed:"Could not get location",
+        currentLocation:"Current location"
+      }
+    };
+
+    const t = texts[prefLang];
+
+    // Statik metinleri uygula
+    document.title = t.pageTitle;
+    const homeText = document.getElementById("homeText");
+    const titleText = document.getElementById("titleText");
+    const leadText = document.getElementById("leadText");
+    const goText = document.getElementById("goText");
+    const geoText = document.getElementById("geoText");
+    const qEl = document.getElementById("q");
+    const status = document.getElementById("status");
+    const meta = document.getElementById("meta");
+
+    if(homeText) homeText.textContent = t.home;
+    if(titleText) titleText.textContent = t.heading;
+    if(leadText) leadText.textContent = t.lead;
+    if(goText) goText.textContent = t.btnSearch;
+    if(geoText) geoText.textContent = t.btnGeo;
+    if(qEl) qEl.placeholder = t.placeholder;
+    if(status) status.textContent = t.statusReady;
+
     const quick = [
       "Istanbul","Ankara","Izmir","London","Paris","Berlin","Madrid","Rome",
       "New York","Los Angeles","Chicago","Toronto","Mexico City","Sao Paulo","Buenos Aires","Rio de Janeiro",
@@ -549,44 +626,68 @@
     ];
 
     const chips = document.getElementById("chips");
-    const qEl = document.getElementById("q");
-    const status = document.getElementById("status");
-    const meta = document.getElementById("meta");
 
     chips.innerHTML = quick.map(c => `<span class="chip" data-city="${c}">${c}</span>`).join("");
 
     function setStatus(text, mode){
       status.textContent = text;
-
-      // animasyon renklerini class ve inline stylle güncelle
       const st = status;
-      st.classList.remove("status-warn","status-err");
-      st.style.color = "var(--muted)";
-      const before = st;
 
       if(mode === "search"){
         st.style.color = "#eab308";
-        before.style.setProperty("--status-color","#eab308");
         st.style.animation = "pulseWarn 1.4s ease-out infinite";
       } else if(mode === "error"){
         st.style.color = "#fca5a5";
-        before.style.setProperty("--status-color","#ef4444");
         st.style.animation = "pulseErr 1.4s ease-out infinite";
       } else {
         st.style.color = "var(--muted)";
-        before.style.setProperty("--status-color","#22c55e");
         st.style.animation = "pulseOk 1.6s ease-out infinite";
       }
     }
 
+    // Chip click
     chips.addEventListener("click", e => {
-      const c = e.target.dataset.city;
+      const chipEl = e.target.closest(".chip");
+      if(!chipEl) return;
+      const c = chipEl.dataset.city;
       if(!c) return;
       qEl.value = c;
       document.querySelectorAll(".chip").forEach(ch => ch.classList.remove("active"));
-      e.target.classList.add("active");
+      chipEl.classList.add("active");
       search(c);
     });
+
+    // PC için drag-scroll (mouse ile yana kaydırma)
+    (function initChipDrag(){
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+
+      chips.addEventListener("mousedown", e => {
+        isDown = true;
+        chips.classList.add("dragging");
+        startX = e.pageX - chips.offsetLeft;
+        scrollLeft = chips.scrollLeft;
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDown = false;
+        chips.classList.remove("dragging");
+      });
+
+      chips.addEventListener("mouseleave", () => {
+        isDown = false;
+        chips.classList.remove("dragging");
+      });
+
+      chips.addEventListener("mousemove", e => {
+        if(!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - chips.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        chips.scrollLeft = scrollLeft - walk;
+      });
+    })();
 
     const map = L.map("map", {
       zoomControl:true
@@ -598,31 +699,39 @@
 
     let marker = L.marker([39,35]).addTo(map);
 
+    // Open-Meteo geocoding
+    async function geocode(term){
+      const res = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=1&language=${encodeURIComponent(prefLang)}`
+      );
+      const j = await res.json();
+      return j?.results?.[0] || null;
+    }
+
     async function search(term){
       if(!term){
-        setStatus("Lütfen bir yer yazın.","error");
+        setStatus(t.statusEmpty,"error");
         return;
       }
-      setStatus("Aranıyor...","search");
+      setStatus(t.statusSearching,"search");
       meta.classList.remove("show");
       try{
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&limit=1`);
-        const data = await res.json();
-        if(!data.length){
-          setStatus("Bulunamadı","error");
+        const place = await geocode(term);
+        if(!place){
+          setStatus(t.statusNotFound,"error");
           return;
         }
-        const place = data[0];
-        const lat = Number(place.lat), lon = Number(place.lon);
+        const lat = Number(place.latitude);
+        const lon = Number(place.longitude);
+
         marker.setLatLng([lat,lon]);
-        // daha smooth zoom
         map.flyTo([lat,lon], 13, { duration: 1.2 });
-        meta.textContent = place.display_name;
+        meta.textContent = `${place.name}${place.country ? ", " + place.country : ""}`;
         meta.classList.add("show");
-        setStatus("Hazır","ok");
+        setStatus(t.statusReady,"ok");
       }catch(err){
         console.error(err);
-        setStatus("Hata oluştu","error");
+        setStatus(t.statusError,"error");
       }
     }
 
@@ -638,24 +747,23 @@
 
     document.getElementById("geo").addEventListener("click", () => {
       if(!navigator.geolocation){
-        setStatus("Tarayıcı desteklemiyor","error");
+        setStatus(t.statusGeoUnsupported,"error");
         return;
       }
-      setStatus("Konum alınıyor...","search");
+      setStatus(t.statusGeoGetting,"search");
       meta.classList.remove("show");
       navigator.geolocation.getCurrentPosition(pos => {
         const { latitude, longitude } = pos.coords;
         marker.setLatLng([latitude,longitude]);
         map.flyTo([latitude,longitude], 13, { duration: 1.2 });
-        meta.textContent = "Mevcut konum";
+        meta.textContent = t.currentLocation;
         meta.classList.add("show");
-        setStatus("Hazır","ok");
+        setStatus(t.statusReady,"ok");
       }, () => {
-        setStatus("Konum alınamadı","error");
+        setStatus(t.statusGeoFailed,"error");
       });
     });
 
-    // Arka plan mouse parallax
     document.addEventListener("mousemove", e => {
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
@@ -663,12 +771,13 @@
       document.documentElement.style.setProperty("--my", y + "%");
     });
 
-    // İlk açılış animasyonu
     window.addEventListener("load", () => {
       document.body.classList.add("ready");
-      setStatus("Hazır","ok");
+      setStatus(t.statusReady,"ok");
     });
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

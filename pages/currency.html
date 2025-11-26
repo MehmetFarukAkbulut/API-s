@@ -124,6 +124,10 @@
       overflow:hidden;
       backdrop-filter:blur(16px);
     }
+    .panel > .bar{
+      flex-wrap:wrap !important;
+      overflow:visible !important;
+    }
     .panel::before{
       content:"";
       position:absolute;
@@ -434,15 +438,18 @@
   <div class="orb orb-b"></div>
 
   <header>
-    <h1><span class="spark"></span>Kur / Döviz</h1>
-    <p class="lead">Frankfurter API ile baz kur, tarih ve miktar dönüştürme.</p>
+    <h1>
+      <span class="spark"></span>
+      <span id="titleText">Kur / Döviz</span>
+    </h1>
+    <p class="lead" id="leadText">Frankfurter API ile baz kur, tarih ve miktar dönüştürme.</p>
     <div class="header-bar"></div>
   </header>
 
   <div class="panel">
     <div class="bar">
-      <a class="btn" href="../index.html">
-        Ana Sayfa
+      <a class="btn" href="../index.html" id="homeBtn">
+        <span id="homeBtnText">Ana Sayfa</span>
       </a>
       <select id="base">
         <option>USD</option>
@@ -456,15 +463,15 @@
       <input type="date" id="date">
       <input type="number" id="amt" value="100" min="1" step="1" placeholder="Miktar">
       <button class="btn" id="go">
-        <span>▶</span><span>Hesapla</span>
+        <span>▶</span><span id="goText">Hesapla</span>
       </button>
       <span class="status badge" id="status">Hazır</span>
     </div>
 
     <div class="bar">
-      <button class="btn btn-range" data-range="1g">1G</button>
-      <button class="btn btn-range" data-range="5g">5G</button>
-      <button class="btn btn-range" data-range="1m">1 Ay</button>
+      <button class="btn btn-range" data-range="1g" id="btnRange1">1G</button>
+      <button class="btn btn-range" data-range="5g" id="btnRange5">5G</button>
+      <button class="btn btn-range" data-range="1m" id="btnRangeM">1 Ay</button>
     </div>
 
     <div id="result" class="card" style="animation-delay:0s;">
@@ -476,6 +483,84 @@
 
   <script>
   (function(){
+    // Dil tercihi (tr / en) – diğer sayfalarla uyumlu
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const texts = {
+      tr: {
+        pageTitle: "Kur / Döviz",
+        heading: "Kur / Döviz",
+        lead: "Frankfurter API ile baz kur, tarih ve miktar dönüştürme.",
+        home: "Ana Sayfa",
+        go: "Hesapla",
+        statusReady: "Hazır",
+        statusLoading: "Yükleniyor...",
+        statusError: "Hata",
+        baseLabel: "Baz",
+        dateLabel: "Tarih",
+        mainBadge: "Kur Bilgisi",
+        totalLabel: "Toplam kur",
+        mainSub: "Seçilen baz kura göre tüm karşı para birimlerinin son değerleri listelenmiştir.",
+        errorText: "Veri alınamadı. Lütfen bağlantıyı veya tarihi kontrol edin.",
+        placeholderAmount: "Miktar",
+        range: {
+          "1g": "1G",
+          "5g": "5G",
+          "1m": "1 Ay"
+        },
+        compareDatePrefix: "Önceki",
+        compareLabel: (refDate) => refDate + " itibarıyla"
+      },
+      en: {
+        pageTitle: "FX / Currencies",
+        heading: "FX / Currencies",
+        lead: "Base currency, date and amount conversion via Frankfurter API.",
+        home: "Home",
+        go: "Calculate",
+        statusReady: "Ready",
+        statusLoading: "Loading...",
+        statusError: "Error",
+        baseLabel: "Base",
+        dateLabel: "Date",
+        mainBadge: "Rates",
+        totalLabel: "Total pairs",
+        mainSub: "All target currencies relative to the selected base are listed with latest values.",
+        errorText: "Failed to fetch data. Please check your connection or date.",
+        placeholderAmount: "Amount",
+        range: {
+          "1g": "1D",
+          "5g": "5D",
+          "1m": "1M"
+        },
+        compareDatePrefix: "Previous",
+        compareLabel: (refDate) => "Ref: " + refDate
+      }
+    };
+
+    const t = texts[prefLang];
+
+    // Statik metinleri uygula
+    document.title = t.pageTitle;
+    const titleText = document.getElementById("titleText");
+    const leadText = document.getElementById("leadText");
+    const homeBtnText = document.getElementById("homeBtnText");
+    const goText = document.getElementById("goText");
+    const amtInput = document.getElementById("amt");
+    const btnRange1 = document.getElementById("btnRange1");
+    const btnRange5 = document.getElementById("btnRange5");
+    const btnRangeM = document.getElementById("btnRangeM");
+
+    if(titleText) titleText.textContent = t.heading;
+    if(leadText) leadText.textContent = t.lead;
+    if(homeBtnText) homeBtnText.textContent = t.home;
+    if(goText) goText.textContent = t.go;
+    if(amtInput) amtInput.placeholder = t.placeholderAmount;
+    if(btnRange1) btnRange1.textContent = t.range["1g"];
+    if(btnRange5) btnRange5.textContent = t.range["5g"];
+    if(btnRangeM) btnRangeM.textContent = t.range["1m"];
+
     const baseEl = document.getElementById("base");
     const dateEl = document.getElementById("date");
     const amtEl = document.getElementById("amt");
@@ -490,16 +575,26 @@
     dateEl.max = isoToday;
 
     function friendly(code){
-      const map={
+      const mapEn = {
         USD:"US Dollar",
         EUR:"Euro",
         TRY:"Turkish Lira",
-        GBP:"Pound",
+        GBP:"Pound Sterling",
         CHF:"Swiss Franc",
         CAD:"Canadian Dollar",
         AUD:"Australian Dollar"
       };
-      return map[code] || code;
+      const mapTr = {
+        USD:"ABD Doları",
+        EUR:"Euro",
+        TRY:"Türk Lirası",
+        GBP:"İngiliz Sterlini",
+        CHF:"İsviçre Frangı",
+        CAD:"Kanada Doları",
+        AUD:"Avustralya Doları"
+      };
+      const m = prefLang === "tr" ? mapTr : mapEn;
+      return m[code] || code;
     }
 
     async function fetchRates(base,date){
@@ -520,16 +615,16 @@
     }
 
     function setStatusLoading(){
-      status.textContent = "Yükleniyor...";
+      status.textContent = t.statusLoading;
       status.classList.add("is-loading");
       status.classList.remove("is-error");
     }
     function setStatusReady(){
-      status.textContent = "Hazır";
+      status.textContent = t.statusReady;
       status.classList.remove("is-loading","is-error");
     }
     function setStatusError(){
-      status.textContent = "Hata";
+      status.textContent = t.statusError;
       status.classList.remove("is-loading");
       status.classList.add("is-error");
     }
@@ -550,7 +645,7 @@
         activateRangeButton(range || "");
         // küçük skeleton etkisi
         resEl.innerHTML = `
-          <div class="badge"><span class="badge-dot"></span><span>Kur Bilgisi</span></div>
+          <div class="badge"><span class="badge-dot"></span><span>${t.mainBadge}</span></div>
           <div class="skeleton" style="width:55%;margin-top:8px;"></div>
         `;
         ratesEl.innerHTML = "";
@@ -575,15 +670,15 @@
           <div class="card-header">
             <div class="badge">
               <span class="badge-dot"></span>
-              <span>Baz: ${base}</span>
+              <span>${t.baseLabel}: ${base}</span>
             </div>
-            <span class="muted">Tarih: ${date || j.date || ""}</span>
+            <span class="muted">${t.dateLabel}: ${date || j.date || ""}</span>
           </div>
           <div class="card-main">
-            Toplam kur: <span class="num-anim">${Object.keys(rates).length}</span>
+            ${t.totalLabel}: <span class="num-anim">${Object.keys(rates).length}</span>
           </div>
           <div class="card-sub">
-            Seçilen baz kura göre tüm karşı para birimlerinin son değerleri listelenmiştir.
+            ${t.mainSub}
           </div>
         `;
 
@@ -599,9 +694,10 @@
             const arrow = diff >= 0 ? "↑" : "↓";
             const color = diff >= 0 ? "var(--success)" : "var(--danger)";
             deltaColor = color;
+            const labelText = t.compareLabel(refDateLabel);
             deltaHtml = `
               <div class="change-line" style="color:${color}">
-                ${refDateLabel}: ${refRates[k].toFixed(4)} | ${arrow} ${perc}%
+                ${labelText}: ${refRates[k].toFixed(4)} | ${arrow} ${perc}%
               </div>
             `;
           }
@@ -638,7 +734,7 @@
         setStatusError();
         resEl.innerHTML = `
           <div class="card-main" style="color:var(--danger);">
-            Veri alınamadı. Lütfen bağlantıyı veya tarihi kontrol edin.
+            ${t.errorText}
           </div>
         `;
         ratesEl.innerHTML = "";
@@ -655,8 +751,13 @@
       });
     });
 
+    // Başlangıçta "hazır" metnini de dillere göre düzelt
+    status.textContent = t.statusReady;
+
     run(null);
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8">
@@ -611,35 +611,35 @@
       .chart-inner{padding:12px 10px 8px;}
       .chart-svg-wrap svg{height:150px;}
     }
-  
-/* --- mobile-shared-opt --- */
-@media(max-width:768px){
-  .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
-    flex-wrap:nowrap !important;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    gap:8px;
-    padding-bottom:6px;
-  }
-  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
-}
-@media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
-}
-/* --- end mobile-shared-opt --- */
-</style>
+
+    /* Mobilde sağa kaymayı engelle – butonlar alta sarılsın */
+    @media (max-width:768px){
+      .bar{
+        flex-wrap:wrap;
+        overflow:visible;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation:none !important;
+        transition:none !important;
+        scroll-behavior:auto !important;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
 
   <header style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;position:relative;z-index:2;">
-    <a class="home-link" href="../index.html">
-      <span>◀</span><span>Ana sayfa</span>
+    <a class="home-link" href="../index.html" id="homeLink">
+      <span>◀</span><span id="homeText">Ana sayfa</span>
     </a>
     <div>
-      <h1>TCMB Kurları</h1>
-      <p class="lead">Güncel ve tarih bazlı kur verileri, TL miktarı ile birlikte; 1G / 7G / 1A değişim karşılaştırmaları.</p>
+      <h1 id="headerTitle">TCMB Kurları</h1>
+      <p class="lead" id="headerLead">Güncel ve tarih bazlı kur verileri, TL miktarı ile birlikte; 1G / 7G / 1A değişim karşılaştırmaları.</p>
     </div>
   </header>
 
@@ -650,16 +650,16 @@
           <input type="date" id="dateInput">
         </div>
         <div class="input-shell">
-          <input type="number" id="amountInput" value="1000" min="1" step="1" placeholder="TL miktarı">
+          <input type="number" id="amountInput" value="1" min="1" step="1" placeholder="TL miktarı">
         </div>
         <button class="btn btn-primary" id="btnLatest"><span>Güncel</span></button>
         <button class="btn" id="btnFetch"><span>Ara</span></button>
 
         <div style="flex:1 1 auto"></div>
 
-        <button class="btn btn-compare" data-days="1" id="btn1g"><span>1G Değişim</span></button>
-        <button class="btn btn-compare" data-days="7" id="btn7g"><span>7G Değişim</span></button>
-        <button class="btn btn-compare" data-days="30" id="btn30g"><span>1A Değişim</span></button>
+        <button class="btn btn-compare" data-days="1" id="btn1g"><span>1 Gün</span></button>
+        <button class="btn btn-compare" data-days="7" id="btn7g"><span>7 Gün</span></button>
+        <button class="btn btn-compare" data-days="30" id="btn30g"><span>1 Ay</span></button>
 
         <span class="badge badge-muted" id="status">
           <span class="status-dot"></span>
@@ -691,9 +691,77 @@
 
   <script>
   (function(){
-    const obf = "aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9NZWhtZXRGYXJ1a0FrYnVsdXQvNWViNGY4MjhlMGJiMTczZWNjNTljZTE1OWVhYTE5ZDMvcmF3L3RjbWIuanNvbg==";
-    const TCMB_URL = (typeof window !== "undefined" && window.__TCMB_JSON_URL__) || atob(obf);
+    // Dil tercihi
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
 
+    const texts = {
+      tr: {
+        pageTitle: "MFA TCMB Widget",
+        home: "Ana sayfa",
+        headerTitle: "TCMB Kurları",
+        headerLead: "Güncel ve tarih bazlı kur verileri, TL miktarı ile birlikte; 1G / 7G / 1A değişim karşılaştırmaları.",
+        latestBtn: "Güncel",
+        fetchBtn: "Ara",
+        amountPlaceholder: "TL miktarı",
+        cmp1: "1 Gün",
+        cmp7: "7 Gün",
+        cmp30: "1 Ay",
+        chipChart: "Son 30G Grafik",
+        statusReady: "Hazır",
+        statusLoading: "Yükleniyor...",
+        statusError: "Hata",
+        noData: "Veri yok",
+        fetchError: "Veri alınamadı.",
+        dateLabelPrefix: "",
+        convLabel: (amountStr) => `${amountStr} TL karşılığı`,
+        labelBid: "Alış",
+        labelAsk: "Satış",
+        changeWord: "DEĞİŞİM",
+        chartSubtitleSuffix: "Son 30 Günlük Hareket",
+        chartPointsLabel: "Nokta sayısı",
+        chartNoData: "Grafik için veri yok.",
+        chartNoDataMeta: "Veri yok",
+        chartMetaRange: (from,to,count) => `${from} → ${to} · Nokta sayısı: ${count}`
+      },
+      en: {
+        pageTitle: "MFA CBRT FX Widget",
+        home: "Home",
+        headerTitle: "CBRT Exchange Rates",
+        headerLead: "Latest and historical FX rates with TRY amount; 1D / 7D / 1M change comparisons.",
+        latestBtn: "Latest",
+        fetchBtn: "Search",
+        amountPlaceholder: "Amount in TRY",
+        cmp1: "1 Day",
+        cmp7: "7 Days",
+        cmp30: "1 Month",
+        chipChart: "Last 30D Chart",
+        statusReady: "Ready",
+        statusLoading: "Loading...",
+        statusError: "Error",
+        noData: "No data",
+        fetchError: "Data could not be retrieved.",
+        dateLabelPrefix: "",
+        convLabel: (amountStr) => `Value of ${amountStr} TRY`,
+        labelBid: "Bid",
+        labelAsk: "Ask",
+        changeWord: "CHANGE",
+        chartSubtitleSuffix: "Last 30 Days Movement",
+        chartPointsLabel: "Points",
+        chartNoData: "No data for chart.",
+        chartNoDataMeta: "No data",
+        chartMetaRange: (from,to,count) => `${from} → ${to} · Points: ${count}`
+      }
+    };
+    const t = texts[prefLang];
+
+    document.title = t.pageTitle;
+
+    // UI eleman referansları
+    const homeText = document.getElementById("homeText");
+    const headerTitle = document.getElementById("headerTitle");
+    const headerLead = document.getElementById("headerLead");
     const dateInput = document.getElementById("dateInput");
     const amountInput = document.getElementById("amountInput");
     const cards = document.getElementById("cards");
@@ -713,13 +781,38 @@
     const chartSvgWrap = document.getElementById("chartSvgWrap");
     const chartList = document.getElementById("chartList");
 
+    // Statik metinleri uygula
+    if(homeText) homeText.textContent = t.home;
+    if(headerTitle) headerTitle.textContent = t.headerTitle;
+    if(headerLead) headerLead.textContent = t.headerLead;
+    if(btnLatest) btnLatest.querySelector("span").textContent = t.latestBtn;
+    if(btnFetch) btnFetch.querySelector("span").textContent = t.fetchBtn;
+    if(amountInput) amountInput.placeholder = t.amountPlaceholder;
+    if(btn1g) btn1g.querySelector("span").textContent = t.cmp1;
+    if(btn7g) btn7g.querySelector("span").textContent = t.cmp7;
+    if(btn30g) btn30g.querySelector("span").textContent = t.cmp30;
+    if(status) status.lastChild.textContent = " " + t.statusReady;
+
+    // TCMB URL (obfuscated)
+    const obf = "aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9NZWhtZXRGYXJ1a0FrYnVsdXQvNWViNGY4MjhlMGJiMTczZWNjNTljZTE1OWVhYTE5ZDMvcmF3L3RjbWIuanNvbg==";
+    const TCMB_URL = (typeof window !== "undefined" && window.__TCMB_JSON_URL__) || atob(obf);
+
     const CODES = ["USD","EUR","GBP","CHF","CAD","AUD","DKK","SEK","NOK","SAR","JPY","BGN","RON","RUB","CNY","PKR","QAR"];
-    const NAMES = {
-      USD:"ABD DOLARI", EUR:"EURO", GBP:"İNGİLİZ STERLİNİ", CHF:"İSVİÇRE FRANGI",
-      CAD:"KANADA DOLARI", AUD:"AVUSTRALYA DOLARI", DKK:"DANİMARKA KRONU", SEK:"İSVEÇ KRONU",
-      NOK:"NORVEÇ KRONU", SAR:"SUUDİ RİYALİ", JPY:"JAPON YENİ", BGN:"BULGAR LEVASI",
-      RON:"RUMEN LEYİ", RUB:"RUS RUBLESİ", CNY:"ÇİN YUANI", PKR:"PAKİSTAN RUPİSİ", QAR:"KATAR RİYALİ"
+    const NAMES_TR = {
+      USD:'ABD DOLARI', EUR:'EURO', GBP:'İNGİLİZ STERLİNİ', CHF:'İSVİÇRE FRANGI',
+      CAD:'KANADA DOLARI', AUD:'AVUSTRALYA DOLARI', DKK:'DANİMARKA KRONU', SEK:'İSVEÇ KRONU',
+      NOK:'NORVEÇ KRONU', SAR:'SUUDİ RİYALİ', JPY:'JAPON YENİ', BGN:'BULGAR LEVASI',
+      RON:'RUMEN LEYİ', RUB:'RUS RUBLESİ', CNY:'ÇİN YUANI', PKR:'PAKİSTAN RUPİSİ',
+      QAR:'KATAR RİYALİ'
     };
+    const NAMES_EN = {
+      USD:'US DOLLAR', EUR:'EURO', GBP:'BRITISH POUND', CHF:'SWISS FRANC',
+      CAD:'CANADIAN DOLLAR', AUD:'AUSTRALIAN DOLLAR', DKK:'DANISH KRONE', SEK:'SWEDISH KRONA',
+      NOK:'NORWEGIAN KRONE', SAR:'SAUDI RIYAL', JPY:'JAPANESE YEN', BGN:'BULGARIAN LEV',
+      RON:'ROMANIAN LEU', RUB:'RUSSIAN RUBLE', CNY:'CHINESE YUAN', PKR:'PAKISTANI RUPEE',
+      QAR:'QATARI RIYAL'
+    };
+    const NAMES = prefLang==='tr' ? NAMES_TR : NAMES_EN;
 
     let allRows = [];
     let loaded = false;
@@ -748,7 +841,7 @@
     }
 
     function parseTarih(t){
-      // TARIH: "dd-mm-yyyy" veya "yyyy-mm-dd"
+      // "dd-mm-yyyy" veya "yyyy-mm-dd"
       const parts = t.split("-").map(Number);
       if(parts[0]>1900){
         return new Date(parts[0],parts[1]-1,parts[2]);
@@ -768,7 +861,6 @@
     }
 
     function findRecordForTargetDate(targetTarih){
-      // targetTarih: "dd-mm-yyyy" veya null -> son kayıt
       if(!allRows.length) return null;
       if(!targetTarih) return allRows[allRows.length-1];
 
@@ -807,28 +899,34 @@
     async function ensureData(){
       if(loaded) return;
       try{
-        setStatus("Yükleniyor...", "loading");
+        setStatus(t.statusLoading, "loading");
         const res = await fetch(TCMB_URL);
         const rows = await res.json();
         sortRowsOnce(rows);
         allRows = rows;
         loaded = true;
-        setStatus("Hazır", null);
+        setStatus(t.statusReady, null);
       }catch(e){
         console.error(e);
-        setStatus("Hata", "error");
-        cards.innerHTML = "<div class='card'><div>Veri alınamadı.</div></div>";
+        setStatus(t.statusError, "error");
+        cards.innerHTML = `<div class='card'><div>${t.fetchError}</div></div>`;
       }
     }
 
     function getCompareLabel(days){
-      if(days===1) return "1G";
-      if(days===7) return "7G";
-      if(days===30) return "1A";
+      if(prefLang==="tr"){
+        if(days===1) return "1G";
+        if(days===7) return "7G";
+        if(days===30) return "1A";
+      }else{
+        if(days===1) return "1D";
+        if(days===7) return "7D";
+        if(days===30) return "1M";
+      }
       return "";
     }
 
-    function setCompareWindow(days){
+    function setCompareWindowFn(days){
       compareWindow = days;
       [btn1g,btn7g,btn30g].forEach(btn=>{
         btn.classList.toggle("active", Number(btn.dataset.days)===days);
@@ -840,17 +938,20 @@
 
     function render(rec){
       if(!rec){
-        cards.innerHTML="<div class='card'><div>Veri yok</div></div>";
+        cards.innerHTML=`<div class='card'><div>${t.noData}</div></div>`;
         return;
       }
 
       const amount = parseFloat(amountInput.value)||1000;
+      const locale = prefLang==="tr" ? "tr-TR" : "en-US";
+      const amountStr = amount.toLocaleString(locale);
+
       resultDate.innerHTML = `
         <span class="status-dot"></span>
-        <span>${rec.TARIH || "-"}</span>
+        <span>${t.dateLabelPrefix}${rec.TARIH || "-"}</span>
       `;
 
-      const label = compareWindow ? getCompareLabel(compareWindow) : null;
+      const labelCode = compareWindow ? getCompareLabel(compareWindow) : null;
 
       let html = "";
       CODES.forEach(code=>{
@@ -867,25 +968,26 @@
             const prevSell = parseFloat(cmpRec[code+"_SATIS"]||"0");
             if(prevSell){
               const diff = sell - prevSell;
+              const labelWord = t.changeWord;
               if(diff>0){
                 changeHtml = `
                   <div class="change change-up">
-                    <span class="change-label">${label} DEĞİŞİM</span>
+                    <span class="change-label">${labelCode} ${labelWord}</span>
                     <span class="arrow">↑</span>
                     <span>${diff.toFixed(4)}</span>
                   </div>`;
               }else if(diff<0){
                 changeHtml = `
                   <div class="change change-down">
-                    <span class="change-label">${label} DEĞİŞİM</span>
+                    <span class="change-label">${labelCode} ${labelWord}</span>
                     <span class="arrow">↓</span>
                     <span>${diff.toFixed(4)}</span>
                   </div>`;
               }else{
                 changeHtml = `
                   <div class="change change-flat">
-                    <span class="change-label">${label} DEĞİŞİM</span>
-                    <span>- 0.0000</span>
+                    <span class="change-label">${labelCode} ${labelWord}</span>
+                    <span>0.0000</span>
                   </div>`;
               }
             }
@@ -901,21 +1003,21 @@
               </div>
               <div class="card-chip">
                 <span class="card-chip-dot"></span>
-                <span>Son 30G Grafik</span>
+                <span>${t.chipChart}</span>
               </div>
             </div>
             <div class="rates">
               <div>
-                <span class="label">Alış</span>
+                <span class="label">${t.labelBid}</span>
                 <div>${buy.toFixed(4)}</div>
               </div>
               <div>
-                <span class="label">Satış</span>
+                <span class="label">${t.labelAsk}</span>
                 <div>${sell.toFixed(4)}</div>
               </div>
             </div>
             <div class="conversion">
-              <span>${amount.toLocaleString("tr-TR")} TL karşılığı</span>
+              <span>${t.convLabel(amountStr)}</span>
               <span class="conversion-amount">≈ ${conv} ${code}</span>
             </div>
             ${changeHtml}
@@ -941,7 +1043,7 @@
       if(!allRows.length || !currentRecord) return;
 
       const baseDate = parseTarih(currentRecord.TARIH);
-      const maxBackDays = 60; // 30+ buffer; sadece mevcut veri bağlanacak
+      const maxBackDays = 60;
       const startDate = new Date(baseDate.getTime() - maxBackDays*24*60*60*1000);
 
       const series = [];
@@ -954,24 +1056,23 @@
         series.push({date:d, tarih:r.TARIH, value:sell});
       }
       if(!series.length){
-        chartSvgWrap.innerHTML = "<div style='font-size:12px;color:var(--muted);'>Grafik için yeterli veri bulunamadı.</div>";
+        chartSvgWrap.innerHTML = `<div style='font-size:12px;color:var(--muted);'>${t.chartNoData}</div>`;
         chartList.innerHTML = "";
         chartTitle.textContent = code + "/TRY";
         chartSubtitle.textContent = NAMES[code] || code;
-        chartMeta.textContent = "Veri bulunamadı";
+        chartMeta.textContent = t.chartNoDataMeta;
         chartPanel.classList.add("show");
         return;
       }
-      // tarihe göre sırala
       series.sort((a,b)=>a.date-b.date);
 
       chartTitle.textContent = code + "/TRY";
-      chartSubtitle.textContent = (NAMES[code]||code) + " · Son 30 Günlük Hareket";
+      chartSubtitle.textContent = (NAMES[code]||code) + " · " + t.chartSubtitleSuffix;
       const first = series[0];
       const last = series[series.length-1];
-      chartMeta.textContent = `${first.tarih} → ${last.tarih} · Nokta sayısı: ${series.length}`;
+      chartMeta.textContent = t.chartMetaRange(first.tarih, last.tarih, series.length);
 
-      // SVG için min/max
+      // SVG min/max
       let min = series[0].value;
       let max = series[0].value;
       for(const p of series){
@@ -981,10 +1082,10 @@
       const range = (max-min) || 1;
 
       const points = series.map((p,idx)=>{
-        const t = series.length===1 ? 0 : idx/(series.length-1);
-        const x = 5 + t*90;
+        const tVal = series.length===1 ? 0 : idx/(series.length-1);
+        const x = 5 + tVal*90;
         const norm = (p.value-min)/range;
-        const y = 90 - norm*70; // 10-80 arası
+        const y = 90 - norm*70;
         return {x,y};
       });
 
@@ -1005,7 +1106,7 @@
       `;
       chartSvgWrap.innerHTML = svg;
 
-      // Liste – günlük değişimler, alçalış yeşil, çıkış kırmızı
+      // Liste – günlük değişimler
       let listHtml = "";
       for(let i=0;i<series.length;i++){
         const p = series[i];
@@ -1048,7 +1149,7 @@
           [btn1g,btn7g,btn30g].forEach(b=>b.classList.remove("active"));
           if(currentRecord) render(currentRecord);
         }else{
-          setCompareWindow(days);
+          setCompareWindowFn(days);
         }
       });
     });
@@ -1085,5 +1186,8 @@
     loadForCurrentDate();
   })();
   </script>
+  <script src='../lang-helper.js'></script>
+  <script src='../scroll-helper.js'></script>
+  <script src='../page-lang.js'></script>
 </body>
 </html>

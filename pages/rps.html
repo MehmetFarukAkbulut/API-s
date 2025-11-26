@@ -238,10 +238,10 @@
 </head>
 <body>
   <header>
-    <a class="btn" href="../index.html">Ana sayfa</a>
+    <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
     <div>
-      <h1>RPS-25</h1>
-      <p class="lead">
+      <h1 id="pageTitle">RPS-25</h1>
+      <p class="lead" id="pageLead">
         Tamamen lokal, 25 hamleli taş-kâğıt-makas varyasyonu. Her hamle kendisinden sonraki 12 hamleyi yener.
       </p>
     </div>
@@ -249,7 +249,9 @@
 
   <div class="panel">
     <div class="score">
-      <span class="badge">Kurallar: Dairedeki sıraya göre her hamle sonraki 12 hamleyi yener.</span>
+      <span class="badge" id="ruleBadge">
+        Kurallar: Dairedeki sıraya göre her hamle sonraki 12 hamleyi yener.
+      </span>
       <span class="badge" id="status">Hamle seç, rakip rastgele.</span>
     </div>
 
@@ -269,7 +271,7 @@
         </div>
       </div>
       <div class="battle-meta" id="battleMeta">
-        <span>Seçim yap ve çarpışmayı izle.</span>
+        <span id="battleHint">Seçim yap ve çarpışmayı izle.</span>
         <span id="battleResult"></span>
       </div>
     </div>
@@ -282,7 +284,79 @@
 
   <script>
   (function(){
-    // Başlangıçta görünen avatarlar – buraya kendi URL'lerini yazabilirsin.
+    // Dil tercihi
+    const pref = (typeof localStorage!=="undefined" && localStorage.getItem("prefLang")) || "en";
+    const lang = pref==="tr" ? "tr" : "en";
+    document.documentElement.lang = lang;
+
+    const TXT = {
+      tr:{
+        title:"RPS-25 (Lokal)",
+        heading:"RPS-25",
+        home:"Ana sayfa",
+        lead:"Tamamen lokal, 25 hamleli taş-kâğıt-makas varyasyonu. Her hamle kendisinden sonraki 12 hamleyi yener.",
+        ruleBadge:"Kurallar: Dairedeki sıraya göre her hamle sonraki 12 hamleyi yener.",
+        statusIdle:"Hamle seç, rakip rastgele.",
+        statusAfter:"Çarpışma tamamlandı, yeni hamle seç.",
+        battleHint:"Seçim yap ve çarpışmayı izle.",
+        resultWaiting:"Sonuç bekleniyor...",
+        you:"Sen",
+        cpu:"Rakip",
+        drawShort:"Berabere!",
+        winShort:"Kazandın!",
+        loseShort:"Kaybettin.",
+        drawVerbose:"Berabere! İki sembol birbirini durdurdu.",
+        battleWinMid:"hamlesini parçaladı.",
+        battleLoseMid:"üstün geldi;",
+        battleLoseEnd:"yere serildi.",
+        methodText:"Yöntem: Dairede her hamle kendisinden sonraki 12 hamleyi yener, önceki 12 hamleye yenilir."
+      },
+      en:{
+        title:"RPS-25 (Local)",
+        heading:"RPS-25",
+        home:"Home",
+        lead:"Fully local 25-move rock–paper–scissors variant. Each move defeats the next 12 moves in the circle.",
+        ruleBadge:"Rules: In the circle, each move beats the next 12 moves.",
+        statusIdle:"Pick a move, opponent is random.",
+        statusAfter:"Battle finished, choose another move.",
+        battleHint:"Choose a move and watch the clash.",
+        resultWaiting:"Waiting for result...",
+        you:"You",
+        cpu:"CPU",
+        drawShort:"Draw!",
+        winShort:"You win!",
+        loseShort:"You lose.",
+        drawVerbose:"Draw! Both symbols cancel each other out.",
+        battleWinMid:"shatters",
+        battleLoseMid:"overpowers",
+        battleLoseEnd:"and knocks it out.",
+        methodText:"Rule: Around the circle, each move defeats the next 12 moves and loses to the previous 12."
+      }
+    }[lang];
+
+    // Statik metinleri doldur
+    document.title = TXT.title;
+    const pageTitleEl  = document.getElementById("pageTitle");
+    const pageLeadEl   = document.getElementById("pageLead");
+    const homeBtn      = document.getElementById("homeBtn");
+    const ruleBadgeEl  = document.getElementById("ruleBadge");
+    const statusEl     = document.getElementById("status");
+    const battleHintEl = document.getElementById("battleHint");
+    const resultEl     = document.getElementById("result");
+    const labelA       = document.getElementById("labelA");
+    const labelB       = document.getElementById("labelB");
+
+    if(pageTitleEl)  pageTitleEl.textContent  = TXT.heading;
+    if(pageLeadEl)   pageLeadEl.textContent   = TXT.lead;
+    if(homeBtn)      homeBtn.textContent      = TXT.home;
+    if(ruleBadgeEl)  ruleBadgeEl.textContent  = TXT.ruleBadge;
+    if(statusEl)     statusEl.textContent     = TXT.statusIdle;
+    if(battleHintEl) battleHintEl.textContent = TXT.battleHint;
+    if(resultEl)     resultEl.textContent     = TXT.resultWaiting;
+    if(labelA)       labelA.textContent       = TXT.you;
+    if(labelB)       labelB.textContent       = TXT.cpu;
+
+    // Başlangıçta görünen avatarlar – istersen değiştir
     const defaultPlayerImg =
       "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQPj_OsU7YpE9XPdzkuMeMyNq3eumEJEi6MYqyhE5RbvoDcfB2bylAG83e7wPw2ysCi0225SQmTy-466gOdVO1dQUbZ5MxF5NQNQmwD0fcKXj8JBnViFywND9mRq4_g.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=zNTbqmt1efSCYWjODJqnkw&_nc_cat=100&_nc_oc=AdlZKHGTd0nxW4tR8xjkcN9xq-2n3K9hBJThPjKMeLST55La9zYcbJrygr9YCc2PR7U&ccb=9-4&oh=00_AfiLOFPbrSTg1QgK0f6h1JeooIlHdyxXaIdeASy9cILdXw&oe=692807F6&_nc_sid=5b3566";
     const defaultCpuImg =
@@ -319,13 +393,10 @@
     const grid=document.getElementById("grid");
     const resultBox=document.getElementById("result");
     const arena=document.getElementById("arena");
-    const status=document.getElementById("status");
     const fighterA=document.getElementById("fighterA");
     const fighterB=document.getElementById("fighterB");
     const imgA=document.getElementById("imgA");
     const imgB=document.getElementById("imgB");
-    const labelA=document.getElementById("labelA");
-    const labelB=document.getElementById("labelB");
     const clash=document.getElementById("clash");
     const battleResult=document.getElementById("battleResult");
 
@@ -345,10 +416,9 @@
       return min + v*(max-min);
     }
 
-    // Çarpışma için stil seçimi (her çift için deterministik)
     function pickStyle(myIdx, foeIdx){
       const seed = myIdx*31 + foeIdx*17;
-      return Math.floor(seededRand(seed,0,4)); // 0,1,2,3
+      return Math.floor(seededRand(seed,0,4)); // 0..3
     }
 
     function animateBattle(myIdx, foeIdx, outcome){
@@ -356,20 +426,23 @@
       const foe = moves[foeIdx];
       const seed = myIdx*37 + foeIdx*13;
       const angle = seededRand(seed, -14, 14);
-      const drop = seededRand(seed+1, 12, 32);
+      const drop  = seededRand(seed+1, 12, 32);
       const style = pickStyle(myIdx,foeIdx);
 
       imgA.src = me.img;
       imgB.src = foe.img;
-      labelA.textContent = `Sen: ${me.name}`;
-      labelB.textContent = `Rakip: ${foe.name}`;
+
+      const labelAEl = document.getElementById("labelA");
+      const labelBEl = document.getElementById("labelB");
+      if(labelAEl) labelAEl.textContent = `${TXT.you}: ${me.name}`;
+      if(labelBEl) labelBEl.textContent = `${TXT.cpu}: ${foe.name}`;
 
       const arriveOpts = {duration:720,easing:"cubic-bezier(.18,.8,.32,1.05)",fill:"forwards"};
       let leftFrames,rightFrames;
 
-      // Geliş animasyonları stil bazlı
+      // geliş animasyonları
       switch(style){
-        case 0: // klasik önden çarpışma
+        case 0:
           leftFrames = [
             {transform:"translate(-140%,10px) rotate(-6deg)"},
             {transform:`translate(-40%,${angle}px) rotate(-2deg)`},
@@ -381,7 +454,7 @@
             {transform:"translate(0,0) rotate(0deg)"}
           ];
           break;
-        case 1: // yay çizerek üstten giriş
+        case 1:
           leftFrames = [
             {transform:"translate(-160%,40px) rotate(-12deg)"},
             {transform:"translate(-60%,-20px) rotate(-4deg)"},
@@ -393,7 +466,7 @@
             {transform:"translate(0,0) rotate(0deg)"}
           ];
           break;
-        case 2: // alttan zıplayarak giriş
+        case 2:
           leftFrames = [
             {transform:"translate(-120%,80px) scale(0.9)"},
             {transform:"translate(-40%,-10px) scale(1.05)"},
@@ -405,7 +478,7 @@
             {transform:"translate(0,0) scale(1)"}
           ];
           break;
-        default: // hafif titreşimli giriş
+        default:
           leftFrames = [
             {transform:"translate(-130%,0) rotate(-4deg)"},
             {transform:"translate(-60%,4px) rotate(-1deg)"},
@@ -424,7 +497,7 @@
       const rightAnim = fighterB.animate(rightFrames, arriveOpts);
 
       Promise.all([leftAnim.finished, rightAnim.finished]).then(()=>{
-        // Çarpışma ışığı
+        // çarpışma ışığı
         clash.animate(
           [
             {opacity:0,transform:"translate(-50%,-50%) scale(0.7)"},
@@ -448,7 +521,6 @@
         });
 
         if(outcome==="draw"){
-          // Berabere animasyonu
           fighterA.animate(
             [
               {transform:"translate(0,0) scale(1)"},
@@ -465,17 +537,16 @@
             ],
             {duration:520,easing:"ease-in-out",delay:60}
           );
-          battleResult.textContent = "Berabere! İki sembol birbirini durdurdu.";
+          battleResult.textContent = TXT.drawVerbose;
           return;
         }
 
         const winner = outcome==="a" ? fighterA : fighterB;
         const loser  = outcome==="a" ? fighterB : fighterA;
 
-        // Kazanan animasyonları stil bazlı küçük farklarla
         let winnerFrames, loserFrames;
         switch(style){
-          case 0: // Yukarı zıplayıp parlıyor
+          case 0:
             winnerFrames = [
               {transform:"translate(0,0) scale(1)",filter:"brightness(1)"},
               {transform:"translate(0,-14px) scale(1.09)",filter:"brightness(1.2)"},
@@ -487,13 +558,13 @@
               {transform:`translate(${seededRand(seed+2,-40,40)}px,${drop+24}px) scale(0.9)`,opacity:0,filter:"grayscale(1)"}
             ];
             break;
-          case 1: // Yan darbeyle savrulma
+          case 1:
             const push = outcome==="a" ? 80 : -80;
             const push2 = outcome==="a" ? 110 : -110;
             winnerFrames = [
               {transform:"translate(0,0) scale(1)"},
               {transform:`translate(${push/4}px,-10px) scale(1.06)`},
-              {transform:`translate(0,-4px) scale(1.03)`}
+              {transform:"translate(0,-4px) scale(1.03)"}
             ];
             loserFrames = [
               {transform:"translate(0,0) scale(1)",opacity:1},
@@ -501,7 +572,7 @@
               {transform:`translate(${push2}px,${drop+30}px) rotate(${push>0?16:-16}deg) scale(0.88)`,opacity:0}
             ];
             break;
-          case 2: // Yukarı fırlatıp yere çakılma
+          case 2:
             winnerFrames = [
               {transform:"translate(0,0) scale(1)"},
               {transform:"translate(0,-24px) scale(1.1)"},
@@ -513,7 +584,7 @@
               {transform:`translate(${seededRand(seed,-30,30)}px,${drop+26}px) scale(0.88)`,opacity:0}
             ];
             break;
-          default: // Titreşerek sönme
+          default:
             winnerFrames = [
               {transform:"translate(0,0) scale(1)"},
               {transform:"translate(0,-10px) scale(1.07)"},
@@ -536,9 +607,11 @@
           {duration:640,easing:"cubic-bezier(.3,.6,.4,1)"}
         );
 
-        battleResult.textContent = outcome==="a"
-          ? `${me.name} ${foe.name} hamlesini parçaladı.`
-          : `${foe.name} üstün geldi; ${me.name} yere serildi.`;
+        if(outcome==="a"){
+          battleResult.textContent = `${me.name} ${TXT.battleWinMid} ${foe.name}.`;
+        }else{
+          battleResult.textContent = `${foe.name} ${TXT.battleLoseMid} ${me.name} ${TXT.battleLoseEnd}`;
+        }
       });
     }
 
@@ -558,25 +631,25 @@
           const myIdx=Number(btn.dataset.idx);
           const foe=Math.floor(Math.random()*moves.length);
           const outcome=decide(myIdx,foe);
+          const me   = moves[myIdx];
+          const opp  = moves[foe];
 
           let text="";
           if(outcome==="draw"){
-            text=`Berabere! ${moves[myIdx].name} = ${moves[foe].name}`;
+            text=`${TXT.drawShort} ${me.name} = ${opp.name}`;
           }else if(outcome==="a"){
-            text=`Kazandın! ${moves[myIdx].name} -> ${moves[foe].name}`;
+            text=`${TXT.winShort} ${me.name} -> ${opp.name}`;
           }else{
-            text=`Kaybettin. ${moves[foe].name} -> ${moves[myIdx].name}`;
+            text=`${TXT.loseShort} ${opp.name} -> ${me.name}`;
           }
 
           resultBox.innerHTML = `
-            <div class="badge">Sen: ${moves[myIdx].name} ${moves[myIdx].emoji}</div>
-            <div class="badge">Rakip: ${moves[foe].name} ${moves[foe].emoji}</div>
+            <div class="badge">${TXT.you}: ${me.name} ${me.emoji}</div>
+            <div class="badge">${TXT.cpu}: ${opp.name} ${opp.emoji}</div>
             <h3 style="margin:8px 0 4px;font-size:16px;">${text}</h3>
-            <div class="muted">
-              Yöntem: Dairede her hamle kendisinden sonraki 12 hamleyi yener,
-              önceki 12 hamleye yenilir.
-            </div>`;
-          status.textContent="Çarpışma tamamlandı, yeni hamle seç.";
+            <div class="muted">${TXT.methodText}</div>`;
+
+          if(statusEl) statusEl.textContent = TXT.statusAfter;
           if(window.innerWidth < 980 && arena){
             arena.scrollIntoView({behavior:"smooth", block:"center"});
           }
@@ -584,8 +657,12 @@
         });
       });
     }
+
     render();
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
+  <script src="../page-lang.js"></script>
 </body>
 </html>

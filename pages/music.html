@@ -14,6 +14,7 @@
       --muted:#9ca3af;
     }
     *{box-sizing:border-box;}
+
     body{
       margin:0;
       font-family:"Inter","Segoe UI",sans-serif;
@@ -26,18 +27,72 @@
       display:flex;
       flex-direction:column;
       align-items:center;
+      overflow-x:hidden;
+      position:relative;
+    }
+
+    /* Arka plan orb’ları */
+    .bg-orb{
+      position:fixed;
+      border-radius:999px;
+      filter:blur(40px);
+      opacity:0.4;
+      pointer-events:none;
+      z-index:-1;
+      mix-blend-mode:screen;
+    }
+    .bg-orb.orb-1{
+      width:360px;height:360px;
+      top:-120px;left:-80px;
+      background:radial-gradient(circle,var(--accent),transparent 60%);
+      animation: floatSlow 20s ease-in-out infinite alternate;
+    }
+    .bg-orb.orb-2{
+      width:420px;height:420px;
+      bottom:-150px;right:-60px;
+      background:radial-gradient(circle,var(--accent2),transparent 60%);
+      animation: floatSlow 24s ease-in-out infinite alternate;
+    }
+    .bg-orb.orb-3{
+      width:260px;height:260px;
+      top:35%;left:65%;
+      background:radial-gradient(circle,rgba(56,189,248,0.9),transparent 60%);
+      opacity:0.25;
+      animation: floatSlow 28s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatSlow{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(30px,-20px,0) scale(1.06);}
+      100%{transform:translate3d(-10px,25px,0) scale(0.98);}
     }
 
     header{
       width:100%;
       max-width:900px;
-      padding:24px 16px 8px;
+      padding:24px 16px 10px;
       display:flex;
       gap:12px;
       align-items:center;
       flex-wrap:wrap;
+      position:relative;
+      z-index:1;
     }
-    header h1{margin:0;font-size:26px;}
+    header h1{
+      margin:0;
+      font-size:26px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    header h1::after{
+      content:"";
+      width:36px;
+      height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),transparent);
+      opacity:0.8;
+    }
     header p{margin:2px 0 0;font-size:13px;color:var(--muted);}
 
     .btn{
@@ -52,12 +107,30 @@
       display:inline-flex;
       align-items:center;
       gap:6px;
-      transition:background .18s ease,transform .12s ease,box-shadow .18s ease;
+      position:relative;
+      overflow:hidden;
+      transition:background .18s ease,transform .12s ease,box-shadow .18s ease,border-color .18s ease,color .18s ease;
+      box-shadow:0 14px 35px rgba(15,23,42,0.65);
+    }
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 10% 0%,rgba(255,255,255,0.16),transparent 55%);
+      opacity:0;
+      transform:translate3d(-40%,0,0);
+      transition:opacity .2s ease,transform .26s ease;
     }
     .btn:hover{
       background:rgba(31,41,55,0.95);
       transform:translateY(-1px);
-      box-shadow:0 14px 35px rgba(15,23,42,0.65);
+      box-shadow:0 16px 40px rgba(15,23,42,0.85);
+      border-color:rgba(226,232,240,0.7);
+      color:#f9fafb;
+    }
+    .btn:hover::before{
+      opacity:1;
+      transform:translate3d(0,0,0);
     }
 
     .panel{
@@ -66,32 +139,59 @@
       margin:0 auto 24px;
       padding:18px 18px 26px;
       border-radius:24px;
-      background:#020617;
+      background:
+        radial-gradient(circle at top left,rgba(34,211,238,0.16),transparent 55%),
+        radial-gradient(circle at bottom right,rgba(22,163,74,0.16),transparent 55%),
+        #020617;
       border:1px solid rgba(148,163,184,0.35);
-      box-shadow:0 24px 70px rgba(15,23,42,0.85);
+      box-shadow:
+        0 24px 70px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.95);
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(26px);
+      animation: panelIn .6s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes panelIn{
+      0%{opacity:0;transform:translateY(14px) scale(.97);}
+      60%{opacity:1;transform:translateY(-2px) scale(1.01);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
     }
 
     /* Şarkıcı Butonları */
     .artists-row{
       display:flex;
-      flex-wrap:wrap;
-      gap:8px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      gap:10px;
+      padding-bottom:6px;
       margin-bottom:12px;
+      cursor:grab;
     }
+    .artists-row.dragging{cursor:grabbing;}
+    .artists-row::-webkit-scrollbar{display:none;}
     .artist-btn{
-      padding:6px 10px;
+      padding:9px 14px;
       border-radius:999px;
       border:1px solid rgba(148,163,184,0.35);
       background:rgba(15,23,42,0.9);
       color:#e5e7eb;
       cursor:pointer;
-      font-size:12px;
-      transition:background .18s ease,transform .12s ease,box-shadow .18s ease;
+      font-size:13px;
+      min-width:90px;
+      text-align:center;
+      transition:background .18s ease,transform .12s ease,box-shadow .18s ease,border-color .18s ease,color .18s ease;
+      box-shadow:0 10px 25px rgba(15,23,42,0.7);
+      flex:0 0 auto;
+      white-space:nowrap;
     }
     .artist-btn:hover{
-      background:rgba(31,41,55,0.95);
+      background:rgba(31,41,55,0.96);
       transform:translateY(-1px);
-      box-shadow:0 10px 25px rgba(15,23,42,0.7);
+      box-shadow:0 14px 32px rgba(15,23,42,0.9);
+      border-color:rgba(34,211,238,0.7);
+      color:#e0f2fe;
     }
 
     .bar{
@@ -111,8 +211,15 @@
       min-width:220px;
       flex:1 1 220px;
       font-size:14px;
+      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease,transform .12s ease;
     }
     input[type="text"]::placeholder{color:rgba(148,163,184,0.8);}
+    input[type="text"]:focus{
+      border-color:rgba(34,211,238,0.9);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.8),0 0 28px rgba(15,23,42,0.9);
+      background:#020617;
+      transform:translateY(-1px);
+    }
     .muted{color:var(--muted);font-size:13px;}
 
     /* PLAYER */
@@ -132,11 +239,29 @@
       overflow:hidden;
       background:#020617;
       box-shadow:0 32px 60px rgba(0,0,0,0.85);
+      position:relative;
     }
+    .cover-wrap::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      pointer-events:none;
+      background:radial-gradient(circle at 0% 0%,rgba(34,211,238,0.28),transparent 55%);
+      mix-blend-mode:soft-light;
+      opacity:0;
+      transition:opacity .3s ease;
+    }
+    .cover-wrap:hover::after{opacity:1;}
     .cover-wrap img{
       width:100%;
       height:100%;
       object-fit:cover;
+      transform-origin:center;
+      transition:transform .25s ease,filter .25s ease;
+    }
+    .cover-wrap:hover img{
+      transform:scale(1.02);
+      filter:brightness(1.02);
     }
 
     .track-meta{
@@ -174,12 +299,24 @@
       border-radius:999px;
       outline:none;
     }
+    .progress-row input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      background:#f9fafb;
+      box-shadow:0 0 0 4px rgba(34,211,238,0.45);
+      border:none;
+    }
 
     .controls{
       width:100%;
       max-width:480px;
       display:flex;
       justify-content:space-between;
+      align-items:center;
+      gap:10px;
     }
     .icon-btn{
       width:38px;
@@ -189,6 +326,16 @@
       color:var(--muted);
       cursor:pointer;
       font-size:18px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:background .16s ease,color .16s ease,transform .12s ease;
+    }
+    .icon-btn:hover{
+      background:rgba(15,23,42,0.9);
+      transform:translateY(-1px);
+      color:#e5e7eb;
     }
     .icon-btn.active{color:#22d3ee;}
 
@@ -200,6 +347,19 @@
       background:#f9fafb;
       cursor:pointer;
       font-size:26px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 18px 40px rgba(15,23,42,0.9);
+      transition:transform .12s ease,box-shadow .18s ease;
+    }
+    .play-main:hover{
+      transform:translateY(-1px) scale(1.02);
+      box-shadow:0 22px 50px rgba(15,23,42,1);
+    }
+    .play-main:active{
+      transform:translateY(0) scale(0.98);
+      box-shadow:0 12px 30px rgba(15,23,42,0.9);
     }
   
 /* --- mobile-shared-opt --- */
@@ -217,50 +377,55 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
 
+  <!-- Arka plan orb'ları -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
 <header>
-  <a class="btn" href="../index.html">Ana sayfa</a>
+  <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
   <div>
-    <h1>Müzik Çalar</h1>
-    <p>30 saniyelik Apple Music önizleme oynatıcı</p>
+    <h1 id="pageTitle">Müzik Çalar</h1>
+    <p id="pageLead">30 saniyelik Apple Music önizleme oynatıcı</p>
   </div>
 </header>
 
 <div class="panel">
 
   <!-- POPÜLER ŞARKICILAR -->
-  <div class="artists-row" id="artistsRow">
+  <div class="artists-row chips" id="artistsRow">
     <button class="artist-btn" data-artist="The Weeknd">The Weeknd</button>
-      <button class="artist-btn" data-artist="Bruno Mars">Bruno Mars</button>
-      <button class="artist-btn" data-artist="Taylor Swift">Taylor Swift</button>
-      <button class="artist-btn" data-artist="Justin Bieber">Justin Bieber</button>
-      <button class="artist-btn" data-artist="Rihanna">Rihanna</button>
-      <button class="artist-btn" data-artist="Lady Gaga">Lady Gaga</button>
-      <button class="artist-btn" data-artist="Ed Sheeran">Ed Sheeran</button>
-      <button class="artist-btn" data-artist="Ariana Grande">Ariana Grande</button>
-      <button class="artist-btn" data-artist="Billie Eilish">Billie Eilish</button>
-      <button class="artist-btn" data-artist="Coldplay">Coldplay</button>
-      <button class="artist-btn" data-artist="Drake">Drake</button>
-      <button class="artist-btn" data-artist="Bad Bunny">Bad Bunny</button>
-      <button class="artist-btn" data-artist="David Guetta">David Guetta</button>
-      <button class="artist-btn" data-artist="Sabrina Carpenter">Sabrina Carpenter</button>
-      <button class="artist-btn" data-artist="Maroon 5">Maroon 5</button>
-      <button class="artist-btn" data-artist="Eminem">Eminem</button>
-      <button class="artist-btn" data-artist="Sia">Sia</button>
-      <button class="artist-btn" data-artist="Kendrick Lamar">Kendrick Lamar</button>
-      <button class="artist-btn" data-artist="Shakira">Shakira</button>
-      <button class="artist-btn" data-artist="SZA">SZA</button>
-      <button class="artist-btn" data-artist="Michael Jackson">Michael Jackson</button>
-      <button class="artist-btn" data-artist="Müslüm Gürses">Müslüm Gürses</button>
-      <button class="artist-btn" data-artist="Sezen Aksu">Sezen Aksu</button>
-      <button class="artist-btn" data-artist="Tarkan">Tarkan</button>
-      <button class="artist-btn" data-artist="Barış Manço">Barış Manço</button>
-      <button class="artist-btn" data-artist="Sertap Erener">Sertap Erener</button>
-      <button class="artist-btn" data-artist="Dedublüman">Dedublüman</button>
-      <button class="artist-btn" data-artist="Adamlar">Adamlar</button>
+    <button class="artist-btn" data-artist="Bruno Mars">Bruno Mars</button>
+    <button class="artist-btn" data-artist="Taylor Swift">Taylor Swift</button>
+    <button class="artist-btn" data-artist="Justin Bieber">Justin Bieber</button>
+    <button class="artist-btn" data-artist="Rihanna">Rihanna</button>
+    <button class="artist-btn" data-artist="Lady Gaga">Lady Gaga</button>
+    <button class="artist-btn" data-artist="Ed Sheeran">Ed Sheeran</button>
+    <button class="artist-btn" data-artist="Ariana Grande">Ariana Grande</button>
+    <button class="artist-btn" data-artist="Billie Eilish">Billie Eilish</button>
+    <button class="artist-btn" data-artist="Coldplay">Coldplay</button>
+    <button class="artist-btn" data-artist="Drake">Drake</button>
+    <button class="artist-btn" data-artist="Bad Bunny">Bad Bunny</button>
+    <button class="artist-btn" data-artist="David Guetta">David Guetta</button>
+    <button class="artist-btn" data-artist="Sabrina Carpenter">Sabrina Carpenter</button>
+    <button class="artist-btn" data-artist="Maroon 5">Maroon 5</button>
+    <button class="artist-btn" data-artist="Eminem">Eminem</button>
+    <button class="artist-btn" data-artist="Sia">Sia</button>
+    <button class="artist-btn" data-artist="Kendrick Lamar">Kendrick Lamar</button>
+    <button class="artist-btn" data-artist="Shakira">Shakira</button>
+    <button class="artist-btn" data-artist="SZA">SZA</button>
+    <button class="artist-btn" data-artist="Michael Jackson">Michael Jackson</button>
+    <button class="artist-btn" data-artist="Müslüm Gürses">Müslüm Gürses</button>
+    <button class="artist-btn" data-artist="Sezen Aksu">Sezen Aksu</button>
+    <button class="artist-btn" data-artist="Tarkan">Tarkan</button>
+    <button class="artist-btn" data-artist="Barış Manço">Barış Manço</button>
+    <button class="artist-btn" data-artist="Sertap Erener">Sertap Erener</button>
+    <button class="artist-btn" data-artist="Dedublüman">Dedublüman</button>
+    <button class="artist-btn" data-artist="Adamlar">Adamlar</button>
   </div>
 
   <!-- ARAMA -->
@@ -272,7 +437,7 @@
 
   <!-- PLAYER -->
   <div class="player-shell">
-    <div class="cover-wrap"><img id="cover"></div>
+    <div class="cover-wrap"><img id="cover" alt="Cover"></div>
     <div class="track-meta">
       <p class="track-title" id="title">Şarkı seçin</p>
       <p class="track-artist" id="artist"></p>
@@ -295,122 +460,231 @@
 <audio id="player"></audio>
 
 <script>
-/* ELEMENTLER */
-const player=document.getElementById("player");
-const coverEl=document.getElementById("cover");
-const titleEl=document.getElementById("title");
-const artistEl=document.getElementById("artist");
-const seekEl=document.getElementById("seek");
-const currentEl=document.getElementById("currentTime");
-const playBtn=document.getElementById("playMain");
-const repeatBtn=document.getElementById("repeat");
-const statusEl=document.getElementById("status");
+(function(){
+  /* Dil seçimi (tr/en) – diğer sayfalarla uyumlu */
+  const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+  const prefLang = pref === "tr" ? "tr" : "en";
+  document.documentElement.lang = prefLang;
 
-/* BAŞLANGIÇ KAPAK FOTOĞRAFI */
-const defaultCover =
-"https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m340/AQNLbfs0fX0z2dYctKUGtxppTB1nue39GomWmtOGBQbeLL4gmSV8Rz28e8shfzH-yJ0ncxiO3uw6G5wQkJv0NB2eLuBDr8KbllQttbqwImY2mm_JUl8e-_qjd6dUL1WRFyP9FcCIKKQTmj77sG-Qs8Je7wAYrg.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=tRMeSii4SslqdAoFTbM23Q&_nc_cat=111&_nc_oc=AdkaH_s_rq4x1UKkXET9Q2HsCjtAIXq8fuNTpgBXFPgKaJ8uwR_4Od9HUOQJG-RbAqw&ccb=9-4&oh=00_AfiXKPF79_7ir0nYF3IbUjJzxvPevDtKImKoBdWQuEmOIw&oe=6928111A&_nc_sid=5b3566";
+  const txt = {
+    tr:{
+      pageTitle:"Müzik Çalar",
+      home:"Ana sayfa",
+      heading:"Müzik Çalar",
+      lead:"30 saniyelik Apple Music önizleme oynatıcı",
+      searchPlaceholder:"Şarkı / artist (boş: top hits)",
+      searchBtn:"Ara",
+      statusReady:"Hazır",
+      statusLoading:"Yükleniyor...",
+      statusError:"Hata",
+      defaultTitle:"Şarkı seçin",
+      noResultTitle:"Sonuç yok",
+      noResultArtist:"",
+    },
+    en:{
+      pageTitle:"Music Player",
+      home:"Home",
+      heading:"Music Player",
+      lead:"30-second Apple Music preview player",
+      searchPlaceholder:"Song / artist (empty: top hits)",
+      searchBtn:"Search",
+      statusReady:"Ready",
+      statusLoading:"Loading...",
+      statusError:"Error",
+      defaultTitle:"Pick a track",
+      noResultTitle:"No results",
+      noResultArtist:"",
+    }
+  }[prefLang];
 
-coverEl.src = defaultCover;
+  document.title = txt.pageTitle;
 
-/* DEĞİŞKENLER */
-let list=[];
-let idx=0;
-let repeatMode=false;
-let isPlaying=false;
+  const homeBtn = document.getElementById("homeBtn");
+  const pageTitleEl = document.getElementById("pageTitle");
+  const pageLeadEl = document.getElementById("pageLead");
+  const qInput = document.getElementById("q");
+  const goBtn = document.getElementById("go");
+  const statusEl = document.getElementById("status");
+  const titleEl = document.getElementById("title");
+  const artistEl = document.getElementById("artist");
 
-/* POPÜLER ARTİST BUTONLARI */
-document.querySelectorAll(".artist-btn").forEach(btn=>{
-  btn.onclick = () => {
-    const name = btn.dataset.artist;
-    document.getElementById("q").value = name;
-    search(name);
+  if(homeBtn) homeBtn.textContent = txt.home;
+  if(pageTitleEl) pageTitleEl.textContent = txt.heading;
+  if(pageLeadEl) pageLeadEl.textContent = txt.lead;
+  if(qInput) qInput.placeholder = txt.searchPlaceholder;
+  if(goBtn) goBtn.textContent = txt.searchBtn;
+  if(statusEl) statusEl.textContent = txt.statusReady;
+  if(titleEl) titleEl.textContent = txt.defaultTitle;
+
+  /* ELEMENTLER */
+  const player=document.getElementById("player");
+  const coverEl=document.getElementById("cover");
+  const seekEl=document.getElementById("seek");
+  const currentEl=document.getElementById("currentTime");
+  const playBtn=document.getElementById("playMain");
+  const repeatBtn=document.getElementById("repeat");
+
+  /* BAŞLANGIÇ KAPAK FOTOĞRAFI */
+  const defaultCover =
+    "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m340/AQNLbfs0fX0z2dYctKUGtxppTB1nue39GomWmtOGBQbeLL4gmSV8Rz28e8shfzH-yJ0ncxiO3uw6G5wQkJv0NB2eLuBDr8KbllQttbqwImY2mm_JUl8e-_qjd6dUL1WRFyP9FcCIKKQTmj77sG-Qs8Je7wAYrg.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=tRMeSii4SslqdAoFTbM23Q&_nc_cat=111&_nc_oc=AdkaH_s_rq4x1UKkXET9Q2HsCjtAIXq8fuNTpgBXFPgKaJ8uwR_4Od9HUOQJG-RbAqw&ccb=9-4&oh=00_AfiXKPF79_7ir0nYF3IbUjJzxvPevDtKImKoBdWQuEmOIw&oe=6928111A&_nc_sid=5b3566";
+
+  coverEl.src = defaultCover;
+
+  /* DEĞİŞKENLER */
+  let list=[];
+  let idx=0;
+  let repeatMode=false;
+
+  /* POPÜLER ARTİST BUTONLARI */
+  document.querySelectorAll(".artist-btn").forEach(btn=>{
+    btn.onclick = () => {
+      const name = btn.dataset.artist;
+      qInput.value = name;
+      search(name);
+    };
+  });
+
+  /* Artist satırı için drag-scroll (PC uyumlu) */
+  (function initArtistDrag(){
+    const row = document.getElementById("artistsRow");
+    if(!row) return;
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    row.addEventListener("mousedown", e => {
+      isDown = true;
+      row.classList.add("dragging");
+      startX = e.pageX - row.offsetLeft;
+      scrollLeft = row.scrollLeft;
+    });
+    window.addEventListener("mouseup", () => {
+      isDown = false;
+      row.classList.remove("dragging");
+    });
+    row.addEventListener("mouseleave", () => {
+      isDown = false;
+      row.classList.remove("dragging");
+    });
+    row.addEventListener("mousemove", e => {
+      if(!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - row.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      row.scrollLeft = scrollLeft - walk;
+    });
+  })();
+
+  /* BUTONLAR */
+  goBtn.onclick = () => search(qInput.value.trim() || "top hits");
+
+  document.getElementById("next").onclick=()=>{
+    if(!list.length) return;
+    idx=(idx+1)%list.length;
+    render();
   };
-});
+  document.getElementById("prev").onclick=()=>{
+    if(!list.length) return;
+    idx=(idx-1+list.length)%list.length;
+    render();
+  };
+  document.getElementById("shuffle").onclick=()=>{
+    if(!list.length) return;
+    idx=Math.floor(Math.random()*list.length);
+    render();
+  };
+  repeatBtn.onclick = ()=>{
+    repeatMode=!repeatMode;
+    repeatBtn.classList.toggle("active",repeatMode);
+  };
 
-/* BUTONLAR */
-document.getElementById("go").onclick=()=>search(document.getElementById("q").value.trim()||"top hits");
-document.getElementById("next").onclick=()=>{idx=(idx+1)%list.length;render();}
-document.getElementById("prev").onclick=()=>{idx=(idx-1+list.length)%list.length;render();}
-document.getElementById("shuffle").onclick=()=>{idx=Math.floor(Math.random()*list.length);render();}
-repeatBtn.onclick = ()=>{
-  repeatMode=!repeatMode;
-  repeatBtn.classList.toggle("active",repeatMode);
-};
+  playBtn.onclick=()=>{
+    if(!player.src) return;
+    if(player.paused) player.play();
+    else player.pause();
+  };
 
-playBtn.onclick=()=>{
-  if(player.paused) player.play();
-  else player.pause();
-};
+  /* SEEK */
+  seekEl.oninput=()=>{
+    player.currentTime=parseFloat(seekEl.value);
+  };
 
-/* SEEK */
-seekEl.oninput=()=>{
-  player.currentTime=parseFloat(seekEl.value);
-};
+  /* OYNATMA ZAMANI */
+  player.ontimeupdate=()=>{
+    const t=Math.min(player.currentTime,30);
+    seekEl.value=t;
+    currentEl.textContent = "0:" + String(Math.floor(t)).padStart(2,"0");
 
-/* OYNATMA ZAMANI */
-player.ontimeupdate=()=>{
-  const t=Math.min(player.currentTime,30);
-  seekEl.value=t;
-  currentEl.textContent = "0:" + String(Math.floor(t)).padStart(2,"0");
+    if(player.currentTime>=30){
+      if(repeatMode){
+        player.currentTime=0;
+        player.play();
+      } else if(list.length){
+        idx=(idx+1)%list.length;
+        render();
+      }
+    }
+  };
 
-  if(player.currentTime>=30){
-    if(repeatMode){
-      player.currentTime=0;
-      player.play();
-    } else {
-      idx=(idx+1)%list.length;
+  /* OYNATMA DURUMU */
+  player.onplay=()=>{playBtn.textContent="⏸";};
+  player.onpause=()=>{playBtn.textContent="▶";};
+
+  /* ARAMA */
+  async function search(q){
+    try{
+      statusEl.textContent=txt.statusLoading;
+      const r=await fetch(`https://itunes.apple.com/search?media=music&limit=20&term=${encodeURIComponent(q)}`);
+      const j=await r.json();
+      list=j.results||[];
+      if(!list.length){
+        titleEl.textContent=txt.noResultTitle;
+        artistEl.textContent=txt.noResultArtist;
+        coverEl.src=defaultCover;
+        statusEl.textContent=txt.statusReady;
+        player.src="";
+        seekEl.value=0;
+        currentEl.textContent="0:00";
+        return;
+      }
+      idx=0;
       render();
+      statusEl.textContent=txt.statusReady;
+    }catch(e){
+      console.error(e);
+      statusEl.textContent=txt.statusError;
     }
   }
-};
 
-/* OYNATMA DURUMU */
-player.onplay=()=>{isPlaying=true;playBtn.textContent="⏸";};
-player.onpause=()=>{isPlaying=false;playBtn.textContent="▶";};
-
-/* ARAMA */
-async function search(q){
-  try{
-    statusEl.textContent="Yükleniyor...";
-    const r=await fetch(`https://itunes.apple.com/search?media=music&limit=20&term=${encodeURIComponent(q)}`);
-    const j=await r.json();
-    list=j.results||[];
-    if(!list.length){
-      titleEl.textContent="Sonuç yok";
-      artistEl.textContent="";
+  /* ŞARKIYI YÜKLEME */
+  function render(){
+    const t=list[idx];
+    if(!t){
       coverEl.src=defaultCover;
+      titleEl.textContent=txt.defaultTitle;
+      artistEl.textContent="";
+      player.src="";
+      seekEl.value=0;
+      currentEl.textContent="0:00";
       return;
     }
-    idx=0;
-    render();
-    statusEl.textContent="Hazır";
-  }catch(e){
-    statusEl.textContent="Hata";
+
+    coverEl.src = t.artworkUrl100 ? t.artworkUrl100.replace("100x100","512x512") : defaultCover;
+    titleEl.textContent=t.trackName||txt.defaultTitle;
+    artistEl.textContent=t.artistName||"";
+
+    player.src=t.previewUrl;
+    player.currentTime=0;
+    seekEl.value=0;
+    currentEl.textContent="0:00";
+
+    player.play().catch(()=>{});
   }
-}
-
-/* ŞARKIYI YÜKLEME */
-function render(){
-  const t=list[idx];
-  if(!t){
-    coverEl.src=defaultCover;
-    titleEl.textContent="Şarkı seçin";
-    artistEl.textContent="";
-    return;
-  }
-
-  coverEl.src = t.artworkUrl100 ? t.artworkUrl100.replace("100x100","512x512") : defaultCover;
-  titleEl.textContent=t.trackName||"-";
-  artistEl.textContent=t.artistName||"";
-
-  player.src=t.previewUrl;
-  player.currentTime=0;
-  seekEl.value=0;
-  currentEl.textContent="0:00";
-
-  player.play().catch(()=>{});
-}
+})();
 </script>
 
+<script src="../lang-helper.js"></script>
+<script src="../scroll-helper.js"></script>
+<script src="../page-lang.js"></script>
 </body>
 </html>

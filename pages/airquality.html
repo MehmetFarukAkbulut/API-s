@@ -102,6 +102,35 @@
       transform:translateX(30%);
     }
 
+    /* Paneldeki ilk bar (arama satırı) geniş sarmalı kalsın */
+    .panel > .bar:first-of-type{
+      flex-wrap:wrap !important;
+      overflow:visible !important;
+    }
+
+    /* Şehir butonları: tek satır + yatay scroll */
+    .bar.filters{
+      display:flex;
+      gap:10px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:6px;
+      position:relative;
+      z-index:1;
+    }
+    .bar.filters::-webkit-scrollbar{display:none;}
+
+    .bar.filters .btn{
+      min-width:90px;
+      justify-content:center;
+      padding:9px 14px;
+      font-size:13px;
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+
     h1{
       margin:0;
       font-size:30px;
@@ -372,19 +401,19 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
   <!-- Mouse-follow glow -->
   <div class="cursor-blob" id="cursor-blob"></div>
 
   <header class="reveal">
-    <a class="btn" href="../index.html">
+    <a class="btn" href="../index.html" id="btnHome">
       <span>← Ana sayfa</span>
     </a>
     <div>
-      <h1>Hava Kalitesi</h1>
-      <p class="lead">PM2.5, PM10, NO₂, ozon ve polen benzeri parametrelerle özet hava kalitesi görünümü.</p>
+      <h1 id="titleMain">Hava Kalitesi</h1>
+      <p class="lead" id="leadMain">PM2.5, PM10, NO₂, ozon ve polen benzeri parametrelerle özet hava kalitesi görünümü.</p>
     </div>
   </header>
 
@@ -392,194 +421,316 @@
     <div class="bar">
       <input id="q" placeholder="Şehir (örn: Istanbul)">
       <button class="btn" id="go">Ara</button>
-      <span class="badge" id="status"><span class="badge-dot"></span> Hazır</span>
+      <span class="badge" id="status">
+        <span class="badge-dot"></span> Hazır
+      </span>
     </div>
-    <div class="bar" id="presets"></div>
+    <div class="bar filters" id="presets"></div>
     <div class="grid" id="grid">
-      <div class="card reveal visible">Arama yapın.</div>
+      <div class="card reveal visible" id="initialCard">Arama yapın.</div>
     </div>
   </div>
 
   <script>
-  // Scroll reveal observer
-  let revealObserver = null;
-  if ("IntersectionObserver" in window) {
-    revealObserver = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){
-          entry.target.classList.add("visible");
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, {threshold:0.2});
-  }
+  (function(){
+    // Dil tercihi
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const lang = pref === "tr" ? "tr" : "en";
+    const locale = lang === "tr" ? "tr-TR" : "en-US";
+    document.documentElement.lang = lang;
 
-  // Başlangıç reveal elemanları
-  document.querySelectorAll(".reveal").forEach(el=>{
-    if(revealObserver) revealObserver.observe(el);
-  });
+    const texts = {
+      en: {
+        pageTitle: "Air Quality",
+        btnHome: "← Home",
+        mainTitle: "Air Quality",
+        lead: "Summary air quality view with PM2.5, PM10, NO₂, ozone and similar parameters.",
+        placeholder: "City (e.g. Istanbul)",
+        searchBtn: "Search",
+        statusReady: "Ready",
+        statusLoading: "Loading...",
+        statusError: "Error",
+        msgInitial: "Start a search.",
+        msgWriteCity: "Type a city.",
+        msgNotFound: "Not found",
+        msgFetchError: "Data could not be retrieved.",
+        lblStatus: "Status:",
+        lblHealthyRef: "Healthy reference:",
+        lblUpdated: "Updated:",
+        chipNormal: "Normal",
+        chipGood: "Good",
+        chipHigh: "High",
+        chipUnknown: "Unknown",
+        pm25Label: "PM2.5",
+        pm25Healthy: "≤12 good (24h)",
+        pm25Desc: "Fine particulate matter",
+        pm10Label: "PM10",
+        pm10Healthy: "≤50 good (24h)",
+        pm10Desc: "Coarse dust particles",
+        no2Label: "NO₂",
+        no2Healthy: "≤40 annual (EU)",
+        no2Desc: "Nitrogen dioxide",
+        ozoneLabel: "Ozone",
+        ozoneHealthy: "≤100 (8h)",
+        ozoneDesc: "Ground-level ozone",
+        dustLabel: "Dust",
+        dustHealthy: "Should stay low",
+        dustDesc: "Dust/PM mixture",
+        uvLabel: "UV",
+        uvHealthy: "0–2 low",
+        uvDesc: "UV index"
+      },
+      tr: {
+        pageTitle: "Hava Kalitesi",
+        btnHome: "← Ana sayfa",
+        mainTitle: "Hava Kalitesi",
+        lead: "PM2.5, PM10, NO₂, ozon ve polen benzeri parametrelerle özet hava kalitesi görünümü.",
+        placeholder: "Şehir (örn: Istanbul)",
+        searchBtn: "Ara",
+        statusReady: "Hazır",
+        statusLoading: "Yükleniyor...",
+        statusError: "Hata",
+        msgInitial: "Arama yapın.",
+        msgWriteCity: "Şehir yazın.",
+        msgNotFound: "Bulunamadı",
+        msgFetchError: "Veri alınamadı.",
+        lblStatus: "Durum:",
+        lblHealthyRef: "Sağlıklı referans:",
+        lblUpdated: "Güncelleme:",
+        chipNormal: "Normal",
+        chipGood: "İyi",
+        chipHigh: "Yüksek",
+        chipUnknown: "Bilinmiyor",
+        pm25Label: "PM2.5",
+        pm25Healthy: "≤12 iyi (24s)",
+        pm25Desc: "İnce partikül madde",
+        pm10Label: "PM10",
+        pm10Healthy: "≤50 iyi (24s)",
+        pm10Desc: "Toz partiküller",
+        no2Label: "NO₂",
+        no2Healthy: "≤40 yıllık (AB)",
+        no2Desc: "Azot dioksit",
+        ozoneLabel: "Ozon",
+        ozoneHealthy: "≤100 (8s)",
+        ozoneDesc: "Yer seviyesi ozon",
+        dustLabel: "Toz",
+        dustHealthy: "Düşük olmalı",
+        dustDesc: "Toz/PM karışımı",
+        uvLabel: "UV",
+        uvHealthy: "0–2 düşük",
+        uvDesc: "UV indeks"
+      }
+    };
 
-  // Mouse-follow glow
-  (function initCursorBlob(){
-    const blob=document.getElementById("cursor-blob");
-    if(!blob) return;
-    let targetX=window.innerWidth/2;
-    let targetY=window.innerHeight/2;
-    let currentX=targetX;
-    let currentY=targetY;
+    const t = texts[lang];
 
-    window.addEventListener("mousemove",(e)=>{
-      targetX=e.clientX;
-      targetY=e.clientY;
+    // Başlık & temel UI
+    document.title = t.pageTitle;
+    const btnHome = document.getElementById("btnHome");
+    if (btnHome && btnHome.firstElementChild) btnHome.firstElementChild.textContent = t.btnHome;
+
+    const titleMain = document.getElementById("titleMain");
+    if (titleMain) titleMain.textContent = t.mainTitle;
+
+    const leadMain = document.getElementById("leadMain");
+    if (leadMain) leadMain.textContent = t.lead;
+
+    const q = document.getElementById("q");
+    if (q) q.placeholder = t.placeholder;
+
+    const goBtn = document.getElementById("go");
+    if (goBtn) goBtn.textContent = t.searchBtn;
+
+    const statusEl = document.getElementById("status");
+    if (statusEl) {
+      // badge-dot + boşluk + metin
+      statusEl.innerHTML = `<span class="badge-dot"></span> ${t.statusReady}`;
+    }
+
+    const grid = document.getElementById("grid");
+    const initialCard = document.getElementById("initialCard");
+    if (initialCard) initialCard.textContent = t.msgInitial;
+
+    // Scroll reveal observer
+    let revealObserver = null;
+    if ("IntersectionObserver" in window) {
+      revealObserver = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, {threshold:0.2});
+    }
+
+    document.querySelectorAll(".reveal").forEach(el=>{
+      if(revealObserver) revealObserver.observe(el);
     });
 
-    function animate(){
-      const lerp=0.12;
-      currentX+=(targetX-currentX)*lerp;
-      currentY+=(targetY-currentY)*lerp;
-      blob.style.transform=`translate3d(${currentX-130}px,${currentY-130}px,0)`;
-      requestAnimationFrame(animate);
-    }
-    animate();
-  })();
+    // Mouse-follow glow
+    (function initCursorBlob(){
+      const blob=document.getElementById("cursor-blob");
+      if(!blob) return;
+      let targetX=window.innerWidth/2;
+      let targetY=window.innerHeight/2;
+      let currentX=targetX;
+      let currentY=targetY;
 
-  // Ana işlevler
-  const q = document.getElementById("q");
-  const grid = document.getElementById("grid");
-  const statusEl = document.getElementById("status");
-  const presets = [
-    "Istanbul","Ankara","Izmir","London","Paris","Berlin","Madrid","Rome",
-    "New York","Los Angeles","Chicago","Toronto","Mexico City","Sao Paulo","Buenos Aires","Rio de Janeiro",
-    "Cairo","Lagos","Johannesburg","Nairobi",
-    "Moscow","Delhi","Mumbai","Bangalore","Beijing","Shanghai","Shenzhen","Guangzhou","Seoul","Tokyo","Osaka","Bangkok","Jakarta","Singapore","Hong Kong"
-  ];
-
-  const presetsEl = document.getElementById("presets");
-  presetsEl.innerHTML = presets.map(p =>
-    `<button class="btn" data-city="${p}" style="font-size:11px;">${p}</button>`
-  ).join("");
-
-  presetsEl.addEventListener("click",(e)=>{
-    const c=e.target.dataset.city;
-    if(c){
-      q.value=c;
-      search(c);
-    }
-  });
-
-  function setStatus(text,colorHex){
-    statusEl.childNodes[1].nodeValue = " " + text;
-    if(colorHex){
-      statusEl.style.borderColor=colorHex;
-      const dot=statusEl.querySelector(".badge-dot");
-      if(dot){
-        dot.style.background=colorHex;
-        dot.style.boxShadow=`0 0 0 4px ${hexToRgba(colorHex,0.25)}`;
-      }
-    }
-  }
-
-  function hexToRgba(hex,alpha){
-    const h=hex.replace("#","");
-    if(h.length!==6) return hex;
-    const r=parseInt(h.slice(0,2),16);
-    const g=parseInt(h.slice(2,4),16);
-    const b=parseInt(h.slice(4,6),16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  async function search(city){
-    if(!city){
-      grid.innerHTML="<div class='card reveal visible'>Şehir yazın.</div>";
-      return;
-    }
-    try{
-      setStatus("Yükleniyor...","#22d3ee");
-      const g = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=tr`);
-      const gj = await g.json();
-      const loc = gj?.results?.[0];
-      if(!loc){
-        grid.innerHTML="<div class='card reveal visible'>Bulunamadı</div>";
-        setStatus("Hazır","#94a3b8");
-        return;
-      }
-      const {latitude,longitude,name,country} = loc;
-      const r = await fetch(
-        `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,dust,uv_index,aerosol_optical_depth`
-      );
-      const j = await r.json();
-      const c = j.current || {};
-      const timeStr = c.time ? new Date(c.time).toLocaleString("tr-TR") : "";
-
-      const items = [
-        {label:"PM2.5", key:"pm2_5", val:c.pm2_5, unit:"µg/m³", healthy:"≤12 iyi (24s)", desc:"İnce partikül madde", limit:12},
-        {label:"PM10", key:"pm10", val:c.pm10, unit:"µg/m³", healthy:"≤50 iyi (24s)", desc:"Toz partiküller", limit:50},
-        {label:"NO₂", key:"nitrogen_dioxide", val:c.nitrogen_dioxide, unit:"µg/m³", healthy:"≤40 yıllık (AB)", desc:"Azot dioksit", limit:40},
-        {label:"Ozon", key:"ozone", val:c.ozone, unit:"µg/m³", healthy:"≤100 (8s)", desc:"Yer seviyesi ozon", limit:100},
-        {label:"Toz", key:"dust", val:c.dust, unit:"µg/m³", healthy:"Düşük olmalı", desc:"Toz/PM karışımı", limit:20},
-        {label:"UV", key:"uv_index", val:c.uv_index, unit:"", healthy:"0–2 düşük", desc:"UV indeks", limit:2, reverse:false}
-      ];
-
-      grid.innerHTML = items.map(it=>{
-        const val = it.val ?? "?";
-        const num = Number(val);
-        let colorGood="#4ade80";
-        let colorBad="#f97316";
-        let color="inherit";
-        let chip="Normal";
-
-        if(!isNaN(num)){
-          const ok = it.reverse ? num<=it.limit : num<=it.limit;
-          if(ok){
-            color=colorGood;
-            chip="İyi";
-          }else{
-            color=colorBad;
-            chip="Yüksek";
-          }
-        }else{
-          chip="Bilinmiyor";
-          color="#e5e7eb";
-        }
-
-        const borderColor = hexToRgba(color,0.5);
-
-        return `
-        <div class="card reveal" style="border-color:${borderColor};">
-          <div class="badge" style="margin-bottom:6px;">
-            <span class="badge-dot" style="background:${color};box-shadow:0 0 0 4px ${hexToRgba(color,0.25)}"></span>
-            ${name}, ${country||""}
-          </div>
-          <h3 style="margin:4px 0 4px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;">${it.label}</h3>
-          <p style="margin:0 0 4px;color:${color};font-weight:600;font-size:18px;">${val} ${it.unit}</p>
-          <p class="muted" style="margin:0 0 4px;">Durum: <span style="color:${color};font-weight:500;">${chip}</span></p>
-          <p class="muted" style="margin:0 0 4px;">Sağlıklı referans: ${it.healthy}</p>
-          <p class="muted" style="margin:0;">${it.desc}</p>
-          ${timeStr ? `<p class="muted" style="margin:6px 0 0;font-size:11px;">Güncelleme: ${timeStr}</p>` : ""}
-        </div>`;
-      }).join("");
-
-      // Yeni kartlara reveal ekle
-      const cards = grid.querySelectorAll(".card.reveal");
-      cards.forEach(c=>{
-        if(revealObserver && !c.classList.contains("visible")){
-          revealObserver.observe(c);
-        }
+      window.addEventListener("mousemove",(e)=>{
+        targetX=e.clientX;
+        targetY=e.clientY;
       });
 
-      setStatus("Hazır","#94a3b8");
-    }catch(e){
-      console.error(e);
-      setStatus("Hata","#f87171");
-      grid.innerHTML="<div class='card reveal visible'>Veri alınamadı.</div>";
+      function animate(){
+        const lerp=0.12;
+        currentX+=(targetX-currentX)*lerp;
+        currentY+=(targetY-currentY)*lerp;
+        blob.style.transform=`translate3d(${currentX-130}px,${currentY-130}px,0)`;
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
+    const presets = [
+      "Istanbul","Ankara","Izmir","London","Paris","Berlin","Madrid","Rome",
+      "New York","Los Angeles","Chicago","Toronto","Mexico City","Sao Paulo","Buenos Aires","Rio de Janeiro",
+      "Cairo","Lagos","Johannesburg","Nairobi",
+      "Moscow","Delhi","Mumbai","Bangalore","Beijing","Shanghai","Shenzhen","Guangzhou","Seoul","Tokyo","Osaka","Bangkok","Jakarta","Singapore","Hong Kong"
+    ];
+
+    const presetsEl = document.getElementById("presets");
+    presetsEl.innerHTML = presets.map(p =>
+      `<button class="btn" data-city="${p}">${p}</button>`
+    ).join("");
+
+    presetsEl.addEventListener("click",(e)=>{
+      const c=e.target.dataset.city;
+      if(c){
+        q.value=c;
+        search(c);
+      }
+    });
+
+    function hexToRgba(hex,alpha){
+      const h=hex.replace("#","");
+      if(h.length!==6) return hex;
+      const r=parseInt(h.slice(0,2),16);
+      const g=parseInt(h.slice(2,4),16);
+      const b=parseInt(h.slice(4,6),16);
+      return `rgba(${r},${g},${b},${alpha})`;
     }
-  }
 
-  document.getElementById("go").addEventListener("click",()=>search(q.value.trim()));
-  q.addEventListener("keydown",e=>{if(e.key==="Enter")search(q.value.trim());});
+    function setStatus(text,colorHex){
+      if (!statusEl) return;
+      // structure: <span class="badge-dot"></span> text
+      statusEl.innerHTML = `<span class="badge-dot"></span> ${text}`;
+      if(colorHex){
+        statusEl.style.borderColor=colorHex;
+        const dot=statusEl.querySelector(".badge-dot");
+        if(dot){
+          dot.style.background=colorHex;
+          dot.style.boxShadow=`0 0 0 4px ${hexToRgba(colorHex,0.25)}`;
+        }
+      }
+    }
 
-  // İstersen default şehir
-  // search("Istanbul");
+    async function search(city){
+      if(!city){
+        grid.innerHTML=`<div class='card reveal visible'>${t.msgWriteCity}</div>`;
+        return;
+      }
+      try{
+        setStatus(t.statusLoading,"#22d3ee");
+        const g = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${lang}`);
+        const gj = await g.json();
+        const loc = gj?.results?.[0];
+        if(!loc){
+          grid.innerHTML=`<div class='card reveal visible'>${t.msgNotFound}</div>`;
+          setStatus(t.statusReady,"#94a3b8");
+          return;
+        }
+        const {latitude,longitude,name,country} = loc;
+        const r = await fetch(
+          `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,dust,uv_index,aerosol_optical_depth`
+        );
+        const j = await r.json();
+        const c = j.current || {};
+        const timeStr = c.time ? new Date(c.time).toLocaleString(locale) : "";
+
+        const items = [
+          {label:t.pm25Label, key:"pm2_5", val:c.pm2_5, unit:"µg/m³", healthy:t.pm25Healthy, desc:t.pm25Desc, limit:12},
+          {label:t.pm10Label, key:"pm10", val:c.pm10, unit:"µg/m³", healthy:t.pm10Healthy, desc:t.pm10Desc, limit:50},
+          {label:t.no2Label, key:"nitrogen_dioxide", val:c.nitrogen_dioxide, unit:"µg/m³", healthy:t.no2Healthy, desc:t.no2Desc, limit:40},
+          {label:t.ozoneLabel, key:"ozone", val:c.ozone, unit:"µg/m³", healthy:t.ozoneHealthy, desc:t.ozoneDesc, limit:100},
+          {label:t.dustLabel, key:"dust", val:c.dust, unit:"µg/m³", healthy:t.dustHealthy, desc:t.dustDesc, limit:20},
+          {label:t.uvLabel, key:"uv_index", val:c.uv_index, unit:"", healthy:t.uvHealthy, desc:t.uvDesc, limit:2}
+        ];
+
+        grid.innerHTML = items.map(it=>{
+          const val = it.val ?? "?";
+          const num = Number(val);
+          let colorGood="#4ade80";
+          let colorBad="#f97316";
+          let color="inherit";
+          let chip=t.chipNormal;
+
+          if(!isNaN(num)){
+            const ok = num <= it.limit;
+            if(ok){
+              color=colorGood;
+              chip=t.chipGood;
+            }else{
+              color=colorBad;
+              chip=t.chipHigh;
+            }
+          }else{
+            chip=t.chipUnknown;
+            color="#e5e7eb";
+          }
+
+          const borderColor = hexToRgba(color,0.5);
+
+          return `
+          <div class="card reveal" style="border-color:${borderColor};">
+            <div class="badge" style="margin-bottom:6px;">
+              <span class="badge-dot" style="background:${color};box-shadow:0 0 0 4px ${hexToRgba(color,0.25)}"></span>
+              ${name}, ${country||""}
+            </div>
+            <h3 style="margin:4px 0 4px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;">${it.label}</h3>
+            <p style="margin:0 0 4px;color:${color};font-weight:600;font-size:18px;">${val} ${it.unit}</p>
+            <p class="muted" style="margin:0 0 4px;">${t.lblStatus} <span style="color:${color};font-weight:500;">${chip}</span></p>
+            <p class="muted" style="margin:0 0 4px;">${t.lblHealthyRef} ${it.healthy}</p>
+            <p class="muted" style="margin:0;">${it.desc}</p>
+            ${timeStr ? `<p class="muted" style="margin:6px 0 0;font-size:11px;">${t.lblUpdated} ${timeStr}</p>` : ""}
+          </div>`;
+        }).join("");
+
+        const cards = grid.querySelectorAll(".card.reveal");
+        cards.forEach(c=>{
+          if(revealObserver && !c.classList.contains("visible")){
+            revealObserver.observe(c);
+          }
+        });
+
+        setStatus(t.statusReady,"#94a3b8");
+      }catch(e){
+        console.error(e);
+        setStatus(t.statusError,"#f87171");
+        grid.innerHTML=`<div class='card reveal visible'>${t.msgFetchError}</div>`;
+      }
+    }
+
+    document.getElementById("go").addEventListener("click",()=>search(q.value.trim()));
+    q.addEventListener("keydown",e=>{if(e.key==="Enter")search(q.value.trim());});
+
+    // İstersen default şehir çağrısı:
+    // search("Istanbul");
+  })();
   </script>
+
+  <script src='../lang-helper.js'></script>
+  <script src='../scroll-helper.js'></script>
+  <script src='../page-lang.js'></script>
 </body>
 </html>

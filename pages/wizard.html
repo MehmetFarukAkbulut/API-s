@@ -893,7 +893,6 @@
           <div class="overlay"></div>
           <div class="caption">
             <span id="stormCaption">Wizard World API</span>
-            <span style="color:#cbd5f5;font-size:11px;">Işık ve animasyonlar aktif</span>
           </div>
         </div>
       </div>
@@ -949,512 +948,817 @@
     </div>
   </div>
 
-  <script>
-    (function(){
-      // Body load state
-      window.addEventListener("load", function(){
-        document.body.classList.add("loaded");
-      });
+<script>
+  (function () {
+    // ---- Dil tespiti ----
+    let LANG = "en";
+    try {
+      const pref = localStorage.getItem("prefLang");
+      if (pref === "tr" || pref === "en") LANG = pref;
+    } catch (e) {}
+    document.documentElement.lang = LANG;
 
-      const grid   = document.getElementById("grid");
+    const isEN = LANG === "en";
+
+    // ---- Sayfa yüklenince "Ana sayfa", başlık, lead, label vb. statik metinleri güncelle ----
+    window.addEventListener("load", function () {
+      document.body.classList.add("loaded");
+
+      const homeBtn = document.querySelector("header .btn");
+      if (homeBtn) {
+        // Sadece noktayı (dot) bırak, metni baştan yaz
+        homeBtn.innerHTML = '<span class="dot"></span>' + (isEN ? ' Home' : ' Ana sayfa');
+      }
+
+
+      const brandPill = document.querySelector(".brand-pill span");
+      if (brandPill) {
+        brandPill.textContent = isEN ? "Wizard Data Link" : "Wizard Data Link";
+      }
+
+      const h1 = document.querySelector(".header-copy h1");
+      if (h1) {
+        h1.innerHTML = 'Wizard <span class="accent">World</span>';
+      }
+
+      const lead = document.querySelector(".header-copy .lead");
+      if (lead) {
+        lead.textContent = isEN
+          ? "Live API data for spells, elixirs and Hogwarts houses. A glowing magic archive."
+          : "Büyüler, iksirler ve Hogwarts evleri için canlı API verisi. Işıkta parlayan bir sihir arşivi.";
+      }
+
+      const barLabel = document.querySelector(".bar-label");
+      if (barLabel) {
+        barLabel.textContent = isEN ? "Data type" : "Veri türü";
+      }
+
       const status = document.getElementById("status");
-      const statusPill = document.getElementById("status-pill");
-      const metaInfo = document.getElementById("metaInfo");
-      const panel = document.querySelector(".panel-parallax");
-      const loadMoreRow = document.getElementById("loadMoreRow");
+      if (status) status.textContent = isEN ? "Ready" : "Hazır";
+
       const loadMoreBtn = document.getElementById("loadMoreBtn");
-      const storm = document.getElementById("spellstorm");
-      const stormClose = document.getElementById("stormClose");
-      const stormType = document.getElementById("stormType");
+      if (loadMoreBtn) {
+        loadMoreBtn.innerHTML = `
+          <span class="bullet"></span>
+          ${isEN ? "Show more" : "Daha fazla göster"}
+        `;
+      }
+
+      const introCard = document.querySelector("#grid .card");
+      if (introCard) {
+        const tag = introCard.querySelector("small.tag");
+        const p = introCard.querySelector("p.muted");
+        if (tag)
+          tag.textContent = isEN ? "Wizard World" : "Wizard World";
+        if (p)
+          p.textContent = isEN
+            ? "Select a category above to get started: spells, elixirs or houses."
+            : "Başlamak için yukarıdan bir kategori seçin: büyüler, iksirler veya evler.";
+      }
+
       const stormTitle = document.getElementById("stormTitle");
       const stormDesc = document.getElementById("stormDesc");
-      const stormMeta = document.getElementById("stormMeta");
-      const stormMini = document.getElementById("stormMini");
-      const stormImage = document.getElementById("stormImage");
-      const stormCaption = document.getElementById("stormCaption");
-      const stormParticles = document.getElementById("stormParticles");
+      const stormClose = document.getElementById("stormClose");
+      if (stormTitle)
+        stormTitle.textContent = isEN ? "Waiting for selection" : "Seçim bekleniyor";
+      if (stormDesc)
+        stormDesc.textContent = isEN
+          ? "When you click a card, the whole page shifts to match that spell, potion or house."
+          : "Bir kartı tıkladığınızda sayfanın tamamı seçilen büyü, iksir veya evin tonlarına bürünür.";
+      if (stormClose)
+        stormClose.setAttribute("aria-label", isEN ? "Close" : "Kapat");
+    });
 
-      const PAGE_SIZE = 30;
-      let allData = [];
-      let currentType = "spells";
-      let shownCount = 0;
+    // ---- Orijinal uygulama kodu (metinler dil destekli) ----
+    const grid = document.getElementById("grid");
+    const status = document.getElementById("status");
+    const statusPill = document.getElementById("status-pill");
+    const metaInfo = document.getElementById("metaInfo");
+    const panel = document.querySelector(".panel-parallax");
+    const loadMoreRow = document.getElementById("loadMoreRow");
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    const storm = document.getElementById("spellstorm");
+    const stormClose = document.getElementById("stormClose");
+    const stormType = document.getElementById("stormType");
+    const stormTitle = document.getElementById("stormTitle");
+    const stormDesc = document.getElementById("stormDesc");
+    const stormMeta = document.getElementById("stormMeta");
+    const stormMini = document.getElementById("stormMini");
+    const stormImage = document.getElementById("stormImage");
+    const stormCaption = document.getElementById("stormCaption");
+    const stormParticles = document.getElementById("stormParticles");
+    const wizardBtns = document.getElementById("wizardBtns");
 
-      const esc = (val="") => String(val ?? "").replace(/"/g,"&quot;");
+    const PAGE_SIZE = 30;
+    let allData = [];
+    let currentType = "spells";
+    let shownCount = 0;
 
-      const LIGHT_COLORS = {
-        Blue:"#38bdf8",
-        IcyBlue:"#7dd3fc",
-        Red:"#ef4444",
-        Gold:"#fbbf24",
-        Purple:"#c084fc",
-        Transparent:"#a5f3fc",
-        White:"#f8fafc",
-        BlackSmoke:"#0f172a",
-        Green:"#22c55e",
-        Yellow:"#fcd34d",
-        Orange:"#fb923c",
-        Pink:"#f472b6",
-        Grey:"#cbd5e1",
-        BrightBlue:"#0ea5e9",
-        None:"#94a3b8"
-      };
+    const esc = (val = "") =>
+      String(val ?? "").replace(/"/g, "&quot;");
 
-      const DIFFICULTY_COLORS = {
-        Beginner:"#22c55e",
-        Moderate:"#eab308",
-        Advanced:"#a855f7",
-        Unknown:"#38bdf8"
-      };
+    const LIGHT_COLORS = {
+      Blue: "#38bdf8",
+      IcyBlue: "#7dd3fc",
+      Red: "#ef4444",
+      Gold: "#fbbf24",
+      Purple: "#c084fc",
+      Transparent: "#a5f3fc",
+      White: "#f8fafc",
+      BlackSmoke: "#0f172a",
+      Green: "#22c55e",
+      Yellow: "#fcd34d",
+      Orange: "#fb923c",
+      Pink: "#f472b6",
+      Grey: "#cbd5e1",
+      BrightBlue: "#0ea5e9",
+      None: "#94a3b8",
+    };
 
-      const TYPE_ACCENTS = {
-        spells:"#22d3ee",
-        elixirs:"#eab308",
-        houses:"#10b981"
-      };
+    const DIFFICULTY_COLORS = {
+      Beginner: "#22c55e",
+      Moderate: "#eab308",
+      Advanced: "#a855f7",
+      Unknown: "#38bdf8",
+    };
 
-      const HOUSE_IMAGES = {
-        Gryffindor:"https://insighteditions.com/cdn/shop/products/82450-88465-cover_1024x1024.jpg?v=1600373018",
-        Ravenclaw:"https://sw6.elbenwald.de/media/ef/76/59/1633452254/E1056446_8.jpg",
-        Hufflepuff:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjK1JTFdnUC7lJJFKuY231BnqXbvd2W9nQGw&s",
-        Slytherin:"https://m.media-amazon.com/images/I/81mUqWd-q7L._AC_UF894,1000_QL80_.jpg"
-      };
+    const HOUSE_IMAGES = {
+      Gryffindor:
+        "https://harrypottershop.com/cdn/shop/files/PinOnPin_Gryff.png?v=1708688843",
+      Ravenclaw:
+        "https://sw6.elbenwald.de/media/ef/76/59/1633452254/E1056446_8.jpg",
+      Hufflepuff:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjK1JTFdnUC7lJJFKuY231BnqXbvd2W9nQGw&s",
+      Slytherin:
+        "https://i0.wp.com/ortadunya.com/wp-content/uploads/2016/11/Slytherin.png",
+    };
 
-      const GENERIC_IMAGES = {
-        spells:"https://static.wikia.nocookie.net/harrypotter/images/7/75/Albus_Dumbledore_%28HBPF_promo%29.jpg/revision/latest/scale-to-width-down/1000?cb=20150822232849",
-        elixirs:"https://static.wikia.nocookie.net/harrypotter/images/2/20/ElixirofLife.jpg/revision/latest?cb=20160114113615",
-        houses:"https://static.wikia.nocookie.net/harrypotter/images/a/ae/Hogwartscrest.png/revision/latest?cb=20110806202805"
-      };
+    const GENERIC_IMAGES = {
+      spells:
+        "https://static.wikia.nocookie.net/harrypotter/images/7/75/Albus_Dumbledore_%28HBPF_promo%29.jpg/revision/latest/scale-to-width-down/1000?cb=20150822232849",
+      elixirs:
+        "https://static.wikia.nocookie.net/harrypotter/images/2/20/ElixirofLife.jpg/revision/latest?cb=20160114113615",
+      houses:
+        "https://static.wikia.nocookie.net/harrypotter/images/a/ae/Hogwartscrest.png/revision/latest?cb=20110806202805",
+    };
 
-      // Hidden input for type
-      const hiddenType = document.createElement("input");
-      hiddenType.type = "hidden";
-      hiddenType.id = "typeVal";
-      hiddenType.value = "spells";
-      document.body.appendChild(hiddenType);
+    // Gizli input (type)
+    const hiddenType = document.createElement("input");
+    hiddenType.type = "hidden";
+    hiddenType.id = "typeVal";
+    hiddenType.value = "spells";
+    document.body.appendChild(hiddenType);
 
-      // Filter buttons render
-      const TYPES = [
-        { id:"spells",  label:"Büyüler"  },
-        { id:"elixirs", label:"İksirler" },
-        { id:"houses",  label:"Evler"    }
-      ];
+    // Filtre butonları
+    const TYPES = [
+      { id: "spells", labelTR: "Büyüler", labelEN: "Spells" },
+      { id: "elixirs", labelTR: "İksirler", labelEN: "Elixirs" },
+      { id: "houses", labelTR: "Evler", labelEN: "Houses" },
+    ];
 
-      const wizardBtns = document.getElementById("wizardBtns");
-      wizardBtns.innerHTML = TYPES.map(t => (
-        `<button class="btn-filter" data-t="${t.id}">
-           <span class="bullet"></span>
-           ${t.label}
-         </button>`
-      )).join("");
+    wizardBtns.innerHTML = TYPES.map(
+      (t) => `
+        <button class="btn-filter" data-t="${t.id}">
+          <span class="bullet"></span>
+          ${isEN ? t.labelEN : t.labelTR}
+        </button>`
+    ).join("");
 
-      const filterButtons = Array.from(document.querySelectorAll(".btn-filter"));
-      function setActiveButton(type){
-        filterButtons.forEach(btn=>{
-          if(btn.dataset.t === type){ btn.classList.add("active"); }
-          else{ btn.classList.remove("active"); }
-        });
-      }
-
-      wizardBtns.addEventListener("click", (e)=>{
-        const t = e.target.closest("button")?.dataset.t;
-        if(!t) return;
-        hiddenType.value = t;
-        currentType = t;
-        setActiveButton(t);
-        loadData();
+    const filterButtons = Array.from(
+      document.querySelectorAll(".btn-filter")
+    );
+    function setActiveButton(type) {
+      filterButtons.forEach((btn) => {
+        if (btn.dataset.t === type) btn.classList.add("active");
+        else btn.classList.remove("active");
       });
+    }
 
-      // Status helper
-      function setStatus(mode, text){
-        status.textContent = text;
-        statusPill.classList.remove("loading","error");
-        if(mode === "loading") statusPill.classList.add("loading");
-        if(mode === "error")   statusPill.classList.add("error");
+    // Yatay kaydırma (filtre şeridi)
+    const scrollFilters = (delta) => {
+      if (!wizardBtns) return;
+      wizardBtns.scrollBy({ left: delta, behavior: "smooth" });
+    };
+
+    if (wizardBtns) {
+      wizardBtns.addEventListener(
+        "wheel",
+        (e) => {
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            e.preventDefault();
+            wizardBtns.scrollLeft += e.deltaY;
+          }
+        },
+        { passive: false }
+      );
+
+      (function initFilterDrag() {
+        let isDown = false;
+        let startX = 0;
+        let scrollLeft = 0;
+
+        wizardBtns.addEventListener("mousedown", (e) => {
+          isDown = true;
+          wizardBtns.classList.add("dragging");
+          startX = e.pageX - wizardBtns.offsetLeft;
+          scrollLeft = wizardBtns.scrollLeft;
+        });
+
+        window.addEventListener("mouseup", () => {
+          isDown = false;
+          wizardBtns.classList.remove("dragging");
+        });
+
+        wizardBtns.addEventListener("mouseleave", () => {
+          isDown = false;
+          wizardBtns.classList.remove("dragging");
+        });
+
+        wizardBtns.addEventListener("mousemove", (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - wizardBtns.offsetLeft;
+          const walk = (x - startX) * 1.4;
+          wizardBtns.scrollLeft = scrollLeft - walk;
+        });
+      })();
+    }
+
+    window.addEventListener("keydown", (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        scrollFilters(200);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        scrollFilters(-200);
       }
+    });
 
-      // Skeleton loading
-      function showSkeleton(count){
-        const skeletonCard = () => `
-          <div class="card skeleton is-visible">
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line"></div>
-          </div>
-        `;
-        grid.innerHTML = new Array(count).fill(0).map(skeletonCard).join("");
+    wizardBtns.addEventListener("click", (e) => {
+      const t = e.target.closest("button")?.dataset.t;
+      if (!t) return;
+      hiddenType.value = t;
+      currentType = t;
+      setActiveButton(t);
+      loadData();
+    });
+
+    // Status helper
+    function setStatus(mode, text) {
+      status.textContent = text;
+      statusPill.classList.remove("loading", "error");
+      if (mode === "loading") statusPill.classList.add("loading");
+      if (mode === "error") statusPill.classList.add("error");
+    }
+
+    // Skeleton
+    function showSkeleton(count) {
+      const skeletonCard = () => `
+        <div class="card skeleton is-visible">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>`;
+      grid.innerHTML = new Array(count).fill(0).map(skeletonCard).join("");
+    }
+
+    const POTTER_BASE = "https://api.potterdb.com";
+
+    async function fetchAllPotter(path, mapFn) {
+      let url = `${POTTER_BASE}${path}?page[size]=100`;
+      const collected = [];
+      let guard = 0;
+      while (url && guard < 8) {
+        const res = await fetch(url);
+        const json = await res.json();
+        const items = Array.isArray(json.data) ? json.data : [];
+        collected.push(...items.map(mapFn));
+        const next = json.links?.next;
+        url = next
+          ? next.startsWith("http")
+            ? next
+            : `${POTTER_BASE}${next}`
+          : "";
+        guard++;
       }
+      return collected;
+    }
 
-      const POTTER_BASE = "https://api.potterdb.com";
+    function mapSpell(item = {}) {
+      const a = item.attributes || {};
+      return {
+        name: a.name,
+        type: a.category,
+        effect: a.effect,
+        incantation: a.incantation,
+        light: a.light,
+        creator: a.creator,
+        image: a.image,
+        hand: a.hand,
+        wiki: a.wiki,
+      };
+    }
 
-      async function fetchAllPotter(path, mapFn){
-        let url = `${POTTER_BASE}${path}?page[size]=100`;
-        const collected = [];
-        let guard = 0;
-        while(url && guard < 8){
-          const res = await fetch(url);
-          const json = await res.json();
-          const items = Array.isArray(json.data) ? json.data : [];
-          collected.push(...items.map(mapFn));
-          const next = json.links?.next;
-          url = next ? (next.startsWith("http") ? next : `${POTTER_BASE}${next}`) : "";
-          guard++;
-        }
-        return collected;
-      }
+    function mapPotion(item = {}) {
+      const a = item.attributes || {};
+      const ingredients = (a.ingredients || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((name) => ({ name }));
+      return {
+        name: a.name,
+        effect: a.effect,
+        difficulty: a.difficulty || "Unknown",
+        ingredients,
+        sideEffects: a.side_effects,
+        characteristics: a.characteristics,
+        image: a.image,
+        wiki: a.wiki,
+      };
+    }
 
-      function mapSpell(item={}){
-        const a = item.attributes || {};
+    // Palet helper’ları
+    const COLOR_FALLBACK = "#22d3ee";
+    function colorFromHouse(colorName = "") {
+      const normalized = (colorName || "").trim().split(" ")[0];
+      const key =
+        normalized.charAt(0).toUpperCase() +
+        normalized.slice(1).toLowerCase();
+      const map = {
+        Scarlet: "#ef233c",
+        Gold: "#fbbf24",
+        Blue: "#3b82f6",
+        Bronze: "#b45309",
+        Yellow: "#facc15",
+        Black: "#0f172a",
+        Green: "#22c55e",
+        Silver: "#cbd5e1",
+      };
+      return map[key] || COLOR_FALLBACK;
+    }
+
+    function paletteFromItem(it = {}, type) {
+      if (type === "houses") {
+        const parts = (it.houseColours || "")
+          .split("and")
+          .map((s) => s.trim());
+        const primary = colorFromHouse(parts[0]);
+        const secondary = colorFromHouse(parts[1]);
         return {
-          name: a.name,
-          type: a.category,
-          effect: a.effect,
-          incantation: a.incantation,
-          light: a.light,
-          creator: a.creator,
-          image: a.image,
-          hand: a.hand,
-          wiki: a.wiki
+          primary: primary || "#22c55e",
+          secondary: secondary || "#22d3ee",
+          tertiary: "#a855f7",
+          caption: it.element
+            ? isEN
+              ? `${it.element} element`
+              : `${it.element} elementi`
+            : isEN
+            ? "Hogwarts house"
+            : "Hogwarts evi",
+          desc: isEN
+            ? `Founder: ${it.founder || "unknown"} · Ghost: ${
+                it.ghost || "unknown"
+              }`
+            : `Kurucu: ${it.founder || "bilinmiyor"} · Hayalet: ${
+                it.ghost || "bilinmiyor"
+              }`,
         };
       }
-
-      function mapPotion(item={}){
-        const a = item.attributes || {};
-        const ingredients = (a.ingredients || "").split(",").map(s=>s.trim()).filter(Boolean).map(name=>({name}));
+      if (type === "elixirs") {
+        const diff =
+          it.difficulty && DIFFICULTY_COLORS[it.difficulty]
+            ? DIFFICULTY_COLORS[it.difficulty]
+            : "#e879f9";
+        const ingred = (it.ingredients || [])
+          .slice(0, 2)
+          .map((i) => i.name)
+          .join(", ");
         return {
-          name: a.name,
-          effect: a.effect,
-          difficulty: a.difficulty || "Unknown",
-          ingredients,
-          sideEffects: a.side_effects,
-          characteristics: a.characteristics,
-          image: a.image,
-          wiki: a.wiki
+          primary: diff,
+          secondary: "#22d3ee",
+          tertiary: "#9333ea",
+          caption: ingred
+            ? ingred
+            : isEN
+            ? "Limited ingredient details"
+            : "İçerik bilgisi sınırlı",
+          desc: it.effect
+            ? it.effect
+            : isEN
+            ? "Unknown effect"
+            : "Bilinmeyen etki",
         };
       }
+      // spells
+      const light =
+        it.light && LIGHT_COLORS[it.light]
+          ? LIGHT_COLORS[it.light]
+          : "#38bdf8";
+      const inc = it.incantation
+        ? isEN
+          ? `Incantation: ${it.incantation}`
+          : `Dile getir: ${it.incantation}`
+        : isEN
+        ? "Non-verbal spell"
+        : "Sessiz büyü";
+      return {
+        primary: light,
+        secondary: "#a855f7",
+        tertiary: "#22c55e",
+        caption: inc,
+        desc: it.effect
+          ? it.effect
+          : isEN
+          ? "No effect description"
+          : "Etki bilgisi yok",
+      };
+    }
 
-      // Tema paleti Ǫretimi
-      const COLOR_FALLBACK = "#22d3ee";
-      function colorFromHouse(colorName=""){
-        const normalized = (colorName || "").trim().split(" ")[0];
-        const key = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
-        const map = {
-          Scarlet:"#ef233c",
-          Gold:"#fbbf24",
-          Blue:"#3b82f6",
-          Bronze:"#b45309",
-          Yellow:"#facc15",
-          Black:"#0f172a",
-          Green:"#22c55e",
-          Silver:"#cbd5e1"
-        };
-        return map[key] || COLOR_FALLBACK;
+    function pickImage(it = {}, type) {
+      if (it.image) return it.image;
+      if (type === "houses" && HOUSE_IMAGES[it.name]) {
+        return HOUSE_IMAGES[it.name];
+      }
+      return GENERIC_IMAGES[type] || GENERIC_IMAGES.spells;
+    }
+
+    function renderParticles(palette) {
+      if (!stormParticles) return;
+      stormParticles.innerHTML = "";
+      const count = 22;
+      for (let i = 0; i < count; i++) {
+        const span = document.createElement("span");
+        const size = 5 + Math.random() * 12;
+        span.style.width = `${size}px`;
+        span.style.height = `${size}px`;
+        span.style.left = `${Math.random() * 100}%`;
+        span.style.top = `${Math.random() * 100}%`;
+        span.style.background = i % 2 ? palette.primary : palette.secondary;
+        span.style.animationDuration = `${12 + Math.random() * 8}s`;
+        span.style.opacity = 0.35 + Math.random() * 0.5;
+        stormParticles.appendChild(span);
+      }
+    }
+
+    function applyPalette(palette) {
+      const root = document.documentElement.style;
+      root.setProperty("--storm-primary", palette.primary);
+      root.setProperty("--storm-secondary", palette.secondary);
+      root.setProperty("--storm-tertiary", palette.tertiary);
+      root.setProperty("--storm-glow", palette.primary);
+    }
+
+    const chipHtml = (label) =>
+      `<span class="storm-chip">${label}</span>`;
+
+    function openStorm(it, type) {
+      const palette = paletteFromItem(it, type);
+      applyPalette(palette);
+      renderParticles(palette);
+
+      const typeLabel =
+        type === "spells"
+          ? isEN
+            ? "Spell"
+            : "Büyü"
+          : type === "elixirs"
+          ? isEN
+            ? "Elixir"
+            : "İksir"
+          : isEN
+          ? "Hogwarts house"
+          : "Hogwarts evi";
+
+      stormType.innerHTML = `<span class="pulse"></span> ${typeLabel}`;
+      stormTitle.textContent = it.name || (isEN ? "Unknown" : "Bilinmiyor");
+      stormDesc.textContent = palette.desc;
+
+      const chips = [];
+      if (type === "spells") {
+        if (it.incantation)
+          chips.push(
+            (isEN ? "Incantation: " : "Ezber: ") + it.incantation
+          );
+        if (it.type)
+          chips.push((isEN ? "Type: " : "Tür: ") + it.type);
+        if (it.light)
+          chips.push((isEN ? "Light: " : "Işık: ") + it.light);
+        if (it.creator)
+          chips.push(
+            (isEN ? "Creator: " : "Yaratıcı: ") + it.creator
+          );
+      } else if (type === "elixirs") {
+        if (it.difficulty)
+          chips.push(
+            (isEN ? "Difficulty: " : "Zorluk: ") + it.difficulty
+          );
+        if (it.sideEffects)
+          chips.push(
+            (isEN ? "Side effects: " : "Yan etki: ") + it.sideEffects
+          );
+        if (it.effect)
+          chips.push(
+            (isEN ? "Effect: " : "Etki: ") + it.effect
+          );
+      } else if (type === "houses") {
+        if (it.founder)
+          chips.push(
+            (isEN ? "Founder: " : "Kurucu: ") + it.founder
+          );
+        if (it.ghost)
+          chips.push(
+            (isEN ? "Ghost: " : "Hayalet: ") + it.ghost
+          );
+        if (it.commonRoom)
+          chips.push(
+            (isEN ? "Common room: " : "Ortak salon: ") +
+              it.commonRoom
+          );
+      }
+      stormMeta.innerHTML =
+        chips.map(chipHtml).join("") ||
+        chipHtml(
+          isEN ? "No additional details" : "Detay bulunamadı"
+        );
+
+      if (type === "elixirs") {
+        const ingred = (it.ingredients || []).map((i) => i.name);
+        stormMini.innerHTML = ingred.length
+          ? ingred
+              .slice(0, 8)
+              .map(
+                (n) => `<div class="chip">${esc(n)}</div>`
+              )
+              .join("")
+          : `<div class="chip">${
+              isEN ? "No ingredient information" : "İçerik bilgisi yok"
+            }</div>`;
+      } else if (type === "houses") {
+        const traits = (it.traits || []).map((t) => t.name || t);
+        stormMini.innerHTML = traits.length
+          ? traits
+              .slice(0, 8)
+              .map(
+                (n) => `<div class="chip">${esc(n)}</div>`
+              )
+              .join("")
+          : `<div class="chip">${
+              isEN ? "No trait information" : "Özellik bilgisi yok"
+            }</div>`;
+      } else {
+        const extras = [it.effect, it.incantation, it.type].filter(
+          Boolean
+        );
+        stormMini.innerHTML = extras.length
+          ? extras
+              .slice(0, 4)
+              .map(
+                (n) => `<div class="chip">${esc(n)}</div>`
+              )
+              .join("")
+          : `<div class="chip">${
+              isEN ? "No extra data" : "Ek veri yok"
+            }</div>`;
       }
 
-      function paletteFromItem(it={}, type){
-        if(type === "houses"){
-          const parts = (it.houseColours || "").split("and").map(s=>s.trim());
-          const primary = colorFromHouse(parts[0]);
-          const secondary = colorFromHouse(parts[1]);
-          return {
-            primary: primary || "#22c55e",
-            secondary: secondary || "#22d3ee",
-            tertiary: "#a855f7",
-            caption: it.element ? `${it.element} elementi` : "Hogwarts evi",
-            desc: `Kurucu: ${it.founder || "bilinmiyor"} · Hayalet: ${it.ghost || "bilinmiyor"}`
-          };
-        }
-        if(type === "elixirs"){
-          const diff = it.difficulty && DIFFICULTY_COLORS[it.difficulty] ? DIFFICULTY_COLORS[it.difficulty] : "#e879f9";
-          const ingred = (it.ingredients || []).slice(0,2).map(i=>i.name).join(", ");
-          return {
-            primary: diff,
-            secondary: "#22d3ee",
-            tertiary: "#9333ea",
-            caption: ingred || "İçerik bilgisi sınırlı",
-            desc: it.effect || "Bilinmeyen etki"
-          };
-        }
-        // spells
-        const light = it.light && LIGHT_COLORS[it.light] ? LIGHT_COLORS[it.light] : "#38bdf8";
-        const inc = it.incantation ? `Dile getir: ${it.incantation}` : "Sessiz büyü";
-        return {
-          primary: light,
-          secondary: "#a855f7",
-          tertiary: "#22c55e",
-          caption: inc,
-          desc: it.effect || "Etki bilgisi yok"
-        };
-      }
+      const imgUrl = pickImage(it, type);
+      stormImage.src = imgUrl;
+      stormImage.onerror = () => {
+        stormImage.onerror = null;
+        stormImage.src =
+          GENERIC_IMAGES[type] || GENERIC_IMAGES.spells;
+      };
+      stormCaption.textContent =
+        palette.caption || "Wizard World API";
 
-      function pickImage(it={}, type){
-        if(it.image) return it.image;
-        if(type === "houses" && HOUSE_IMAGES[it.name]){
-          return HOUSE_IMAGES[it.name];
-        }
-        return GENERIC_IMAGES[type] || GENERIC_IMAGES.spells;
-      }
+      storm.classList.add("is-active");
+      document.body.classList.add("storm-open");
+    }
 
-      function renderParticles(palette){
-        if(!stormParticles) return;
-        stormParticles.innerHTML = "";
-        const count = 22;
-        for(let i=0;i<count;i++){
-          const span = document.createElement("span");
-          const size = 5 + Math.random()*12;
-          span.style.width = `${size}px`;
-          span.style.height = `${size}px`;
-          span.style.left = `${Math.random()*100}%`;
-          span.style.top = `${Math.random()*100}%`;
-          span.style.background = i % 2 ? palette.primary : palette.secondary;
-          span.style.animationDuration = `${12 + Math.random()*8}s`;
-          span.style.opacity = 0.35 + Math.random()*0.5;
-          stormParticles.appendChild(span);
-        }
-      }
+    function closeStorm() {
+      storm.classList.remove("is-active");
+      document.body.classList.remove("storm-open");
+    }
 
-      function applyPalette(palette){
-        const root = document.documentElement.style;
-        root.setProperty("--storm-primary", palette.primary);
-        root.setProperty("--storm-secondary", palette.secondary);
-        root.setProperty("--storm-tertiary", palette.tertiary);
-        root.setProperty("--storm-glow", palette.primary);
-      }
-
-      function chipHtml(label){
-        return `<span class="storm-chip">${label}</span>`;
-      }
-
-      function openStorm(it, type){
-        const palette = paletteFromItem(it, type);
-        applyPalette(palette);
-        renderParticles(palette);
-
-        const typeLabel = type === "spells" ? "Büyü" : type === "elixirs" ? "İksir" : "Hogwarts evi";
-        stormType.innerHTML = `<span class="pulse"></span> ${typeLabel}`;
-        stormTitle.textContent = it.name || "Bilinmiyor";
-        stormDesc.textContent = palette.desc;
-
-        const chips = [];
-        if(type === "spells"){
-          if(it.incantation) chips.push(`Ezber: ${it.incantation}`);
-          if(it.type) chips.push(`Tür: ${it.type}`);
-          if(it.light) chips.push(`Işık: ${it.light}`);
-          if(it.creator) chips.push(`Yaratıcı: ${it.creator}`);
-        }else if(type === "elixirs"){
-          if(it.difficulty) chips.push(`Zorluk: ${it.difficulty}`);
-          if(it.sideEffects) chips.push(`Yan etki: ${it.sideEffects}`);
-          if(it.effect) chips.push(`Etki: ${it.effect}`);
-        }else if(type === "houses"){
-          if(it.founder) chips.push(`Kurucu: ${it.founder}`);
-          if(it.ghost) chips.push(`Hayalet: ${it.ghost}`);
-          if(it.commonRoom) chips.push(`Ortak salon: ${it.commonRoom}`);
-        }
-        stormMeta.innerHTML = chips.map(chipHtml).join("") || chipHtml("Detay bulunamadı");
-
-        if(type === "elixirs"){
-          const ingred = (it.ingredients || []).map(i=>i.name);
-          stormMini.innerHTML = ingred.length ? ingred.slice(0,8).map(n=>`<div class="chip">${esc(n)}</div>`).join("") : `<div class="chip">İçerik bilgisi yok</div>`;
-        }else if(type === "houses"){
-          const traits = (it.traits || []).map(t=>t.name||t);
-          stormMini.innerHTML = traits.length ? traits.slice(0,8).map(n=>`<div class="chip">${esc(n)}</div>`).join("") : `<div class="chip">Özellik bilgisi yok</div>`;
-        }else{
-          const extras = [it.effect, it.incantation, it.type].filter(Boolean);
-          stormMini.innerHTML = extras.length ? extras.slice(0,4).map(n=>`<div class="chip">${esc(n)}</div>`).join("") : `<div class="chip">Ek veri yok</div>`;
-        }
-
-        const imgUrl = pickImage(it, type);
-        stormImage.src = imgUrl;
-        stormImage.onerror = () => {
-          stormImage.onerror = null;
-          stormImage.src = GENERIC_IMAGES[type] || GENERIC_IMAGES.spells;
-        };
-        stormCaption.textContent = palette.caption || "Wizard World API";
-
-        storm.classList.add("is-active");
-        document.body.classList.add("storm-open");
-      }
-
-      function closeStorm(){
-        storm.classList.remove("is-active");
-        document.body.classList.remove("storm-open");
-      }
-
-      // Kart HTML üretimi
-      function buildCard(it, type, idx){
-        if(type === "houses"){
-          const traits = (it.traits || []).map(t=>t.name||t).join(", ");
-          return `
-            <div class="card" data-idx="${idx}" data-type="${type}">
-              <small class="tag">Hogwarts evi</small>
-              <h3>${it.name}</h3>
-              <p class="muted">Kurucu: ${it.founder || "-"}</p>
-              <p class="muted">${traits || "&nbsp;"}</p>
-            </div>
-          `;
-        }
-        if(type === "elixirs"){
-          const ingred = (it.ingredients || []).map(i=>i.name).join(", ");
-          return `
-            <div class="card" data-idx="${idx}" data-type="${type}">
-              <small class="tag">İksir</small>
-              <h3>${it.name}</h3>
-              <p class="muted">${it.effect || ""}</p>
-              <p class="muted">Zorluk: ${it.difficulty || "?"}</p>
-              <p class="muted">${ingred || "&nbsp;"}</p>
-            </div>
-          `;
-        }
-        // spells
+    // Kart HTML
+    function buildCard(it, type, idx) {
+      if (type === "houses") {
+        const traits = (it.traits || [])
+          .map((t) => t.name || t)
+          .join(", ");
         return `
           <div class="card" data-idx="${idx}" data-type="${type}">
-            <small class="tag">Büyü</small>
+            <small class="tag">${isEN ? "Hogwarts house" : "Hogwarts evi"}</small>
             <h3>${it.name}</h3>
-            <p class="muted">${it.type || ""}</p>
-            <p class="muted">${it.effect || it.incantation || ""}</p>
-          </div>
-        `;
+            <p class="muted">${(isEN ? "Founder: " : "Kurucu: ") + (it.founder || "-")}</p>
+            <p class="muted">${traits || "&nbsp;"}</p>
+          </div>`;
       }
+      if (type === "elixirs") {
+        const ingred = (it.ingredients || [])
+          .map((i) => i.name)
+          .join(", ");
+        return `
+          <div class="card" data-idx="${idx}" data-type="${type}">
+            <small class="tag">${isEN ? "Elixir" : "İksir"}</small>
+            <h3>${it.name}</h3>
+            <p class="muted">${it.effect || ""}</p>
+            <p class="muted">${isEN ? "Difficulty: " : "Zorluk: "}${
+          it.difficulty || "?"
+        }</p>
+            <p class="muted">${ingred || "&nbsp;"}</p>
+          </div>`;
+      }
+      // spells
+      return `
+        <div class="card" data-idx="${idx}" data-type="${type}">
+          <small class="tag">${isEN ? "Spell" : "Büyü"}</small>
+          <h3>${it.name}</h3>
+          <p class="muted">${it.type || ""}</p>
+          <p class="muted">${it.effect || it.incantation || ""}</p>
+        </div>`;
+    }
 
-      async function loadData(){
-        const type = hiddenType.value || "spells";
-        currentType = type;
-        setStatus("loading","Yükleniyor...");
-        metaInfo.textContent = type === "houses" ? "Wizard World API - canlı veri çekiliyor" : "Potter DB API - canlı veri çekiliyor";
-        loadMoreRow.style.display = "none";
-        showSkeleton(6);
+    async function loadData() {
+      const type = hiddenType.value || "spells";
+      currentType = type;
+      setStatus("loading", isEN ? "Loading..." : "Yükleniyor...");
+      metaInfo.textContent =
+        type === "houses"
+          ? isEN
+            ? "Wizard World API – fetching live data"
+            : "Wizard World API - canlı veri çekiliyor"
+          : isEN
+          ? "Potter DB API – fetching live data"
+          : "Potter DB API - canlı veri çekiliyor";
+      loadMoreRow.style.display = "none";
+      showSkeleton(6);
 
-        try{
-          let list = [];
-          if(type === "spells"){
-            list = await fetchAllPotter("/v1/spells", mapSpell);
-          }else if(type === "elixirs"){
-            list = await fetchAllPotter("/v1/potions", mapPotion);
-          }else{
-            const r = await fetch("https://wizard-world-api.herokuapp.com/Houses");
-            const j = await r.json();
-            list = Array.isArray(j) ? j : (j.houses || []);
-          }
+      try {
+        let list = [];
+        if (type === "spells") {
+          list = await fetchAllPotter("/v1/spells", mapSpell);
+        } else if (type === "elixirs") {
+          list = await fetchAllPotter("/v1/potions", mapPotion);
+        } else {
+          const r = await fetch(
+            "https://wizard-world-api.herokuapp.com/Houses"
+          );
+          const j = await r.json();
+          list = Array.isArray(j) ? j : j.houses || [];
+        }
 
-          allData = list || [];
-          shownCount = 0;
+        allData = list || [];
+        shownCount = 0;
 
-          if(!allData.length){
-            setStatus("","Hazır");
-            metaInfo.textContent = "Sonuç bulunamad?.";
-            grid.innerHTML = `<div class="card is-visible"><small class="tag">Bilgi</small><p class="muted">Bu kategori için sonu? bulunamad?.</p></div>`;
-            loadMoreRow.style.display = "none";
-            return;
-          }
-
-          renderPage(true);
-          setStatus("","Hazır");
-          statusPill.classList.remove("error","loading");
-        }catch(e){
-          console.error(e);
-          setStatus("error","Hata");
-          metaInfo.textContent = "Veri alınırken bir hata oluştu.";
+        if (!allData.length) {
+          setStatus("", isEN ? "Ready" : "Hazır");
+          metaInfo.textContent = isEN
+            ? "No results found."
+            : "Sonuç bulunamadı.";
           grid.innerHTML = `
             <div class="card is-visible">
-              <small class="tag">Hata</small>
-              <p class="muted">Veri alınamadı. Daha sonra tekrar deneyin.</p>
-            </div>
-          `;
+              <small class="tag">${isEN ? "Info" : "Bilgi"}</small>
+              <p class="muted">${
+                isEN
+                  ? "No results found for this category."
+                  : "Bu kategori için sonuç bulunamadı."
+              }</p>
+            </div>`;
           loadMoreRow.style.display = "none";
+          return;
         }
-      }
 
-      // IntersectionObserver ile kart fade/slide-in
-      let observer;
-      function initObserver(){
-        if(observer) observer.disconnect();
-        observer = new IntersectionObserver(entries=>{
-          entries.forEach(entry=>{
-            if(entry.isIntersecting){
+        renderPage(true);
+        setStatus("", isEN ? "Ready" : "Hazır");
+        statusPill.classList.remove("error", "loading");
+      } catch (e) {
+        console.error(e);
+        setStatus("error", isEN ? "Error" : "Hata");
+        metaInfo.textContent = isEN
+          ? "An error occurred while fetching data."
+          : "Veri alınırken bir hata oluştu.";
+        grid.innerHTML = `
+          <div class="card is-visible">
+            <small class="tag">${isEN ? "Error" : "Hata"}</small>
+            <p class="muted">${
+              isEN
+                ? "Could not fetch data. Please try again later."
+                : "Veri alınamadı. Daha sonra tekrar deneyin."
+            }</p>
+          </div>`;
+        loadMoreRow.style.display = "none";
+      }
+    }
+
+    let observer;
+    function initObserver() {
+      if (observer) observer.disconnect();
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               entry.target.classList.add("is-visible");
               observer.unobserve(entry.target);
             }
           });
-        },{ threshold:0.15 });
+        },
+        { threshold: 0.15 }
+      );
+    }
+
+    function revealCards() {
+      initObserver();
+      document.querySelectorAll(".card").forEach((card) => {
+        card.classList.remove("is-visible");
+        observer.observe(card);
+      });
+    }
+
+    function renderPage(reset) {
+      if (!allData.length) return;
+      if (reset) {
+        shownCount = 0;
+        grid.innerHTML = "";
       }
 
-      function revealCards(){
-        initObserver();
-        document.querySelectorAll(".card").forEach(card=>{
-          card.classList.remove("is-visible");
-          observer.observe(card);
-        });
+      const nextSlice = allData.slice(
+        shownCount,
+        shownCount + PAGE_SIZE
+      );
+      const html = nextSlice
+        .map((it, i) => buildCard(it, currentType, shownCount + i))
+        .join("");
+      grid.insertAdjacentHTML("beforeend", html);
+      shownCount += nextSlice.length;
+
+      metaInfo.textContent = isEN
+        ? `Shown entries: ${shownCount} / ${allData.length}`
+        : `Gösterilen kayıt: ${shownCount} / ${allData.length}`;
+
+      if (shownCount < allData.length) {
+        loadMoreRow.style.display = "flex";
+      } else {
+        loadMoreRow.style.display = "none";
       }
 
-      // Sayfalama & Daha fazla göster
-      function renderPage(reset){
-        if(!allData.length) return;
+      revealCards();
+    }
 
-        if(reset){
-          shownCount = 0;
-          grid.innerHTML = "";
-        }
+    loadMoreBtn.addEventListener("click", function () {
+      renderPage(false);
+    });
 
-        const nextSlice = allData.slice(shownCount, shownCount + PAGE_SIZE);
-        const html = nextSlice.map((it, i) => buildCard(it, currentType, shownCount + i)).join("");
-        grid.insertAdjacentHTML("beforeend", html);
-        shownCount += nextSlice.length;
+    grid.addEventListener("click", function (e) {
+      const card = e.target.closest(".card");
+      if (!card || card.classList.contains("skeleton")) return;
+      const idx = Number(card.dataset.idx);
+      if (Number.isNaN(idx)) return;
+      const item = allData[idx];
+      if (!item) return;
+      openStorm(item, currentType);
+    });
 
-        metaInfo.textContent = `Gösterilen kayıt: ${shownCount} / ${allData.length}`;
+    stormClose?.addEventListener("click", closeStorm);
+    storm?.addEventListener("click", (e) => {
+      if (e.target === storm) closeStorm();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeStorm();
+    });
 
-        if(shownCount < allData.length){
-          loadMoreRow.style.display = "flex";
-        }else{
-          loadMoreRow.style.display = "none";
-        }
-
-        revealCards();
-      }
-
-      loadMoreBtn.addEventListener("click", function(){
-        renderPage(false);
+    // Panel parallax
+    if (panel) {
+      window.addEventListener("mousemove", (e) => {
+        const rect = panel.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        const maxTilt = 2.4;
+        const rx = y * maxTilt * -1;
+        const ry = x * maxTilt;
+        panel.style.transform = `perspective(1100px) rotateX(${rx}deg) rotateY(${ry}deg) translate3d(0,0,0)`;
       });
-
-      // Kart tıklandığında tam ekran tema/animasyon
-      grid.addEventListener("click", function(e){
-        const card = e.target.closest(".card");
-        if(!card || card.classList.contains("skeleton")) return;
-        const idx = Number(card.dataset.idx);
-        if(Number.isNaN(idx)) return;
-        const item = allData[idx];
-        if(!item) return;
-        openStorm(item, currentType);
+      window.addEventListener("mouseleave", () => {
+        panel.style.transform =
+          "perspective(1100px) rotateX(0deg) rotateY(0deg)";
       });
+    }
 
-      stormClose?.addEventListener("click", closeStorm);
-      storm?.addEventListener("click", (e)=>{
-        if(e.target === storm) closeStorm();
-      });
-      document.addEventListener("keydown", e=>{
-        if(e.key === "Escape") closeStorm();
-      });
-
-      // Panel parallax
-      if(panel){
-        window.addEventListener("mousemove", e=>{
-          const rect = panel.getBoundingClientRect();
-          const x = (e.clientX - rect.left) / rect.width - 0.5;
-          const y = (e.clientY - rect.top) / rect.height - 0.5;
-          const maxTilt = 2.4;
-          const rx = y * maxTilt * -1;
-          const ry = x * maxTilt;
-          panel.style.transform = `perspective(1100px) rotateX(${rx}deg) rotateY(${ry}deg) translate3d(0,0,0)`;
-        });
-        window.addEventListener("mouseleave", ()=>{
-          panel.style.transform = "perspective(1100px) rotateX(0deg) rotateY(0deg)";
-        });
-      }
-
-      // Başlangıç - spells aktif
-      setActiveButton("spells");
-      loadData();
-    })();
-  </script>
+    // Başlangıç: spells
+    setActiveButton("spells");
+    loadData();
+  })();
+</script>
+  <script src='../lang-helper.js'></script>
+  <script src='../scroll-helper.js'></script>
+  <script src='../page-lang.js'></script>
 </body>
 </html>
+
+
+

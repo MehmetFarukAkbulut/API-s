@@ -77,7 +77,7 @@
       font-size:30px;
       background: linear-gradient(135deg, #7dd3fc, #a855f7);
       -webkit-background-clip: text;
-      background-clip: text;           /* standart property eklendi */
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: fadeInUp 0.8s ease-out 0.2s backwards;
     }
@@ -150,7 +150,7 @@
       margin-bottom: 12px;
       background: linear-gradient(135deg, #7dd3fc, #a855f7);
       -webkit-background-clip: text;
-      background-clip: text;           /* standart property eklendi */
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -289,7 +289,7 @@
 <body>
 
 <header>
-  <a href="../index.html" class="btn-home">Ana sayfa</a>
+  <a href="../index.html" class="btn-home" id="btnHome">Ana sayfa</a>
   <h1>Mehmet Faruk Akbulut</h1>
 </header>
 
@@ -298,7 +298,9 @@
   <div class="flex">
     <img class="avatar" src="https://avatars.githubusercontent.com/u/78991543" alt="avatar">
     <div>
-      <p>Full-stack meraklısı; API koleksiyonu, görselleştirme ve otomasyonla uğraşıyor. Buradaki widget'ların tamamı kişisel denemeler.</p>
+      <p id="pShort">
+        Full-stack meraklısı; API koleksiyonu, görselleştirme ve otomasyonla uğraşıyor. Buradaki widget'ların tamamı kişisel denemeler.
+      </p>
       <div class="links">
         <a href="https://github.com/MehmetFarukAkbulut" target="_blank" rel="noreferrer">
           <img class="icon" src="https://cdn.worldvectorlogo.com/logos/github-icon-2.svg" alt="">
@@ -312,7 +314,10 @@
           <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Instagram_logo_2022.svg/2048px-Instagram_logo_2022.svg.png" alt="">
           Instagram
         </a>
-        <a href="mailto:mefarukakbulut@gmail.com"> <img class="icon" src="https://cdn4.iconfinder.com/data/icons/social-media-logos-6/512/112-gmail_email_mail-512.png" alt=""> E-posta </a>
+        <a href="mailto:mefarukakbulut@gmail.com">
+          <img class="icon" src="https://cdn4.iconfinder.com/data/icons/social-media-logos-6/512/112-gmail_email_mail-512.png" alt="">
+          <span id="emailText">E-posta</span>
+        </a>
       </div>
     </div>
   </div>
@@ -321,69 +326,133 @@
 <!-- PANEL 2 – GitHub profil içeriği -->
 <div class="panel">
 
-  <h2 class="center">Hi 👋, I'm Mehmet Faruk Akbulut</h2>
+  <h2 class="center" id="h2Hello">Hi 👋, I'm Mehmet Faruk Akbulut</h2>
 
   <p class="center">
     <img src="https://media.giphy.com/media/8OPvIhcHkUUCGgkEzW/giphy.gif" width="350" alt="Hello gif">
   </p>
 
-  <h3 class="center">A passionate Software Engineer from Istanbul, Turkey</h3>
+  <h3 class="center" id="h3Role">A passionate Software Engineer from Istanbul, Turkey</h3>
 
-  <p>
+  <p id="pBio1">
     As a technology enthusiast who graduated from Trakya University, Department of Computer Engineering, 
     I work in a Technical Support position at 
     <a href="https://www.prodenso.com.tr" target="_blank" style="color:#22d3ee;">Prodenso Information Technologies</a>.
   </p>
 
-  <p>
+  <p id="pBio2">
     I improve myself in Network, System and Database Monitoring, SQL, n8n and Python automation. I am excited to learn new technologies every day.
   </p>
-<h3>Languages &amp; Tools</h3>
 
-<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;">
+  <h3 id="h3LangTools">Languages &amp; Tools</h3>
 
-  <!-- Sistem Programlama -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/c/c-original.svg" alt="C">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/cplusplus/cplusplus-original.svg" alt="C++">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg" alt="C#">
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;">
 
-  <!-- Web / Frontend -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original.svg" alt="HTML5">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original.svg" alt="CSS3">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="JavaScript">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg" alt="TypeScript">
+    <!-- Sistem Programlama -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/c/c-original.svg" alt="C">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/cplusplus/cplusplus-original.svg" alt="C++">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg" alt="C#">
 
-  <!-- Frameworkler -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" alt="React">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg" alt="Node.js">
+    <!-- Web / Frontend -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original.svg" alt="HTML5">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original.svg" alt="CSS3">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="JavaScript">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg" alt="TypeScript">
 
-  <!-- Backend Dilleri -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="Java">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/php/php-original.svg" alt="PHP">
+    <!-- Frameworkler -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" alt="React">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg" alt="Node.js">
 
-  <!-- Mobil -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" alt="React Native">
+    <!-- Backend Dilleri -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="Java">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/php/php-original.svg" alt="PHP">
 
-  <!-- Veri & Database -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg" alt="MySQL">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original.svg" alt="PostgreSQL">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mongodb/mongodb-original.svg" alt="MongoDB">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" alt="MSSQL">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/sqlite/sqlite-original.svg" alt="SQLite">
+    <!-- Mobil -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" alt="React Native">
 
-  <!-- Cloud & DevOps -->
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/kubernetes/kubernetes-plain.svg" alt="Kubernetes">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/git/git-original.svg" alt="Git">
-  <img class="icon-large" src="https://www.vectorlogo.zone/logos/github/github-icon.svg" alt="GitHub">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" alt="Linux">
-  <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/bash/bash-original.svg" alt="Bash">
+    <!-- Veri & Database -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg" alt="MySQL">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original.svg" alt="PostgreSQL">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mongodb/mongodb-original.svg" alt="MongoDB">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" alt="MSSQL">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/sqlite/sqlite-original.svg" alt="SQLite">
 
+    <!-- Cloud & DevOps -->
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/kubernetes/kubernetes-plain.svg" alt="Kubernetes">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/git/git-original.svg" alt="Git">
+    <img class="icon-large" src="https://www.vectorlogo.zone/logos/github/github-icon.svg" alt="GitHub">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" alt="Linux">
+    <img class="icon-large" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/bash/bash-original.svg" alt="Bash">
+
+  </div>
 
 </div>
 
-</div>
+<script>
+  (function(){
+    var pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    var lang = pref === "tr" ? "tr" : "en";
 
+    var aboutText = {
+      en: {
+        pageTitle: "About",
+        btnHome: "Home",
+        short: "Full-stack enthusiast; works with API collections, visualization and automation. All widgets here are personal experiments.",
+        email: "Email",
+        h2Hello: "Hi 👋, I'm Mehmet Faruk Akbulut",
+        h3Role: "A passionate Software Engineer from Istanbul, Turkey",
+        bio1: `As a technology enthusiast who graduated from Trakya University, Department of Computer Engineering, I work in a Technical Support position at <a href="https://www.prodenso.com.tr" target="_blank" style="color:#22d3ee;">Prodenso Information Technologies</a>.`,
+        bio2: "I improve myself in Network, System and Database Monitoring, SQL, n8n and Python automation. I am excited to learn new technologies every day.",
+        langTools: "Languages & Tools"
+      },
+      tr: {
+        pageTitle: "Hakkımda",
+        btnHome: "Ana sayfa",
+        short: "Full-stack meraklısı; API koleksiyonları, görselleştirme ve otomasyonla uğraşıyor. Buradaki widget'ların tamamı kişisel denemeler.",
+        email: "E-posta",
+        h2Hello: "Merhaba 👋, ben Mehmet Faruk Akbulut",
+        h3Role: "İstanbul, Türkiye'den tutkulu bir Yazılım Mühendisi",
+        bio1: `Trakya Üniversitesi Bilgisayar Mühendisliği bölümünden mezun bir teknoloji meraklısı olarak, <a href="https://www.prodenso.com.tr" target="_blank" style="color:#22d3ee;">Prodenso Information Technologies</a> şirketinde Teknik Destek pozisyonunda çalışıyorum.`,
+        bio2: "Ağ, Sistem ve Veritabanı İzleme, SQL, n8n ve Python otomasyon alanlarında kendimi geliştiriyorum. Her gün yeni teknolojiler öğrenmekten heyecan duyuyorum.",
+        langTools: "Diller & Araçlar"
+      }
+    };
+
+    var t = aboutText[lang];
+    if (!t) return;
+
+    document.title = t.pageTitle;
+
+    var el;
+    el = document.getElementById("btnHome");
+    if (el) el.textContent = t.btnHome;
+
+    el = document.getElementById("pShort");
+    if (el) el.textContent = t.short;
+
+    el = document.getElementById("emailText");
+    if (el) el.textContent = t.email;
+
+    el = document.getElementById("h2Hello");
+    if (el) el.textContent = t.h2Hello;
+
+    el = document.getElementById("h3Role");
+    if (el) el.textContent = t.h3Role;
+
+    el = document.getElementById("pBio1");
+    if (el) el.innerHTML = t.bio1;
+
+    el = document.getElementById("pBio2");
+    if (el) el.textContent = t.bio2;
+
+    el = document.getElementById("h3LangTools");
+    if (el) el.textContent = t.langTools;
+  })();
+</script>
+
+<script src='../lang-helper.js'></script>
+<script src='../scroll-helper.js'></script>
 </body>
 </html>

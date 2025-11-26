@@ -528,7 +528,7 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
   <!-- Dekoratif orbs -->
@@ -537,14 +537,14 @@
 
   <main>
     <header class="reveal">
-      <div class="kicker">kitap keşfi · deneysel arayüz</div>
-      <h1>Yeni kitaplar keşfet,<br>okuma listeni güçlendir.</h1>
-      <p class="lead">OpenLibrary ve Google Books üzerinden konu / başlık araması, hızlı keşif filtreleri ve animasyonlu kartlarla keşif deneyimi.</p>
+      <div class="kicker" id="kickerText">kitap keşfi · deneysel arayüz</div>
+      <h1 id="heroTitle">Yeni kitaplar keşfet,<br>okuma listeni güçlendir.</h1>
+      <p class="lead" id="heroLead">OpenLibrary ve Google Books üzerinden konu / başlık araması, hızlı keşif filtreleri ve animasyonlu kartlarla keşif deneyimi.</p>
     </header>
 
     <div class="panel reveal">
       <div class="bar">
-        <a class="btn" href="../index.html">Ana sayfa</a>
+        <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
         <input id="q" placeholder="Konu veya başlık (örn: science)">
         <button class="btn" id="go">Ara</button>
         <span class="badge" id="status">Hazır</span>
@@ -552,9 +552,9 @@
       <div class="chips" id="chips"></div>
       <div class="grid" id="grid">
         <div class="card revealed">
-          <div class="badge">Başla</div>
-          <strong>Arama yap veya bir konu çipi seç.</strong>
-          <div class="muted">Science, history, fantasy gibi hazır konulara tıklayarak animasyonlu kartlarla hızlıca keşfe başlayabilirsin.</div>
+          <div class="badge" id="startBadge">Başla</div>
+          <strong id="startTitle">Arama yap veya bir konu çipi seç.</strong>
+          <div class="muted" id="startDesc">Science, history, fantasy gibi hazır konulara tıklayarak animasyonlu kartlarla hızlıca keşfe başlayabilirsin.</div>
         </div>
       </div>
       <div class="bar" style="justify-content:flex-end;margin-top:10px;">
@@ -576,29 +576,138 @@
 
   <script>
   (function(){
-    const chips   = document.getElementById("chips");
-    const grid    = document.getElementById("grid");
-    const status  = document.getElementById("status");
-    const q       = document.getElementById("q");
-    const goBtn   = document.getElementById("go");
-    const moreBtn = document.getElementById("more");
+    // Dil tercihi (tr / en)
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const texts = {
+      tr: {
+        pageTitle: "Kitap Keşfi",
+        kicker: "kitap keşfi · deneysel arayüz",
+        title: "Yeni kitaplar keşfet,\nokuma listeni güçlendir.",
+        lead: "OpenLibrary ve Google Books üzerinden konu / başlık araması, hızlı keşif filtreleri ve animasyonlu kartlarla keşif deneyimi.",
+        home: "Ana sayfa",
+        searchPlaceholder: "Konu veya başlık (örn: science)",
+        searchButton: "Ara",
+        moreButton: "Daha fazla",
+        statusReady: "Hazır",
+        statusLoading: "Yükleniyor...",
+        statusError: "Hata",
+        startBadge: "Başla",
+        startTitle: "Arama yap veya bir konu çipi seç.",
+        startDesc: "Science, history, fantasy gibi hazır konulara tıklayarak animasyonlu kartlarla hızlıca keşfe başlayabilirsin.",
+        noResultBadge: "Sonuç",
+        noResultsTitle: "Sonuç bulunamadı.",
+        noResultsDesc: "Başka bir konu veya başlık dene.",
+        scoreLabel: "Puan",
+        detailButton: "Detay",
+        modalClose: "Kapat",
+        modalLink: "Detay sayfasına git",
+        modalNoSummary: "Özet bulunamadı.",
+        subjectLabels: {
+          science:"Bilim",
+          history:"Tarih",
+          fantasy:"Fantastik",
+          technology:"Teknoloji",
+          business:"İş dünyası",
+          philosophy:"Felsefe",
+          space:"Uzay"
+        },
+        categoryFallback: "Kategori",
+        authorUnknown: "Bilinmiyor"
+      },
+      en: {
+        pageTitle: "Book Discovery",
+        kicker: "book discovery · experimental ui",
+        title: "Discover new books,\nupgrade your reading list.",
+        lead: "Search by topic / title over OpenLibrary and Google Books, with quick discovery chips and animated cards.",
+        home: "Home",
+        searchPlaceholder: "Topic or title (e.g. science)",
+        searchButton: "Search",
+        moreButton: "More",
+        statusReady: "Ready",
+        statusLoading: "Loading...",
+        statusError: "Error",
+        startBadge: "Start",
+        startTitle: "Search or pick a topic chip.",
+        startDesc: "Click ready-made topics such as science, history, fantasy to quickly explore with animated cards.",
+        noResultBadge: "Result",
+        noResultsTitle: "No results found.",
+        noResultsDesc: "Try another topic or title.",
+        scoreLabel: "Rating",
+        detailButton: "Details",
+        modalClose: "Close",
+        modalLink: "Open detail page",
+        modalNoSummary: "No summary available.",
+        subjectLabels: {
+          science:"Science",
+          history:"History",
+          fantasy:"Fantasy",
+          technology:"Technology",
+          business:"Business",
+          philosophy:"Philosophy",
+          space:"Space"
+        },
+        categoryFallback: "Category",
+        authorUnknown: "Unknown"
+      }
+    };
+
+    const t = texts[prefLang];
+
+    document.title = t.pageTitle;
+
+    // DOM referansları
+    const kickerText = document.getElementById("kickerText");
+    const heroTitle  = document.getElementById("heroTitle");
+    const heroLead   = document.getElementById("heroLead");
+    const homeBtn    = document.getElementById("homeBtn");
+    const q          = document.getElementById("q");
+    const goBtn      = document.getElementById("go");
+    const moreBtn    = document.getElementById("more");
+    const status     = document.getElementById("status");
+    const startBadge = document.getElementById("startBadge");
+    const startTitle = document.getElementById("startTitle");
+    const startDesc  = document.getElementById("startDesc");
+    const chips      = document.getElementById("chips");
+    const grid       = document.getElementById("grid");
+
+    const bookModal       = document.getElementById("bookModal");
+    const bookModalImg    = document.getElementById("bookModalImg");
+    const bookModalTitle  = document.getElementById("bookModalTitle");
+    const bookModalMeta   = document.getElementById("bookModalMeta");
+    const bookModalSummary= document.getElementById("bookModalSummary");
+    const bookModalLink   = document.getElementById("bookModalLink");
+    const bookModalClose  = document.getElementById("bookModalClose");
+
+    // Statik metinleri uygula
+    if(kickerText) kickerText.textContent = t.kicker;
+    if(heroTitle)  heroTitle.innerHTML = t.title.replace("\n","<br>");
+    if(heroLead)   heroLead.textContent = t.lead;
+    if(homeBtn)    homeBtn.textContent = t.home;
+    if(q)          q.placeholder = t.searchPlaceholder;
+    if(goBtn)      goBtn.textContent = t.searchButton;
+    if(moreBtn)    moreBtn.textContent = t.moreButton;
+    if(status)     status.textContent = t.statusReady;
+    if(startBadge) startBadge.textContent = t.startBadge;
+    if(startTitle) startTitle.textContent = t.startTitle;
+    if(startDesc)  startDesc.textContent = t.startDesc;
+    if(bookModalClose) bookModalClose.textContent = t.modalClose;
+    if(bookModalLink)  bookModalLink.textContent  = t.modalLink;
+
     const subjects = ["science","history","fantasy","technology","business","philosophy","space"];
     const PAGE_SIZE = 12;
-    const DEFAULT_TERM = "book";
+    const DEFAULT_TERM = prefLang === "tr" ? "kitap" : "book";
+
     let currentItems = [];
     let visibleCount = 0;
-    const bookModal = document.getElementById("bookModal");
-    const bookModalImg = document.getElementById("bookModalImg");
-    const bookModalTitle = document.getElementById("bookModalTitle");
-    const bookModalMeta = document.getElementById("bookModalMeta");
-    const bookModalSummary = document.getElementById("bookModalSummary");
-    const bookModalLink = document.getElementById("bookModalLink");
-    const bookModalClose = document.getElementById("bookModalClose");
 
-    // Hazır konu chipleri
-    chips.innerHTML = subjects.map(s =>
-      `<span class="chip" data-sub="${s}">${s}</span>`
-    ).join("");
+    // Hazır konu chipleri (etiketler dil bazlı)
+    chips.innerHTML = subjects.map(s => {
+      const label = t.subjectLabels[s] || s;
+      return `<span class="chip" data-sub="${s}">${label}</span>`;
+    }).join("");
 
     // Parallax mouse hareketi
     document.addEventListener("mousemove", (e) => {
@@ -618,10 +727,9 @@
       });
     }, { threshold: 0.18 });
 
-    // Başlık ve paneli bağla
     document.querySelectorAll(".reveal").forEach(el => revealObserver.observe(el));
 
-    // Kartlar için ayrı observer (tilt giriş animasyonu)
+    // Kartlar için ayrı observer
     const cardObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -654,7 +762,12 @@
 
     function renderItems(){
       if(!currentItems.length){
-        grid.innerHTML = "<div class='card revealed'><div class='badge'>Sonuç</div><strong>Sonuç bulunamadı.</strong><div class='muted'>Başka bir konu veya başlık dene.</div></div>";
+        grid.innerHTML = `
+          <div class="card revealed">
+            <div class="badge">${t.noResultBadge}</div>
+            <strong>${t.noResultsTitle}</strong>
+            <div class="muted">${t.noResultsDesc}</div>
+          </div>`;
         toggleMore();
         observeCards();
         return;
@@ -668,8 +781,8 @@
           ${item.cover ? `<img class="cover" src="${item.cover}" alt="${item.title || ""}" loading="lazy">` : ""}
           <strong>${item.title || ""}</strong>
           <div class="muted">${item.subtitle || ""}</div>
-          <div class="muted" style="margin-top:4px;">Puan: ${item.rating ?? "?"}</div>
-          ${item.link ? `<div style="margin-top:8px;"><a class="btn" href="${item.link}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
+          <div class="muted" style="margin-top:4px;">${t.scoreLabel}: ${item.rating ?? "?"}</div>
+          ${item.link ? `<div style="margin-top:8px;"><a class="btn" href="${item.link}" target="_blank" rel="noreferrer">${t.detailButton}</a></div>` : ""}
         </div>
       `;
       }).join("");
@@ -687,8 +800,8 @@
         bookModalImg.style.display = "none";
       }
       bookModalTitle.textContent = item.title || "";
-      bookModalMeta.textContent = `${item.badge || "Kategori"} · Puan: ${item.rating ?? "?"}`;
-      bookModalSummary.textContent = item.desc || item.subtitle || "Özet bulunamadı.";
+      bookModalMeta.textContent = `${item.badge || t.categoryFallback} · ${t.scoreLabel}: ${item.rating ?? "?"}`;
+      bookModalSummary.textContent = item.desc || item.subtitle || t.modalNoSummary;
       if(item.link){
         bookModalLink.href = item.link;
         bookModalLink.style.display = "inline-flex";
@@ -702,6 +815,13 @@
     function closeBookModal(){
       bookModal.classList.remove("open");
       document.body.style.overflow = "";
+    }
+
+    function setStatusText(text, mode) {
+      status.textContent = text;
+      status.classList.remove("is-loading","is-error");
+      if (mode === "loading") status.classList.add("is-loading");
+      if (mode === "error")   status.classList.add("is-error");
     }
 
     // Chip click
@@ -726,22 +846,15 @@
       }
     });
 
-    function setStatus(text, mode) {
-      status.textContent = text;
-      status.classList.remove("is-loading","is-error");
-      if (mode === "loading") status.classList.add("is-loading");
-      if (mode === "error")   status.classList.add("is-error");
-    }
-
     async function loadSubject(sub){
       try{
-        setStatus("Y?kleniyor...", "loading");
+        setStatusText(t.statusLoading, "loading");
         const res = await fetch(`https://openlibrary.org/subjects/${sub}.json?limit=60`);
         const j   = await res.json();
         const works = j.works || [];
         if(!works.length){
           setItems([]);
-          setStatus("Haz?r");
+          setStatusText(t.statusReady);
           return;
         }
         const items = works
@@ -756,8 +869,9 @@
             const author = w.authors?.[0]?.name || "";
             const year = w.first_publish_year || "";
             const tags = Array.isArray(w.subject) ? w.subject.slice(0,6).join(", ") : "";
+            const labelSubject = t.subjectLabels[sub] || sub;
             return {
-              badge: sub,
+              badge: labelSubject,
               title: w.title || "",
               subtitle: `${author}${author && year ? " - " : ""}${year}`,
               rating: w.ratings_average ? w.ratings_average.toFixed(1) : "?",
@@ -767,10 +881,10 @@
             };
           });
         setItems(items);
-        setStatus("Haz?r");
+        setStatusText(t.statusReady);
       }catch(err){
         console.error(err);
-        setStatus("Hata", "error");
+        setStatusText(t.statusError, "error");
         setItems([]);
       }
     }
@@ -778,7 +892,7 @@
     async function search(term){
       const actualTerm = term || DEFAULT_TERM;
       try{
-        setStatus("Y?kleniyor...", "loading");
+        setStatusText(t.statusLoading, "loading");
         const res = await fetch(
           `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(actualTerm)}&orderBy=relevance&maxResults=30&langRestrict=tr,en`
         );
@@ -786,7 +900,7 @@
         const itemsRaw = j.items || [];
         if(!itemsRaw.length){
           setItems([]);
-          setStatus("Haz?r");
+          setStatusText(t.statusReady);
           return;
         }
         const items = itemsRaw
@@ -794,10 +908,10 @@
           .map(it => {
             const info = it.volumeInfo || {};
             const thumb = (info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || "").replace('http://','https://');
-            const author = (info.authors && info.authors[0]) || "Bilinmiyor";
+            const author = (info.authors && info.authors[0]) || t.authorUnknown;
             const year = info.publishedDate || "";
             return {
-              badge: (info.categories && info.categories[0]) || "Kategori",
+              badge: (info.categories && info.categories[0]) || t.categoryFallback,
               title: info.title || "",
               subtitle: `${author}${year ? " - " + year : ""}`,
               rating: info.averageRating ?? "?",
@@ -807,10 +921,10 @@
             };
           });
         setItems(items);
-        setStatus("Haz?r");
+        setStatusText(t.statusReady);
       }catch(err){
         console.error(err);
-        setStatus("Hata", "error");
+        setStatusText(t.statusError, "error");
         setItems([]);
       }
     }
@@ -835,7 +949,8 @@
     // ilk açılışta genel sonuçları getir
     search(DEFAULT_TERM);
   })();
-
   </script>
+  <script src='../lang-helper.js'></script>
+  <script src='../scroll-helper.js'></script>
 </body>
 </html>

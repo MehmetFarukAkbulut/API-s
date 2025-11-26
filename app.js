@@ -1,5 +1,6 @@
 ﻿// app.js
-const state = { lang: "tr" };
+const storedLang = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+const state = { lang: storedLang === "tr" ? "tr" : "en" };
 let currencyNamesLoaded = false;
 const translationCache = new Map();
 async function translateBatch(texts, targetLang) {
@@ -28,6 +29,18 @@ async function translateBatch(texts, targetLang) {
     }
   }
   return results;
+}
+async function translateUnique(values, targetLang) {
+  const unique = Array.from(new Set((values || []).filter(v => typeof v === "string" && v.trim())));
+  if (!unique.length) return {};
+  const translated = await translateBatch(unique, targetLang);
+  const map = {};
+  unique.forEach((val, idx) => { map[val] = translated[idx] || val; });
+  return map;
+}
+async function translateDataForApp(appId, data) {
+  // API kaynak verileri İngilizce tutuluyor; çeviri uygulanmıyor.
+  return data;
 }
 let currencyNames = {
   USD: "US Dollar",
@@ -474,9 +487,16 @@ const apps = [
         const json = await res.json();
         const m = json?.meals?.[0];
         if (!m) return null;
+        let name = m.strMeal;
+        let instructions = m.strInstructions;
+        if (state.lang === "tr") {
+          const map = await translateUnique([name, instructions].filter(Boolean), "tr");
+          name = map[name] || name;
+          instructions = map[instructions] || instructions;
+        }
         return {
-          name: m.strMeal,
-          instructions: m.strInstructions,
+          name,
+          instructions,
           video: m.strYoutube,
           source: m.strSource
         };
@@ -738,8 +758,8 @@ const apps = [
             status: fixt.fixture?.status?.long || fixt.fixture?.status?.short || "",
             time: timeStr,
             lineup: [
-              fixt.fixture?.referee ? `Hakem: ${fixt.fixture?.referee}` : "",
-              fixt.fixture?.status?.elapsed ? `Dakika: ${fixt.fixture?.status?.elapsed}` : ""
+              fixt.fixture?.referee ? `Referee: ${fixt.fixture?.referee}` : "",
+              fixt.fixture?.status?.elapsed ? `Minutes: ${fixt.fixture?.status?.elapsed}` : ""
             ].filter(Boolean).join("<br>")
           }
         };
@@ -816,26 +836,45 @@ const closeBtn = document.getElementById("close");
 const titleEl = document.getElementById("title");
 const subtitleEl = document.getElementById("subtitle");
 
-const langButtons = document.querySelectorAll(".pill[data-lang]");
-langButtons.forEach(btn => btn.addEventListener("click", () => {
-  state.lang = btn.dataset.lang;
+const langSelect = document.getElementById("languageSelect");
+const langWarningEl = document.getElementById("lang-warning");
+
+function setLang(lang){
+  state.lang = ["en","tr"].includes(lang) ? lang : "en";
   document.documentElement.lang = state.lang;
-  langButtons.forEach(b => b.classList.toggle("active", b === btn));
+  if (langSelect) langSelect.value = state.lang;
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("prefLang", state.lang);
+  }
+  updateLangWarning();
   applyLang();
-}));
+}
+
+function updateLangWarning(){
+  if (!langWarningEl) return;
+  if (state.lang === "tr") {
+    langWarningEl.textContent = "Warning: API data is in English; content stays English while UI labels follow your selection.";
+  } else {
+    langWarningEl.textContent = "";
+  }
+}
+
+if (langSelect) {
+  langSelect.value = state.lang;
+  langSelect.addEventListener("change", (e) => setLang(e.target.value));
+}
 
 function applyLang() {
   const c = copy[state.lang];
   titleEl.textContent = c.title;
   subtitleEl.textContent = c.subtitle;
-  grid.querySelectorAll(".card").forEach(card => {
-    const app = apps.find(a => a.id === card.dataset.id);
-    card.querySelector(".card-title").textContent = app.title[state.lang];
-    card.setAttribute("title", app.subtitle[state.lang]);
-  });
+  if (grid) buildGrid(true);
 }
 
-function buildGrid() {
+function buildGrid(reset = false) {
+  if (reset) {
+    grid.innerHTML = "";
+  }
   apps.forEach(app => {
     const card = document.createElement("article");
     card.className = "card";
@@ -902,8 +941,7 @@ function buildGrid() {
   });
 }
 
-buildGrid();
-applyLang();
+setLang(state.lang);
 
 // URL parametresiyle belirli modalı aç
 setTimeout(() => {
@@ -927,6 +965,12 @@ function translateLocation(str) {
 function friendlyCurrencyName(code) {
   if (currencyNames[code]) return currencyNames[code];
   return null;
+}
+function resolveCurrencyName(code, data) {
+  if (state.lang === "tr" && data?.translatedCurrencyNames && data.translatedCurrencyNames[code]) {
+    return data.translatedCurrencyNames[code];
+  }
+  return friendlyCurrencyName(code) || code;
 }
 
 function formatDateStr(d) {
@@ -1389,7 +1433,10 @@ async function openModal(app) {
     resultBox.innerHTML = '<div class="loader"></div>';
     const query = app.id === "travel" && inputTo ? `${queryRaw} -> ${inputTo.value}` : queryRaw;
     if ((app.id === "currency" || app.id === "tcmb") && dateInput) app._date = dateInput.value || "";
-    const data = await app.fetcher(query, state.lang);
+    let data = await app.fetcher(query, state.lang);
+    if (state.lang === "tr") {
+      data = await translateDataForApp(app.id, data);
+    }
     if (amountInput) app._amount = parseFloat(amountInput.value) || 1;
     renderData(app, data, resultBox, query || app.popularQuery);
   }
@@ -1453,7 +1500,7 @@ function renderData(app, data, container, query) {
         const rate = data.rates?.[code];
         if (rate == null) return "";
         const converted = (rate * amount).toFixed(4);
-        const name = friendlyCurrencyName(code);
+        const name = resolveCurrencyName(code, data);
         if (!name) return "";
         return `${code} (${name}): ${rate} (${amount} -> ${converted})`;
       }).filter(Boolean);
@@ -1462,7 +1509,7 @@ function renderData(app, data, container, query) {
           <div class="badge">${labels.base}: ${data.base} ${data.date ? "· " + data.date : ""}</div>
           ${popularList.length ? `<p><strong>Popular</strong>: ${popularList.join(" | ")}</p>` : ""}
           ${entries.map(([k,v]) => {
-            const name = friendlyCurrencyName(k);
+            const name = resolveCurrencyName(k, data);
             if (!name) return "";
             return `<p>${k} (${name}): ${v.toFixed(4)} ${amount !== 1 ? `(${amount} -> ${(v * amount).toFixed(4)})` : ""}</p>`;
           }).join("")}
@@ -1481,7 +1528,9 @@ function renderData(app, data, container, query) {
               const rate = it.selling || it.buying;
               const conv = rate ? amountTl / rate : null;
               const convText = conv ? ` | ${amountTl} TL ~ ${conv.toFixed(2)} ${it.code.split("/")[0]}` : "";
-              return `<p><strong>${it.code}</strong> (${it.name}) - Alış: ${it.buying.toFixed(4)} | Satış: ${it.selling.toFixed(4)}${convText}</p>`;
+              const baseCode = it.code.split("/")[0];
+              const dispName = resolveCurrencyName(baseCode, data) || it.name;
+              return `<p><strong>${it.code}</strong> (${dispName}) - Alis: ${it.buying.toFixed(4)} | Satis: ${it.selling.toFixed(4)}${convText}</p>`;
             }).join("")}
           </div>`;
       }
@@ -1516,6 +1565,7 @@ function renderData(app, data, container, query) {
       html = renderList(data, j => `<li><strong>${j.position}</strong> @ ${j.company} - ${translateLocation(j.location)} ${j.url ? `<a style=\"color:#7dd3fc\" href=\"${j.url}\" target=\"_blank\" rel=\"noreferrer\">${labels.open}</a>` : ""}</li>`);
       break;
     case "travel":
+      const noRouteMsg = data.message || (state.lang === "tr" ? "Rota bulunamadi" : "No route");
       html = data.route ? `
         <div class="card-detail">
           <div class="badge">${detailLabel}</div>
@@ -1526,7 +1576,7 @@ function renderData(app, data, container, query) {
           <p>${labels.fly}: ~${data.route.flying} dk</p>
           <p>${labels.bus}: ~${data.route.bus} dk</p>
           <p>${labels.train}: ~${data.route.train} dk</p>
-        </div>` : `<div class="card-detail">${data.message || "No route"}</div>`;
+        </div>` : `<div class="card-detail">${noRouteMsg}</div>`;
       break;
     case "maps":
       html = renderList(data, p => `<li><strong>${p.display}</strong> - ${p.lat}, ${p.lon} <a style="color:#7dd3fc" href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}" target="_blank" rel="noreferrer">${labels.map}</a></li>`);
@@ -1586,7 +1636,9 @@ function renderData(app, data, container, query) {
           })
           .map(([country, leagues]) => {
             const leagueHtml = sortLeagues(country, leagues).map(([lg, matches]) => {
-              return `<div style="margin:8px 0;"><strong>${country} - ${lg}</strong>${renderList(matches, m => `<li style="color:${m.live ? '#22d3ee' : '#cbd5e1'}"><button class="pill detail-btn" data-sport="${m.id}">Detay</button> <strong>${m.name}</strong> - ${m.date} - ${m.time} - ${m.status}</li>`)}</div>`;
+              const countryLabel = matches?.[0]?.displayCountry || country;
+              const leagueLabel = matches?.[0]?.displayLeague || lg;
+              return `<div style="margin:8px 0;"><strong>${countryLabel} - ${leagueLabel}</strong>${renderList(matches, m => `<li style="color:${m.live ? '#22d3ee' : '#cbd5e1'}"><button class="pill detail-btn" data-sport="${m.id}">Detay</button> <strong>${m.displayName || m.name}</strong> - ${m.date} - ${m.time} - ${m.displayStatus || m.status}</li>`)}</div>`;
             }).join("");
             return leagueHtml;
           }).join("");

@@ -433,7 +433,7 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
   <!-- Arka plan glow elementleri -->
@@ -442,10 +442,10 @@
   <div class="bg-orb orb-3"></div>
 
   <header>
-    <a class="btn" href="../index.html">Ana sayfa</a>
+    <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
     <div>
-      <h1>Haber + Trend</h1>
-      <p class="lead">Spaceflight News API ile kategori/preset filtreli haber listesi.</p>
+      <h1 id="pageTitle">Haber + Trend</h1>
+      <p class="lead" id="pageLead">Spaceflight News API ile kategori/preset filtreli haber listesi.</p>
     </div>
   </header>
 
@@ -469,11 +469,72 @@
 
   <script>
   (function(){
+    /* Dil seçimi (tr/en) */
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const TXT = {
+      tr:{
+        pageTitle:"Haber + Trend",
+        home:"Ana sayfa",
+        heading:"Haber + Trend",
+        lead:"Spaceflight News API ile kategori/preset filtreli haber listesi.",
+        searchPlaceholder:"Konu (örn: finance)",
+        searchBtn:"Ara",
+        moreBtn:"Daha fazla",
+        statusReady:"Hazır",
+        statusLoading:"Yükleniyor...",
+        statusError:"Hata",
+        emptyMsg:"Filtre veya arama girin.",
+        noResultMsg:"Sonuç yok",
+        errorMsg:"Veri alınamadı",
+        defaultSite:"Haber",
+        readLink:"Oku"
+      },
+      en:{
+        pageTitle:"News + Trends",
+        home:"Home",
+        heading:"News + Trends",
+        lead:"Spaceflight News API with category/preset filtered news.",
+        searchPlaceholder:"Topic (e.g., finance)",
+        searchBtn:"Search",
+        moreBtn:"More",
+        statusReady:"Ready",
+        statusLoading:"Loading...",
+        statusError:"Error",
+        emptyMsg:"Use a preset or enter a search term.",
+        noResultMsg:"No results",
+        errorMsg:"Unable to load data",
+        defaultSite:"News",
+        readLink:"Read"
+      }
+    }[prefLang];
+
+    document.title = TXT.pageTitle;
+
+    /* Header metinlerini güncelle */
+    const homeBtn = document.getElementById("homeBtn");
+    const pageTitleEl = document.getElementById("pageTitle");
+    const pageLeadEl = document.getElementById("pageLead");
     const qEl = document.getElementById("q");
-    const list = document.getElementById("list");
-    const status = document.getElementById("status");
-    const filters = document.getElementById("filters");
+    const goBtn = document.getElementById("go");
     const moreBtn = document.getElementById("more");
+    const status = document.getElementById("status");
+    const list = document.getElementById("list");
+    const filters = document.getElementById("filters");
+
+    if(homeBtn) homeBtn.textContent = TXT.home;
+    if(pageTitleEl) pageTitleEl.textContent = TXT.heading;
+    if(pageLeadEl) pageLeadEl.textContent = TXT.lead;
+    if(qEl) qEl.placeholder = TXT.searchPlaceholder;
+    if(goBtn) goBtn.textContent = TXT.searchBtn;
+    if(moreBtn) moreBtn.textContent = TXT.moreBtn;
+    if(status) status.textContent = TXT.statusReady;
+    if(list && list.firstElementChild){
+      list.firstElementChild.textContent = TXT.emptyMsg;
+    }
+
     const presets = ["technology","space","science","nature","politics","finance"];
 
     filters.innerHTML = presets
@@ -514,8 +575,8 @@
           const midX = rect.width / 2;
           const midY = rect.height / 2;
 
-          const rotateX = ((y - midY) / midY) * -4; // yukarı-aşağı eğim
-          const rotateY = ((x - midX) / midX) * 4;  // sağ-sol eğim
+          const rotateX = ((y - midY) / midY) * -4;
+          const rotateY = ((x - midX) / midX) * 4;
 
           card.style.setProperty("--tiltX", rotateX.toFixed(2) + "deg");
           card.style.setProperty("--tiltY", rotateY.toFixed(2) + "deg");
@@ -553,10 +614,10 @@
     function renderItems(items, append=false){
       const html = items.map(it => `
         <div class="card">
-          <div class="badge">${it.site || "Haber"}</div>
+          <div class="badge">${it.site || TXT.defaultSite}</div>
           <h3>${it.title}</h3>
           <p>${(it.summary || "").slice(0,180)}...</p>
-          <a href="${it.url}" target="_blank" rel="noreferrer">Oku</a>
+          <a href="${it.url}" target="_blank" rel="noreferrer">${TXT.readLink}</a>
         </div>
       `).join("");
 
@@ -570,12 +631,12 @@
 
     async function run(append=false){
       try{
-        setStatus("Yükleniyor...", true);
+        setStatus(TXT.statusLoading, true);
 
         const q = qEl.value.trim() || "";
         if(!q){
-          list.innerHTML = "<div class='card card-visible'>Filtre veya arama girin.</div>";
-          setStatus("Hazır", false);
+          list.innerHTML = `<div class='card card-visible'>${TXT.emptyMsg}</div>`;
+          setStatus(TXT.statusReady, false);
           highlightPreset("");
           return;
         }
@@ -589,18 +650,18 @@
         const items = j.results || [];
 
         if(!items.length){
-          list.innerHTML = "<div class='card card-visible'>Sonuç yok</div>";
-          setStatus("Hazır", false);
+          list.innerHTML = `<div class='card card-visible'>${TXT.noResultMsg}</div>`;
+          setStatus(TXT.statusReady, false);
           return;
         }
 
         renderItems(items, append);
-        setStatus("Hazır", false);
+        setStatus(TXT.statusReady, false);
         highlightPreset(q);
       }catch(e){
         console.error(e);
-        setStatus("Hata", false);
-        list.innerHTML = "<div class='card card-visible'>Veri alınamadı</div>";
+        setStatus(TXT.statusError, false);
+        list.innerHTML = `<div class='card card-visible'>${TXT.errorMsg}</div>`;
       }
     }
 
@@ -629,5 +690,8 @@
     run(false);
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
+  <script src="../page-lang.js"></script>
 </body>
 </html>

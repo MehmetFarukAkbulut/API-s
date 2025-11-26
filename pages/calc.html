@@ -421,34 +421,43 @@
       .grid{ gap:10px; }
       .card{ border-radius:14px; padding:12px 12px 11px; }
     }
-  
-/* --- mobile-shared-opt --- */
-@media(max-width:768px){
-  .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
-    flex-wrap:nowrap !important;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    gap:8px;
-    padding-bottom:6px;
-  }
-  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
-}
-@media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
-}
-/* --- end mobile-shared-opt --- */
-</style>
+
+    /* --- mobile-shared-opt --- */
+    @media(max-width:768px){
+      .bar, .chips, .hero-actions, .topbar, .tab-bar, .filter-bar{
+        flex-wrap:nowrap !important;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        gap:8px;
+        padding-bottom:6px;
+      }
+      .bar::-webkit-scrollbar,
+      .chips::-webkit-scrollbar,
+      .hero-actions::-webkit-scrollbar,
+      .topbar::-webkit-scrollbar,
+      .tab-bar::-webkit-scrollbar,
+      .filter-bar::-webkit-scrollbar{display:none;}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation:none !important;
+        transition:none !important;
+        scroll-behavior:auto !important;
+      }
+    }
+    /* --- end mobile-shared-opt --- */
+  </style>
 </head>
 <body>
   <div class="cursor-glow"></div>
   <header>
-    <a class="btn-home" href="../index.html">
+    <a class="btn-home" href="../index.html" id="homeBtn">
       <span>⟵</span>
-      <span>Ana sayfa</span>
+      <span id="homeBtnText">Ana sayfa</span>
     </a>
     <div>
-      <h1>Hesaplamalar</h1>
-      <p class="lead">Sık kullanılan hesaplar, hızlı sonuç + mini yorumlarla tek panelde.</p>
+      <h1 id="pageTitleHeading">Hesaplamalar</h1>
+      <p class="lead" id="pageLead">Sık kullanılan hesaplar, hızlı sonuç + mini yorumlarla tek panelde.</p>
     </div>
   </header>
 
@@ -460,30 +469,173 @@
 
   <script>
   (function(){
-    const calculators=[
-      { id:"exam", title:"Vize / Final Ortalaması", fields:["vize","vizeAgirlik","final","finalAgirlik"], labels:["Vize","Vize %","Final","Final %"], fn:examFn },
-      { id:"kdv", title:"KDV Hesaplama", fields:["tutar","oran"], labels:["Tutar","KDV %"], fn:kdvFn },
-      { id:"bmi", title:"Vücut Kitle İndeksi", fields:["kilo","boy"], labels:["Kilo (kg)","Boy (cm)"], fn:bmiFn },
-      { id:"faiz", title:"Basit Faiz", fields:["anapara","oran","gun"], labels:["Anapara","%","Gün"], fn:f=>((f.anapara*f.oran/100*f.gun)/365).toFixed(2) },
-      { id:"taksit", title:"Kredi Taksit", fields:["anapara","oran","ay"], labels:["Anapara","Aylık %","Ay"], fn:f=>{
-          const r=f.oran/100;
-          const n=f.ay;
-          if(r===0) return (f.anapara/n).toFixed(2);
-          const pay=r*Math.pow(1+r,n);
-          const payda=Math.pow(1+r,n)-1;
-          return (f.anapara*pay/payda).toFixed(2);
-        } },
-      { id:"indir", title:"İndirimli Fiyat", fields:["fiyat","indirim"], labels:["Fiyat","İndirim %"], fn:f=>(f.fiyat*(1-f.indirim/100)).toFixed(2) },
-      { id:"speed", title:"Ortalama Hız", fields:["mesafe","sure"], labels:["Mesafe (km)","Süre (saat)"], fn:f=>(f.mesafe/f.sure).toFixed(2) },
-      { id:"fuel", title:"Yakıt Tüketimi", fields:["km","litre"], labels:["Gidilen km","Harcanan litre"], fn:f=>(f.litre/f.km*100).toFixed(2)+" L/100km" }
+    // Dil tercihi (tr / en) – diğer sayfalarla aynı mantık
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const texts = {
+      tr: {
+        pageTitle: "Hesaplamalar",
+        heading: "Hesaplamalar",
+        lead: "Sık kullanılan hesaplar, hızlı sonuç + mini yorumlarla tek panelde.",
+        home: "Ana sayfa",
+        calcButton: "Hesapla",
+        resultWaiting: "Sonuç bekleniyor",
+        calcs: {
+          exam: {
+            title: "Vize / Final Ortalaması",
+            labels: ["Vize", "Vize %", "Final", "Final %"],
+            passLine: 60,
+            passed: score => score.toFixed(2) + " · Geçtiniz 🎉",
+            failed: (score, need) =>
+              score.toFixed(2) +
+              " · Kaldınız. Finalde en az " +
+              Math.max(0, need).toFixed(1) +
+              " almalısınız."
+          },
+          kdv: {
+            title: "KDV Hesaplama",
+            labels: ["Tutar", "KDV %"],
+            result: (toplam, kdv, oran) =>
+              toplam.toFixed(2) + " (KDV: " + kdv.toFixed(2) + " | oran " + oran + "%)"
+          },
+          bmi: {
+            title: "Vücut Kitle İndeksi",
+            labels: ["Kilo (kg)", "Boy (cm)"],
+            category: bmi => bmi<18.5 ? "Zayıf" : bmi<25 ? "Normal" : bmi<30 ? "Kilolu" : "Obez",
+            normalRange: (min,max) =>
+              "Normal kilo aralığı: " + min.toFixed(1) + " - " + max.toFixed(1) + " kg"
+          },
+          faiz: {
+            title: "Basit Faiz",
+            labels: ["Anapara", "%", "Gün"],
+            resultSuffix: " ₺ (faiz)"
+          },
+          taksit: {
+            title: "Kredi Taksit",
+            labels: ["Anapara", "Aylık %", "Ay"],
+            resultPrefix: "Aylık taksit: ",
+            resultSuffix: " ₺"
+          },
+          indir: {
+            title: "İndirimli Fiyat",
+            labels: ["Fiyat", "İndirim %"],
+            resultPrefix: "İndirimli fiyat: ",
+            resultSuffix: " ₺"
+          },
+          speed: {
+            title: "Ortalama Hız",
+            labels: ["Mesafe (km)", "Süre (saat)"],
+            resultSuffix: " km/s"
+          },
+          fuel: {
+            title: "Yakıt Tüketimi",
+            labels: ["Gidilen km", "Harcanan litre"],
+            resultPrefix: "Ortalama tüketim: ",
+            resultSuffix: " L/100km"
+          }
+        }
+      },
+      en: {
+        pageTitle: "Calculations",
+        heading: "Calculations",
+        lead: "Frequently used calculations, quick results and mini comments in a single panel.",
+        home: "Home",
+        calcButton: "Calculate",
+        resultWaiting: "Waiting for result",
+        calcs: {
+          exam: {
+            title: "Midterm / Final Average",
+            labels: ["Midterm", "Midterm %", "Final", "Final %"],
+            passLine: 60,
+            passed: score => score.toFixed(2) + " · Passed 🎉",
+            failed: (score, need) =>
+              score.toFixed(2) +
+              " · Failed. You need at least " +
+              Math.max(0, need).toFixed(1) +
+              " in the final."
+          },
+          kdv: {
+            title: "VAT Calculation",
+            labels: ["Amount", "VAT %"],
+            result: (total, vat, rate) =>
+              total.toFixed(2) + " (VAT: " + vat.toFixed(2) + " | rate " + rate + "%)"
+          },
+          bmi: {
+            title: "Body Mass Index",
+            labels: ["Weight (kg)", "Height (cm)"],
+            category: bmi => bmi<18.5 ? "Underweight" : bmi<25 ? "Normal" : bmi<30 ? "Overweight" : "Obese",
+            normalRange: (min,max) =>
+              "Normal weight range: " + min.toFixed(1) + " - " + max.toFixed(1) + " kg"
+          },
+          faiz: {
+            title: "Simple Interest",
+            labels: ["Principal", "%", "Days"],
+            resultSuffix: " (interest)"
+          },
+          taksit: {
+            title: "Loan Installment",
+            labels: ["Principal", "Monthly %", "Months"],
+            resultPrefix: "Monthly payment: ",
+            resultSuffix: ""
+          },
+          indir: {
+            title: "Discounted Price",
+            labels: ["Price", "Discount %"],
+            resultPrefix: "Discounted price: ",
+            resultSuffix: ""
+          },
+          speed: {
+            title: "Average Speed",
+            labels: ["Distance (km)", "Time (hours)"],
+            resultSuffix: " km/h"
+          },
+          fuel: {
+            title: "Fuel Consumption",
+            labels: ["Distance (km)", "Fuel used (L)"],
+            resultPrefix: "Average consumption: ",
+            resultSuffix: " L/100km"
+          }
+        }
+      }
+    };
+
+    const t = texts[prefLang];
+
+    // Statik metinleri uygula
+    document.title = t.pageTitle;
+    const homeBtnText = document.getElementById("homeBtnText");
+    const pageTitleHeading = document.getElementById("pageTitleHeading");
+    const pageLead = document.getElementById("pageLead");
+    if(homeBtnText) homeBtnText.textContent = t.home;
+    if(pageTitleHeading) pageTitleHeading.textContent = t.heading;
+    if(pageLead) pageLead.textContent = t.lead;
+
+    // Hesaplama tanımları – metinler t'den çekiliyor
+    const calcDefs = [
+      { id:"exam", key:"exam", fields:["vize","vizeAgirlik","final","finalAgirlik"], fn:examFn },
+      { id:"kdv", key:"kdv", fields:["tutar","oran"], labels:["Tutar","KDV %"], fn:kdvFn },
+      { id:"bmi", key:"bmi", fields:["kilo","boy"], fn:bmiFn },
+      { id:"faiz", key:"faiz", fields:["anapara","oran","gun"], fn:faizFn },
+      { id:"taksit", key:"taksit", fields:["anapara","oran","ay"], fn:taksitFn },
+      { id:"indir", key:"indir", fields:["fiyat","indirim"], fn:indirFn },
+      { id:"speed", key:"speed", fields:["mesafe","sure"], fn:speedFn },
+      { id:"fuel", key:"fuel", fields:["km","litre"], fn:fuelFn }
     ];
 
     const grid=document.getElementById("grid");
-    grid.innerHTML=calculators.map(calc=>renderCard(calc)).join("");
+    grid.innerHTML = calcDefs.map(calc=>renderCard(calc)).join("");
+
+    function getCalcText(key){
+      return t.calcs[key];
+    }
 
     function renderCard(calc){
-      const inputs=calc.fields.map((f,i)=>`
-        <label class="muted">${calc.labels[i]}</label>
+      const cfg = getCalcText(calc.key);
+      const labels = cfg.labels;
+      const inputs = calc.fields.map((f,i)=>`
+        <label class="muted">${labels[i]}</label>
         <input
           data-field="${f}"
           data-id="${calc.id}"
@@ -494,11 +646,11 @@
       `).join("");
       return `
         <div class="card" data-id="${calc.id}">
-          <div class="badge">${calc.title}</div>
+          <div class="badge">${cfg.title}</div>
           ${inputs}
-          <div class="result muted">Sonuç bekleniyor</div>
+          <div class="result muted">${t.resultWaiting}</div>
           <button class="btn" data-run="${calc.id}">
-            <span>Hesapla</span>
+            <span>${t.calcButton}</span>
           </button>
         </div>
       `;
@@ -508,37 +660,88 @@
       const id=e.target.dataset.run;
       if(!id) return;
       const card=e.target.closest(".card");
-      const calc=calculators.find(c=>c.id===id);
+      const calc=calcDefs.find(c=>c.id===id);
       if(!calc) return;
+
       const values={};
       calc.fields.forEach(f=>{
         const val=parseFloat(card.querySelector("[data-field='"+f+"']").value || "0");
         values[f]=isNaN(val)?0:val;
       });
-      const out=calc.fn(values);
+      const out=calc.fn(values, t);
       card.querySelector(".result").textContent=out;
     });
 
-    function examFn(f){
+    // Fonksiyonlar – metinler t içinden
+    function examFn(f, t){
+      const cfg = t.calcs.exam;
       const score = f.vize*(f.vizeAgirlik/100)+f.final*(f.finalAgirlik/100);
-      const passLine=60;
-      if(score>=passLine) return score.toFixed(2)+" · Geçtiniz 🎉";
+      const passLine=cfg.passLine;
+      if(score>=passLine) return cfg.passed(score);
       const need = (passLine - f.vize*(f.vizeAgirlik/100)) * 100 / (f.finalAgirlik||1);
-      return score.toFixed(2)+" · Kalır. Finalde en az "+Math.max(0,need).toFixed(1)+" almalısınız.";
+      return cfg.failed(score, need);
     }
 
-    function kdvFn(f){
+    function kdvFn(f, t){
+      const cfg = t.calcs.kdv;
       const br=f.tutar||0, oran=f.oran||20;
       const kdv=br*oran/100, toplam=br+kdv;
-      return toplam.toFixed(2)+" (KDV: "+kdv.toFixed(2)+" | oran "+oran+"%)";
+      return cfg.result(toplam, kdv, oran);
     }
 
-    function bmiFn(f){
+    function bmiFn(f, t){
+      const cfg = t.calcs.bmi;
+      if(!f.kilo || !f.boy) return t.resultWaiting;
       const bmi = (f.kilo/((f.boy/100)**2));
-      const txt = bmi<18.5 ? "Zayıf" : bmi<25 ? "Normal" : bmi<30 ? "Kilolu" : "Obez";
+      const txt = cfg.category(bmi);
       const min = 18.5*((f.boy/100)**2);
       const max = 24.9*((f.boy/100)**2);
-      return bmi.toFixed(2)+" · "+txt+" · Normal kilo aralığı: "+min.toFixed(1)+" - "+max.toFixed(1)+" kg";
+      return bmi.toFixed(2)+" · "+txt+" · "+cfg.normalRange(min,max);
+    }
+
+    function faizFn(f, t){
+      const cfg = t.calcs.faiz;
+      const faiz=((f.anapara||0)*(f.oran||0)/100*(f.gun||0))/365;
+      return faiz.toFixed(2)+cfg.resultSuffix;
+    }
+
+    function taksitFn(f, t){
+      const cfg = t.calcs.taksit;
+      const anapara=f.anapara||0;
+      const r=(f.oran||0)/100;
+      const n=f.ay||1;
+      if(!n) return t.resultWaiting;
+      let taksit;
+      if(r===0){
+        taksit = anapara/n;
+      }else{
+        const pay=r*Math.pow(1+r,n);
+        const payda=Math.pow(1+r,n)-1;
+        taksit = anapara*pay/payda;
+      }
+      return cfg.resultPrefix + taksit.toFixed(2) + cfg.resultSuffix;
+    }
+
+    function indirFn(f, t){
+      const cfg = t.calcs.indir;
+      const fiyat=f.fiyat||0;
+      const indirim=f.indirim||0;
+      const sonuc=fiyat*(1-indirim/100);
+      return cfg.resultPrefix + sonuc.toFixed(2) + cfg.resultSuffix;
+    }
+
+    function speedFn(f, t){
+      const cfg = t.calcs.speed;
+      if(!f.mesafe || !f.sure) return t.resultWaiting;
+      const hiz=f.mesafe/f.sure;
+      return hiz.toFixed(2)+cfg.resultSuffix;
+    }
+
+    function fuelFn(f, t){
+      const cfg = t.calcs.fuel;
+      if(!f.km || !f.litre) return t.resultWaiting;
+      const tuk = f.litre/f.km*100;
+      return cfg.resultPrefix + tuk.toFixed(2) + cfg.resultSuffix;
     }
 
     /* Kart giriş animasyonları (CriticalDanger benzeri yumuşak pop-in) */
@@ -569,5 +772,7 @@
     });
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

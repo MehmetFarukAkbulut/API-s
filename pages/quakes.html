@@ -90,6 +90,10 @@
       transform:translateY(1px) scale(.99);
       box-shadow:0 3px 10px rgba(15,23,42,0.7);
     }
+    .btn-compact{
+      padding:7px 12px;
+      font-size:13px;
+    }
 
     .panel{
       max-width:1000px;
@@ -106,16 +110,18 @@
 
     .bar{
       display:flex;
-      flex-wrap:wrap;
+      flex-wrap:wrap !important;
       align-items:center;
       gap:10px;
       margin-bottom:10px;
+      overflow:visible !important;
     }
 
     /* INPUT TASARIMI */
     #country{
       padding:10px 14px;
-      min-width:230px;
+      min-width:200px;
+      flex:1 1 200px;
       background:rgba(15,23,42,0.96);
       border-radius:999px;
       border:1px solid rgba(148,163,184,0.55);
@@ -148,19 +154,25 @@
 
     .chips{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      gap:10px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:6px;
       margin:10px 0 4px;
     }
+    .chips::-webkit-scrollbar{display:none;}
 
     .chip{
-      padding:6px 11px;
+      padding:9px 14px;
       border-radius:999px;
       background:rgba(15,23,42,0.96);
       color:#7dd3fc;
       border:1px solid rgba(56,189,248,0.45);
       cursor:pointer;
       font-size:13px;
+      min-width:88px;
+      text-align:center;
       letter-spacing:.01em;
       transition:
         background .2s ease,
@@ -227,7 +239,22 @@
       header{padding-top:18px;}
       h1{font-size:24px;}
       .panel{margin:0 10px 20px;}
-      #country{flex:1;min-width:180px;}
+      #country{flex:1;min-width:160px;}
+    }
+    @media(max-width:768px){
+      .panel .bar{
+        flex-wrap:wrap !important;
+        overflow:visible !important;
+        gap:8px;
+      }
+      #country{
+        flex:1 1 100%;
+        min-width:180px;
+      }
+      #go{
+        flex:0 0 auto;
+        min-width:110px;
+      }
     }
   
 /* --- mobile-shared-opt --- */
@@ -249,32 +276,107 @@
 </head>
 <body>
   <header>
-    <a class="btn" href="../index.html">Ana sayfa</a>
+    <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
     <div>
-      <h1>Depremler</h1>
-      <p class="lead">USGS son depremler.</p>
+      <h1 id="pageTitle">Depremler</h1>
+      <p class="lead" id="pageLead">USGS son depremler.</p>
     </div>
   </header>
 
   <div class="panel">
     <div class="bar">
-      <button class="btn" data-mag="0" id="all-btn">Tümü</button>
-      <button class="btn" data-mag="4">Mag 4+</button>
-      <button class="btn" data-mag="5">Mag 5+</button>
-
-      <input id="country" placeholder="Ülke filtre (örn: Turkey)">
-      <button class="btn" id="go">Filtrele</button>
-      <span class="muted" id="status">Hazır</span>
+      <button class="btn btn-compact" data-mag="0" id="all-btn">Tum</button>
+      <button class="btn btn-compact" data-mag="4" id="mag4-btn">Mag 4+</button>
+      <button class="btn btn-compact" data-mag="5" id="mag5-btn">Mag 5+</button>
+      <input id="country" placeholder="Ulke filtre (orn: Turkey)">
+      <button class="btn btn-compact" id="go">Filtrele</button>
+      <span class="muted" id="status">Hazir</span>
     </div>
 
     <div class="chips" id="country-chips"></div>
 
     <div class="grid" id="grid">
-      <div class="card">Yükleniyor...</div>
+      <div class="card">Yukleniyor...</div>
     </div>
   </div>
 
+
   <script>
+  (function(){
+    /* Dil tercihi (tr/en) */
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const TXT = {
+      tr:{
+        title:"Depremler",
+        home:"Ana sayfa",
+        heading:"Depremler",
+        lead:"USGS son depremler.",
+        btnAll:"Tüm",
+        btnMag4:"Mag 4+",
+        btnMag5:"Mag 5+",
+        placeholder:"Ülke filtre (örn: Turkey)",
+        filterBtn:"Filtrele",
+        statusReady:"Hazır",
+        statusLoading:"Yükleniyor...",
+        statusError:"Hata",
+        loadingCard:"Yükleniyor...",
+        noResult:"Sonuç yok",
+        errorCard:"Veri alınamadı.",
+        noLocation:"Konum yok",
+        usgs:"USGS"
+      },
+      en:{
+        title:"Earthquakes",
+        home:"Home",
+        heading:"Earthquakes",
+        lead:"Latest USGS earthquakes.",
+        btnAll:"All",
+        btnMag4:"Mag 4+",
+        btnMag5:"Mag 5+",
+        placeholder:"Country filter (e.g., Turkey)",
+        filterBtn:"Filter",
+        statusReady:"Ready",
+        statusLoading:"Loading...",
+        statusError:"Error",
+        loadingCard:"Loading...",
+        noResult:"No results",
+        errorCard:"Unable to load data.",
+        noLocation:"No location",
+        usgs:"USGS"
+      }
+    }[prefLang];
+
+    /* Statik metinleri uygula */
+    document.title = TXT.title;
+
+    const homeBtn = document.getElementById("homeBtn");
+    const pageTitleEl = document.getElementById("pageTitle");
+    const pageLeadEl = document.getElementById("pageLead");
+    const allBtn = document.getElementById("all-btn");
+    const mag4Btn = document.getElementById("mag4-btn");
+    const mag5Btn = document.getElementById("mag5-btn");
+    const countryInput = document.getElementById("country");
+    const goBtn = document.getElementById("go");
+    const statusEl = document.getElementById("status");
+    const grid = document.getElementById("grid");
+
+    if(homeBtn) homeBtn.textContent = TXT.home;
+    if(pageTitleEl) pageTitleEl.textContent = TXT.heading;
+    if(pageLeadEl) pageLeadEl.textContent = TXT.lead;
+    if(allBtn) allBtn.textContent = TXT.btnAll;
+    if(mag4Btn) mag4Btn.textContent = TXT.btnMag4;
+    if(mag5Btn) mag5Btn.textContent = TXT.btnMag5;
+    if(countryInput) countryInput.placeholder = TXT.placeholder;
+    if(goBtn) goBtn.textContent = TXT.filterBtn;
+    if(statusEl) statusEl.textContent = TXT.statusReady;
+    if(grid && grid.firstElementChild){
+      grid.firstElementChild.textContent = TXT.loadingCard;
+    }
+
+    /* Şiddet butonları / filtre */
     const buttons = document.querySelectorAll("[data-mag]");
     let magMin = 0;
 
@@ -286,9 +388,9 @@
     document.getElementById("go").onclick = load;
 
     const countries = [
-      "Turkey","Ireland","Belgium","Germany","France","Netherlands","United Kingdom","Azerbaijan",
-      "Thailand","India","Brazil","China","Italy","Australia","Japan","Canada","Ukraine","Russian Federation","Finland",
-      "United States of America","Republic of Korea","Argentina","Sweden","Uruguay","Mexico","Spain","Romania","Norway",
+      "Turkey","Ireland","Belgium","Germany","France","Netherlands","England","Azerbaijan",
+      "Thailand","India","Brazil","China","Italy","Australia","Japan","Canada","Ukraine","Russia","Finland",
+      "America","Korea","Argentina","Sweden","Uruguay","Mexico","Spain","Romania","Norway",
       "Switzerland","Portugal"
     ];
 
@@ -310,12 +412,10 @@
     });
 
     async function load(){
-      const grid   = document.getElementById("grid");
-      const status = document.getElementById("status");
       const country = document.getElementById("country").value.trim().toLowerCase();
 
       try{
-        status.textContent = "Yükleniyor...";
+        statusEl.textContent = TXT.statusLoading;
         const r = await fetch("https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&orderby=time&limit=100");
         const j = await r.json();
 
@@ -327,8 +427,8 @@
         feats = feats.sort((a,b) => (b.properties?.mag || 0) - (a.properties?.mag || 0));
 
         if (!feats.length){
-          grid.innerHTML = "<div class='card'>Sonuç yok</div>";
-          status.textContent = "Hazır";
+          grid.innerHTML = `<div class='card'>${TXT.noResult}</div>`;
+          statusEl.textContent = TXT.statusReady;
           return;
         }
 
@@ -336,22 +436,25 @@
           const p = f.properties || {};
           const delay = 0.02 * idx;
           return `<div class="card" style="animation-delay:${delay}s;">
-            <h3>${p.place || "Konum yok"}</h3>
+            <h3>${p.place || TXT.noLocation}</h3>
             <div class="muted">Mag: ${p.mag ?? "?"}</div>
             <div class="muted">${new Date(p.time).toLocaleString()}</div>
-            ${p.url ? `<a class="btn" href="${p.url}" target="_blank">USGS</a>` : ""}
+            ${p.url ? `<a class="btn btn-compact" href="${p.url}" target="_blank">${TXT.usgs}</a>` : ""}
           </div>`;
         }).join("");
 
-        status.textContent = "Hazır";
+        statusEl.textContent = TXT.statusReady;
       }catch(e){
         console.error(e);
-        grid.innerHTML = "<div class='card'>Veri alınamadı.</div>";
-        status.textContent = "Hata";
+        grid.innerHTML = `<div class='card'>${TXT.errorCard}</div>`;
+        statusEl.textContent = TXT.statusError;
       }
     }
 
     load();
+  })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

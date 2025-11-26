@@ -360,15 +360,21 @@
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
+@media(max-width:768px){
+  .panel > .bar, .panel > .chips{
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+  }
+}
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
   <header>
-    <a class="btn" href="../index.html">Ana sayfa</a>
+    <a class="btn" href="../index.html" id="btnHome">Ana sayfa</a>
     <div>
-      <h1>AniList Anime Takvimi</h1>
-      <p class="lead">Sezon & yıl seçip en popüler 20 animeyi listele.</p>
+      <h1 id="titleMain">AniList Anime Takvimi</h1>
+      <p class="lead" id="leadMain">Sezon & yıl seçip en popüler 20 animeyi listele.</p>
     </div>
   </header>
   <div class="panel">
@@ -380,17 +386,18 @@
         <option value="FALL" selected>Fall</option>
       </select>
       <select id="year"></select>
-      <button class="btn" id="prev2">◀◀</button>
-      <button class="btn" id="prev">◀</button>
-      <button class="btn" id="nowBtn">●</button>
-      <button class="btn" id="next">▶</button>
-      <button class="btn" id="next2">▶▶</button>
       <button class="btn" id="go">Listele</button>
       <span class="muted" id="status">Hazır</span>
+      <button class="btn" id="prev2">◀ ◀ ◀</button>
+      <button class="btn" id="prev">◀  ◀</button>
+      <button class="btn" id="nowBtn">● ● ●</button>
+      <button class="btn" id="next">▶  ▶</button>
+      <button class="btn" id="next2">▶ ▶ ▶</button>
+      
       <span class="muted" id="labels"></span>
     </div>
     <div class="grid" id="grid">
-      <div class="card" style="grid-template-columns:1fr;">Arama yapın.</div>
+      <div class="card" style="grid-template-columns:1fr;" id="initialCard">Arama yapın.</div>
     </div>
     <div style="text-align:center;margin-top:10px;">
       <button class="btn" id="more">Daha fazla</button>
@@ -403,266 +410,411 @@
     </div>
   </div>
   <script>
-  const seasons=["WINTER","SPRING","SUMMER","FALL"];
-  const yearSel=document.getElementById("year");
-  const now=new Date();
-  const currentSeason=getSeasonForDate(now);
+  (function(){
+    // Dil tercih okuma
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const lang = pref === "tr" ? "tr" : "en";
+    const locale = lang === "tr" ? "tr-TR" : "en-US";
+    document.documentElement.lang = lang;
 
-  yearSel.innerHTML=Array.from({length:6},(_,i)=>currentSeason.year-1+i)
-    .map(y=>`<option value="${y}" ${y===currentSeason.year?'selected':''}>${y}</option>`)
-    .join("");
+    const texts = {
+      en: {
+        pageTitle: "AniList Anime Calendar",
+        home: "Home",
+        mainTitle: "AniList Anime Calendar",
+        lead: "Pick a season & year and list the top 20 popular anime.",
+        listBtn: "List",
+        statusReady: "Ready",
+        statusLoading: "Loading...",
+        statusError: "Error",
+        initialMsg: "Start a search.",
+        moreBtn: "More",
+        closeBtn: "Close",
+        noResults: "No results",
+        fetchError: "Data could not be retrieved.",
+        seasonWinter: "Winter",
+        seasonSpring: "Spring",
+        seasonSummer: "Summer",
+        seasonFall: "Fall",
+        nowPrefix: "Now:",
+        airingNone: "No airing info",
+        scoreLabel: "Score",
+        episodesLabel: "Episodes",
+        durationLabel: "Duration",
+        minutesSuffix: "min",
+        studioLabel: "Studio",
+        epPrefix: "Ep",
+        airHoursSuffix: "h left"
+      },
+      tr: {
+        pageTitle: "AniList Anime Takvimi",
+        home: "Ana sayfa",
+        mainTitle: "AniList Anime Takvimi",
+        lead: "Sezon & yıl seçip en popüler 20 animeyi listele.",
+        listBtn: "Listele",
+        statusReady: "Hazır",
+        statusLoading: "Yükleniyor",
+        statusError: "Hata",
+        initialMsg: "Arama yapın.",
+        moreBtn: "Daha fazla",
+        closeBtn: "Kapat",
+        noResults: "Sonuç yok",
+        fetchError: "Veri alınamadı.",
+        seasonWinter: "Kış",
+        seasonSpring: "İlkbahar",
+        seasonSummer: "Yaz",
+        seasonFall: "Sonbahar",
+        nowPrefix: "Şimdi:",
+        airingNone: "Yayın bilgisi yok",
+        scoreLabel: "Puan",
+        episodesLabel: "Bölüm",
+        durationLabel: "Süre",
+        minutesSuffix: "dk",
+        studioLabel: "Stüdyo",
+        epPrefix: "Ep",
+        airHoursSuffix: "saat sonra"
+      }
+    };
 
-  document.getElementById("season").value=currentSeason.season;
+    const t = texts[lang];
 
-  const grid=document.getElementById("grid");
-  const modal=document.getElementById("modal");
-  const modalBody=document.getElementById("modal-body");
-  const labels=document.getElementById("labels");
-  const status=document.getElementById("status");
-  let page=1;
-  let cardObserver=null;
+    // Temel UI metinleri
+    document.title = t.pageTitle;
+    const btnHome = document.getElementById("btnHome");
+    if (btnHome) btnHome.textContent = t.home;
 
-  document.getElementById("prev").onclick=()=>shiftSeason(-1);
-  document.getElementById("next").onclick=()=>shiftSeason(1);
-  document.getElementById("prev2").onclick=()=>shiftSeason(-2);
-  document.getElementById("next2").onclick=()=>shiftSeason(2);
-  document.getElementById("nowBtn").onclick=()=>{
-    const cs=getSeasonForDate();
-    document.getElementById("season").value=cs.season;
-    yearSel.value=cs.year;
-    page=1;
-    updateLabels();
-    load(true);
-  };
-  document.getElementById("close").onclick=()=>modal.classList.remove("active");
-  modal.addEventListener("click",(e)=>{if(e.target===modal) modal.classList.remove("active");});
-  document.getElementById("go").addEventListener("click",()=>{page=1;load(true);});
-  document.getElementById("more").addEventListener("click",()=>{page++;load(false,true);});
-  document.getElementById("season").addEventListener("change",()=>{page=1;updateLabels();});
-  yearSel.addEventListener("change",()=>{page=1;updateLabels();});
+    const titleMain = document.getElementById("titleMain");
+    if (titleMain) titleMain.textContent = t.mainTitle;
 
-  function getSeasonForDate(d=new Date()){
-    const m=d.getMonth()+1; const y=d.getFullYear();
-    if(m<=2) return {season:"WINTER",year:y-1};
-    if(m<=5) return {season:"SPRING",year:y};
-    if(m<=8) return {season:"SUMMER",year:y};
-    return {season:"FALL",year:y};
-  }
+    const leadMain = document.getElementById("leadMain");
+    if (leadMain) leadMain.textContent = t.lead;
 
-  function shiftSeason(step){
-    let s=document.getElementById("season").value;
-    let y=parseInt(yearSel.value,10);
-    let idx=seasons.indexOf(s);
-    idx+=step;
-    while(idx<0){idx+=4;y--;}
-    while(idx>3){idx-=4;y++;}
-    document.getElementById("season").value=seasons[idx];
-    yearSel.value=y;
-    page=1;
-    updateLabels();
-    load(true);
-  }
+    const goBtn = document.getElementById("go");
+    if (goBtn) goBtn.textContent = t.listBtn;
 
-  function updateLabels(){
-    const s=document.getElementById("season").value;
-    const y=parseInt(yearSel.value,10);
-    const idx=seasons.indexOf(s);
-    const rel=[-2,-1,0,1,2].map(step=>{
-      let i=idx+step; let yy=y;
-      while(i<0){i+=4;yy--;} while(i>3){i-=4;yy++;}
-      return `${seasons[i]} ${yy}`;
-    });
-    labels.textContent=rel.join(" · ");
-  }
+    const statusEl = document.getElementById("status");
+    if (statusEl) statusEl.textContent = t.statusReady;
 
-  async function load(reset=true,append=false){
-    const season=document.getElementById("season").value;
-    const year=parseInt(yearSel.value,10);
-    try{
-      status.textContent="Yükleniyor";
-      status.classList.add("loading");
+    const moreBtn = document.getElementById("more");
+    if (moreBtn) moreBtn.textContent = t.moreBtn;
 
-      const query=`query ($season:MediaSeason,$year:Int,$page:Int){
-        Page(page:$page,perPage:20){
-          media(
-            season:$season,
-            seasonYear:$year,
-            type:ANIME,
-            sort:POPULARITY_DESC
-          ){
-            id
+    const closeBtn = document.getElementById("close");
+    if (closeBtn) closeBtn.textContent = t.closeBtn;
+
+    const initialCard = document.getElementById("initialCard");
+    if (initialCard) initialCard.textContent = t.initialMsg;
+
+    // Sezon select içindeki textleri güncelle
+    const seasonSel = document.getElementById("season");
+    if (seasonSel) {
+      const optMap = {
+        WINTER: t.seasonWinter,
+        SPRING: t.seasonSpring,
+        SUMMER: t.seasonSummer,
+        FALL: t.seasonFall
+      };
+      Array.from(seasonSel.options).forEach(opt => {
+        const v = opt.value;
+        if (optMap[v]) opt.textContent = optMap[v];
+      });
+    }
+
+    const seasons = ["WINTER","SPRING","SUMMER","FALL"];
+    const yearSel=document.getElementById("year");
+    const now=new Date();
+    const currentSeason=getSeasonForDate(now);
+
+    yearSel.innerHTML=Array.from({length:6},(_,i)=>currentSeason.year-1+i)
+      .map(y=>`<option value="${y}" ${y===currentSeason.year?'selected':''}>${y}</option>`)
+      .join("");
+
+    document.getElementById("season").value=currentSeason.season;
+
+    const grid=document.getElementById("grid");
+    const modal=document.getElementById("modal");
+    const modalBody=document.getElementById("modal-body");
+    const labels=document.getElementById("labels");
+    let page=1;
+    let cardObserver=null;
+
+    const prevBtn2 = document.getElementById("prev2");
+    const prevBtn = document.getElementById("prev");
+    const nowBtn = document.getElementById("nowBtn");
+    const nextBtn = document.getElementById("next");
+    const nextBtn2 = document.getElementById("next2");
+
+    prevBtn.onclick=()=>shiftSeason(-1);
+    nextBtn.onclick=()=>shiftSeason(1);
+    prevBtn2.onclick=()=>shiftSeason(-2);
+    nextBtn2.onclick=()=>shiftSeason(2);
+    nowBtn.onclick=()=>{
+      const cs=getSeasonForDate();
+      document.getElementById("season").value=cs.season;
+      yearSel.value=cs.year;
+      page=1;
+      updateLabels();
+      load(true);
+    };
+    closeBtn.onclick=()=>modal.classList.remove("active");
+    modal.addEventListener("click",(e)=>{if(e.target===modal) modal.classList.remove("active");});
+    goBtn.addEventListener("click",()=>{page=1;load(true);});
+    moreBtn.addEventListener("click",()=>{page++;load(false,true);});
+    document.getElementById("season").addEventListener("change",()=>{page=1;updateLabels();});
+    yearSel.addEventListener("change",()=>{page=1;updateLabels();});
+
+    // Mevsim hesaplama: Aralik, Ocak, Subat = WINTER (Aralik bir sonraki yil olarak sayilir)
+    function getSeasonForDate(d=new Date()){
+      const m=d.getMonth()+1;
+      const y=d.getFullYear();
+      if(m===12) return {season:"WINTER",year:y+1};
+      if(m<=2) return {season:"WINTER",year:y};
+      if(m<=5) return {season:"SPRING",year:y};
+      if(m<=8) return {season:"SUMMER",year:y};
+      return {season:"FALL",year:y};
+    }
+
+    function resolveSeasonStep(baseSeason,baseYear,step){
+      let idx=seasons.indexOf(baseSeason);
+      let yr=baseYear;
+      idx+=step;
+      while(idx<0){idx+=4;yr--;}
+      while(idx>3){idx-=4;yr++;}
+      return {season:seasons[idx],year:yr};
+    }
+
+    const seasonLabels = {
+      WINTER: t.seasonWinter,
+      SPRING: t.seasonSpring,
+      SUMMER: t.seasonSummer,
+      FALL: t.seasonFall
+    };
+
+    function shiftSeason(step){
+      const current={season:document.getElementById("season").value,year:parseInt(yearSel.value,10)};
+      const next=resolveSeasonStep(current.season,current.year,step);
+      document.getElementById("season").value=next.season;
+      yearSel.value=next.year;
+      page=1;
+      updateLabels();
+      load(true);
+    }
+
+    function updateLabels(){
+      const s=document.getElementById("season").value;
+      const y=parseInt(yearSel.value,10);
+      const rel=[-2,-1,0,1,2].map(step=>{
+        const r=resolveSeasonStep(s,y,step);
+        return `${seasonLabels[r.season]||r.season} ${r.year}`;
+      });
+      labels.textContent=rel.join(" | ");
+
+      // Buton etiketlerini dinamik
+      prevBtn2.textContent=`<< ${rel[0]}`;
+      prevBtn.textContent=`< ${rel[1]}`;
+      nowBtn.textContent=`${t.nowPrefix} ${rel[2]}`;
+      nextBtn.textContent=`> ${rel[3]}`;
+      nextBtn2.textContent=`>> ${rel[4]}`;
+    }
+
+    function toHoursLabel(seconds){
+      const h = (seconds/3600).toFixed(1);
+      if (lang === "tr") {
+        return `${h} ${t.airHoursSuffix}`; // "saat sonra"
+      }
+      return `${h} ${t.airHoursSuffix}`;   // "h left"
+    }
+
+    async function load(reset=true,append=false){
+      const season=document.getElementById("season").value;
+      const year=parseInt(yearSel.value,10);
+      try{
+        statusEl.textContent=t.statusLoading;
+        statusEl.classList.add("loading");
+
+        const query=`query ($season:MediaSeason,$year:Int,$page:Int){
+          Page(page:$page,perPage:20){
+            media(
+              season:$season,
+              seasonYear:$year,
+              type:ANIME,
+              sort:POPULARITY_DESC
+            ){
+              id
+              title{romaji english}
+              description
+              coverImage{large}
+              averageScore
+              nextAiringEpisode{timeUntilAiring episode}
+              genres
+              externalLinks{site url language type}
+            }
+          }
+        }`;
+
+        const res=await fetch("https://graphql.anilist.co",{
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json"
+          },
+          body:JSON.stringify({query,variables:{season,year,page}})
+        });
+
+        const j=await res.json();
+        const list=j?.data?.Page?.media||[];
+
+        if(!list.length){
+          if(reset){
+            grid.innerHTML=`<div class='card' style='grid-template-columns:1fr;'>${t.noResults}</div>`;
+          }
+          statusEl.textContent=t.statusReady;
+          statusEl.classList.remove("loading");
+          return;
+        }
+
+        const html=list.map(m=>{
+          const desc=(m.description||"")
+            .replace(/<[^>]+>/g,"")
+            .slice(0,160)+"...";
+          const next = m.nextAiringEpisode
+            ? `${t.epPrefix} ${m.nextAiringEpisode.episode} · ${toHoursLabel(m.nextAiringEpisode.timeUntilAiring)}`
+            : t.airingNone;
+          return `<div class="card" data-id="${m.id}">
+            <img class="cover" src="${m.coverImage?.large||""}" alt="${m.title?.romaji||""}">
+            <div>
+              <h3>${m.title?.english||m.title?.romaji||"Anime"}</h3>
+              <div class="muted">${next}</div>
+              <p class="muted">${desc}</p>
+              <div>${(m.genres||[]).slice(0,3).map(g=>`<span class="pill">${g}</span>`).join("")}</div>
+              <div class="muted">${t.scoreLabel}: ${m.averageScore??"?"}</div>
+            </div>
+          </div>`;
+        }).join("");
+
+        if(reset && !append){
+          grid.innerHTML=html;
+        } else {
+          grid.insertAdjacentHTML("beforeend",html);
+        }
+
+        attachCardInteractions();
+
+        statusEl.textContent=t.statusReady;
+        statusEl.classList.remove("loading");
+      }catch(e){
+        console.error(e);
+        statusEl.textContent=t.statusError;
+        statusEl.classList.remove("loading");
+        if(reset){
+          grid.innerHTML=`<div class='card' style='grid-template-columns:1fr;'>${t.fetchError}</div>`;
+        }
+      }
+    }
+
+    async function showDetail(id){
+      try{
+        const query=`query($id:Int){
+          Media(id:$id,type:ANIME){
             title{romaji english}
             description
             coverImage{large}
+            bannerImage
             averageScore
-            nextAiringEpisode{timeUntilAiring episode}
+            episodes
+            duration
+            externalLinks{site url language type icon}
             genres
-            externalLinks{site url language type}
+            tags{name rank}
+            studios{nodes{name}}
           }
-        }
-      }`;
+        }`;
+        const res=await fetch("https://graphql.anilist.co",{
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json"
+          },
+          body:JSON.stringify({query,variables:{id:parseInt(id,10)}})
+        });
+        const j=await res.json();
+        const m=j?.data?.Media;
+        if(!m){return;}
+        const desc=(m.description||"").replace(/<[^>]+>/g,"");
 
-      const res=await fetch("https://graphql.anilist.co",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Accept":"application/json"
-        },
-        body:JSON.stringify({query,variables:{season,year,page}})
-      });
-
-      const j=await res.json();
-      const list=j?.data?.Page?.media||[];
-
-      if(!list.length){
-        if(reset){
-          grid.innerHTML="<div class='card' style='grid-template-columns:1fr;'>Sonuç yok</div>";
-        }
-        status.textContent="Hazır";
-        status.classList.remove("loading");
-        return;
-      }
-
-      const toHours=(s)=> (s/3600).toFixed(1)+" saat";
-      const html=list.map(m=>{
-        const desc=(m.description||"")
-          .replace(/<[^>]+>/g,"")
-          .slice(0,160)+"...";
-        const next = m.nextAiringEpisode
-          ? `Ep ${m.nextAiringEpisode.episode} · ${toHours(m.nextAiringEpisode.timeUntilAiring)} sonra`
-          : "Yayın info yok";
-        return `<div class="card" data-id="${m.id}">
-          <img class="cover" src="${m.coverImage?.large||""}" alt="${m.title?.romaji||""}">
-          <div>
-            <h3>${m.title?.english||m.title?.romaji||"Anime"}</h3>
-            <div class="muted">${next}</div>
-            <p class="muted">${desc}</p>
-            <div>${(m.genres||[]).slice(0,3).map(g=>`<span class="pill">${g}</span>`).join("")}</div>
-            <div class="muted">Puan: ${m.averageScore??"?"}</div>
-          </div>
-        </div>`;
-      }).join("");
-
-      if(reset && !append){
-        grid.innerHTML=html;
-      } else {
-        grid.insertAdjacentHTML("beforeend",html);
-      }
-
-      attachCardInteractions();
-
-      status.textContent="Hazır";
-      status.classList.remove("loading");
-    }catch(e){
-      console.error(e);
-      status.textContent="Hata";
-      status.classList.remove("loading");
-      if(reset){
-        grid.innerHTML="<div class='card' style='grid-template-columns:1fr;'>Veri alınamadı.</div>";
-      }
-    }
-  }
-
-  async function showDetail(id){
-    try{
-      const query=`query($id:Int){
-        Media(id:$id,type:ANIME){
-          title{romaji english}
-          description
-          coverImage{large}
-          bannerImage
-          averageScore
-          episodes
-          duration
-          externalLinks{site url language type icon}
-          genres
-          tags{name rank}
-          studios{nodes{name}}
-        }
-      }`;
-      const res=await fetch("https://graphql.anilist.co",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Accept":"application/json"
-        },
-        body:JSON.stringify({query,variables:{id:parseInt(id,10)}})
-      });
-      const j=await res.json();
-      const m=j?.data?.Media;
-      if(!m){return;}
-      const desc=(m.description||"").replace(/<[^>]+>/g,"");
-
-      modalBody.innerHTML=`
-        ${m.bannerImage
-          ? `<img src="${m.bannerImage}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-bottom:10px;">`
-          : ``}
-        <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
-          <img src="${m.coverImage?.large||""}" style="width:140px;border-radius:10px;object-fit:cover;">
-          <div style="flex:1;min-width:0;">
-            <h2>${m.title?.english||m.title?.romaji||"Anime"}</h2>
-            <p class="muted">${desc}</p>
-            <div>${(m.genres||[]).map(g=>`<span class="pill">${g}</span>`).join("")}</div>
-            <div class="muted" style="margin-top:6px;">
-              Puan: ${m.averageScore??"?"} · Bölüm: ${m.episodes??"?"} · Süre: ${m.duration??"?"} dk
+        modalBody.innerHTML=`
+          ${m.bannerImage
+            ? `<img src="${m.bannerImage}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-bottom:10px;">`
+            : ``}
+          <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+            <img src="${m.coverImage?.large||""}" style="width:140px;border-radius:10px;object-fit:cover;">
+            <div style="flex:1;min-width:0;">
+              <h2>${m.title?.english||m.title?.romaji||"Anime"}</h2>
+              <p class="muted">${desc}</p>
+              <div>${(m.genres||[]).map(g=>`<span class="pill">${g}</span>`).join("")}</div>
+              <div class="muted" style="margin-top:6px;">
+                ${t.scoreLabel}: ${m.averageScore??"?"} · ${t.episodesLabel}: ${m.episodes??"?"} · ${t.durationLabel}: ${m.duration??"?"} ${t.minutesSuffix}
+              </div>
+              <div class="muted">${t.studioLabel}: ${(m.studios?.nodes||[]).map(s=>s.name).join(", ")}</div>
+              <div class="links">${(m.externalLinks||[]).map(l=>`<a href="${l.url}" target="_blank">${l.site}</a>`).join("")}</div>
             </div>
-            <div class="muted">Stüdyo: ${(m.studios?.nodes||[]).map(s=>s.name).join(", ")}</div>
-            <div class="links">${(m.externalLinks||[]).map(l=>`<a href="${l.url}" target="_blank">${l.site}</a>`).join("")}</div>
           </div>
-        </div>
-        <div style="margin-top:8px;">
-          ${(m.tags||[]).slice(0,10).map(t=>`<span class="pill">${t.name} ${t.rank?Math.round(t.rank)+"%":""}</span>`).join("")}
-        </div>
-      `;
-      modal.classList.add("active");
-    }catch(err){
-      console.error(err);
-    }
-  }
-
-  /* Kartlara scroll reveal + click bağlama */
-  function attachCardInteractions(){
-    const cards = grid.querySelectorAll(".card[data-id]");
-    cards.forEach((card,index)=>{
-      card.onclick = () => showDetail(card.dataset.id);
-      card.style.setProperty("--card-index", index);
-      if(cardObserver){
-        cardObserver.observe(card);
+          <div style="margin-top:8px;">
+            ${(m.tags||[]).slice(0,10).map(tg=>`<span class="pill">${tg.name} ${tg.rank?Math.round(tg.rank)+"%":""}</span>`).join("")}
+          </div>
+        `;
+        modal.classList.add("active");
+      }catch(err){
+        console.error(err);
       }
-    });
-  }
+    }
 
-  function setupScrollReveal(){
-    cardObserver = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){
-          entry.target.classList.add("visible");
-          cardObserver.unobserve(entry.target);
+    /* Kartlara scroll reveal + click bağlama */
+    function attachCardInteractions(){
+      const cards = grid.querySelectorAll(".card[data-id]");
+      cards.forEach((card,index)=>{
+        card.onclick = () => showDetail(card.dataset.id);
+        card.style.setProperty("--card-index", index);
+        if(cardObserver){
+          cardObserver.observe(card);
         }
       });
-    },{threshold:0.12});
+    }
 
-    const cards = grid.querySelectorAll(".card[data-id]");
-    cards.forEach((card,index)=>{
-      card.style.setProperty("--card-index", index);
-      cardObserver.observe(card);
-    });
-  }
+    function setupScrollReveal(){
+      cardObserver = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            entry.target.classList.add("visible");
+            cardObserver.unobserve(entry.target);
+          }
+        });
+      },{threshold:0.12});
 
-  function setupParallax(){
-    window.addEventListener("mousemove",(e)=>{
-      const x=(e.clientX/window.innerWidth - 0.5) * 2;
-      const y=(e.clientY/window.innerHeight - 0.5) * 2;
-      document.documentElement.style.setProperty("--parallaxX",(x*10).toFixed(2)+"px");
-      document.documentElement.style.setProperty("--parallaxY",(y*8).toFixed(2)+"px");
-    });
-  }
+      const cards = grid.querySelectorAll(".card[data-id]");
+      cards.forEach((card,index)=>{
+        card.style.setProperty("--card-index", index);
+        cardObserver.observe(card);
+      });
+    }
 
-  updateLabels();
-  load(true);
-  document.body.classList.add("loaded");
-  setupScrollReveal();
-  setupParallax();
+    function setupParallax(){
+      window.addEventListener("mousemove",(e)=>{
+        const x=(e.clientX/window.innerWidth - 0.5) * 2;
+        const y=(e.clientY/window.innerHeight - 0.5) * 2;
+        document.documentElement.style.setProperty("--parallaxX",(x*10).toFixed(2)+"px");
+        document.documentElement.style.setProperty("--parallaxY",(y*8).toFixed(2)+"px");
+      });
+    }
+
+    updateLabels();
+    load(true);
+    document.body.classList.add("loaded");
+    setupScrollReveal();
+    setupParallax();
+  })();
   </script>
+  <script src='../lang-helper.js'></script>
+  <script src='../scroll-helper.js'></script>
+  <script src='../page-lang.js'></script>
 </body>
 </html>

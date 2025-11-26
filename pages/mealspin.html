@@ -422,7 +422,7 @@
       opacity:1;
     }
 
-    /* Spin ikon benzeri ufak pseudo animasyon */
+    /* Spin ikon */
     .spin-icon{
       width:14px;height:14px;
       border-radius:999px;
@@ -472,11 +472,13 @@
 
   <header>
     <a class="btn" href="../index.html">
-      ← Ana sayfa
+      <span id="homeText">← Ana sayfa</span>
     </a>
     <div>
-      <h1>Rastgele Tarif</h1>
-      <p class="lead">TheMealDB'den tek tıkla – veya sola doğru bir swipe ile – yeni tarif keşfet.</p>
+      <h1 id="titleText">Rastgele Tarif</h1>
+      <p class="lead" id="leadText">
+        TheMealDB'den tek tıkla – veya sola doğru bir swipe ile – yeni tarif keşfet.
+      </p>
     </div>
   </header>
 
@@ -485,11 +487,11 @@
       <div class="panel-header">
         <div class="status-pill">
           <div class="status-dot"></div>
-          Canlı tarif motoru
+          <span id="statusLabel">Canlı tarif motoru</span>
         </div>
         <button class="btn" id="spin">
           <div class="spin-icon"></div>
-          <span class="spin-label">Spin</span>
+          <span class="spin-label" id="spinLabel">Spin</span>
         </button>
       </div>
       <div class="card card-enter" id="card">
@@ -499,8 +501,69 @@
   </div>
 
   <script>
+  (function(){
+    // Dil tercihi: site geneliyle uyumlu
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const texts = {
+      tr:{
+        pageTitle:"Rastgele Tarif",
+        home:"← Ana sayfa",
+        heading:"Rastgele Tarif",
+        lead:"TheMealDB'den tek tıkla – veya sola doğru bir swipe ile – yeni tarif keşfet.",
+        statusLabel:"Canlı tarif motoru",
+        spinLabel:"Spin",
+        loading:"Yükleniyor...",
+        noRecipe:"Tarif bulunamadı.",
+        fetchError:"Veri alınamadı.",
+        ingredientsTitle:"Malzemeler",
+        chefPick:"Şefin seçimi",
+        unknownArea:"Bilinmeyen bölge",
+        noCategory:"Kategori yok",
+        swipeHint:"Sola sürükle",
+        watchOnYouTube:"YouTube'da izle",
+        instructionsMore:"..."
+      },
+      en:{
+        pageTitle:"Random Recipe",
+        home:"← Home",
+        heading:"Random Recipe",
+        lead:"Discover a new recipe from TheMealDB with one click – or by swiping left.",
+        statusLabel:"Live recipe engine",
+        spinLabel:"Spin",
+        loading:"Loading...",
+        noRecipe:"No recipe found.",
+        fetchError:"Could not fetch data.",
+        ingredientsTitle:"Ingredients",
+        chefPick:"Chef's pick",
+        unknownArea:"Unknown area",
+        noCategory:"No category",
+        swipeHint:"Swipe left",
+        watchOnYouTube:"Watch on YouTube",
+        instructionsMore:"..."
+      }
+    };
+
+    const t = texts[prefLang];
+
+    // Statik metinleri uygula
+    document.title = t.pageTitle;
+    const homeText = document.getElementById("homeText");
+    const titleText = document.getElementById("titleText");
+    const leadText = document.getElementById("leadText");
+    const statusLabel = document.getElementById("statusLabel");
+    const spinLabel = document.getElementById("spinLabel");
     const card = document.getElementById("card");
     const spinBtn = document.getElementById("spin");
+
+    if(homeText) homeText.textContent = t.home;
+    if(titleText) titleText.textContent = t.heading;
+    if(leadText) leadText.textContent = t.lead;
+    if(statusLabel) statusLabel.textContent = t.statusLabel;
+    if(spinLabel) spinLabel.textContent = t.spinLabel;
+    if(card) card.textContent = t.loading;
 
     async function fetchRandomMeal(){
       card.classList.remove("card-spin-in","card-enter");
@@ -508,16 +571,16 @@
       try{
         const r = await fetch("https://www.themealdb.com/api/json/v1/1/random.php");
         const j = await r.json();
-        const m = j.meals?.[0];
+        const m = j.meals && j.meals[0];
         if(!m){
-          card.innerHTML = "Tarif bulunamadı.";
+          card.innerHTML = t.noRecipe;
           card.classList.remove("card-spin-out");
           card.classList.add("card-spin-in");
           return;
         }
         renderMeal(m);
       }catch(e){
-        card.innerHTML = "Veri alınamadı.";
+        card.innerHTML = t.fetchError;
         card.classList.remove("card-spin-out");
         card.classList.add("card-spin-in");
       }
@@ -526,46 +589,54 @@
     function renderMeal(m){
       const ingredients = [];
       for(let i=1;i<=20;i++){
-        const ing = m[`strIngredient${i}`];
-        const mea = m[`strMeasure${i}`];
+        const ing = m["strIngredient"+i];
+        const mea = m["strMeasure"+i];
         if(ing && ing.trim()){
           ingredients.push(`${ing} - ${mea || ""}`);
         }
       }
 
-      const instructions = (m.strInstructions || "")
+      const instructionsRaw = m.strInstructions || "";
+      const instructions = instructionsRaw
         .split("\n")
         .filter(Boolean)
         .slice(0,6)
         .join("<br>");
 
+      const badgeText = m.strTags
+        ? (m.strTags.split(",")[0] || t.chefPick)
+        : t.chefPick;
+
+      const area = m.strArea || t.unknownArea;
+      const category = m.strCategory || t.noCategory;
+
       card.innerHTML = `
         <div class="meal-title">
           <h3>${m.strMeal}</h3>
-          <span class="badge">${m.strTags ? m.strTags.split(",")[0] : "Chef's pick"}</span>
+          <span class="badge">${badgeText}</span>
         </div>
         <div class="meta muted">
-          ${(m.strArea || "Bilinmeyen bölge")} · ${(m.strCategory || "Kategori yok")}
+          ${area} · ${category}
         </div>
 
         <div class="img-wrap">
           <div class="img-inner">
             <img id="meal-image" src="${m.strMealThumb}" alt="${m.strMeal}">
             <div class="img-hint">
-              <span>↔</span> Sola sürükle
+              <span>↔</span> ${t.swipeHint}
             </div>
           </div>
         </div>
 
-        <strong>Malzemeler</strong>
+        <strong>${t.ingredientsTitle}</strong>
         <ul>
           ${ingredients.map(i => `<li>${i}</li>`).join("")}
         </ul>
 
-        <p class="instructions muted">${instructions}...</p>
+        <p class="instructions muted">${instructions}${t.instructionsMore}</p>
 
         <div class="actions">
-          ${m.strYoutube ? `<a class="btn btn-secondary" href="${m.strYoutube}" target="_blank">YouTube'da izle</a>` : ""}
+          ${m.strYoutube ? `<a class="btn btn-secondary" href="${m.strYoutube}" target="_blank">${t.watchOnYouTube}</a>` : ""}
         </div>
       `;
 
@@ -581,7 +652,7 @@
       const img = document.getElementById("meal-image");
       if(!img) return;
 
-      // Varsayilan surukleme ve image drag davranislarini kapat
+      // Varsayılan drag'i kapat
       img.addEventListener("dragstart", e => e.preventDefault());
 
       let isDragging = false;
@@ -604,7 +675,7 @@
         e.preventDefault();
         isDragging = true;
         pointerId = e.pointerId;
-        startX = e.clientX ?? (e.touches?.[0]?.clientX || 0);
+        startX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
         currentX = 0;
         if(pointerId != null && img.setPointerCapture){
           try { img.setPointerCapture(pointerId); } catch(_) {}
@@ -614,7 +685,7 @@
 
       function handleMove(e){
         if(!isDragging) return;
-        const posX = e.clientX ?? (e.touches?.[0]?.clientX || startX);
+        const posX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : startX);
         currentX = posX - startX;
 
         if(currentX < 0){
@@ -653,7 +724,7 @@
       img.addEventListener("pointermove", handleMove);
       img.addEventListener("pointerup", handleUp);
       img.addEventListener("pointercancel", handleUp);
-      img.addEventListener("pointerleave", (e)=>{
+      img.addEventListener("pointerleave", e => {
         if(isDragging) handleUp(e);
       });
     }
@@ -666,6 +737,10 @@
     window.addEventListener("load", () => {
       fetchRandomMeal();
     });
+  })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
+  <script src="../page-lang.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -144,72 +144,48 @@
       animation-delay: 0.22s;
     }
 
-    .hero-actions {
-      display: inline-flex;
-      margin-top: 16px;
-      padding: 6px;
-      gap: 8px;
-      border-radius: 14px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.45);
-      backdrop-filter: blur(14px);
-      position: relative;
-      z-index: 1;
-      opacity: 0;
-      transform: translateY(16px);
-      animation: fadeUp 0.7s ease-out forwards;
-      animation-delay: 0.32s;
-      overflow: hidden;
+    .lang-wrap{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      margin-top:14px;
+      padding:8px 10px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.45);
+      border-radius:12px;
+      backdrop-filter:blur(12px);
+      position:relative;
+      z-index:1;
+      opacity:0;
+      transform:translateY(16px);
+      animation:fadeUp 0.7s ease-out forwards;
+      animation-delay:0.32s;
     }
-
-    /* Hero şerit shimmer */
-    .hero-actions::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(120deg,
-        transparent,
-        rgba(148,163,184,0.4),
-        transparent
-      );
-      mix-blend-mode: screen;
-      opacity: 0.0;
-      transform: translateX(-120%);
-      animation: heroShimmer 5s ease-in-out infinite;
-      pointer-events: none;
+    .lang-wrap label{
+      font-size:13px;
+      color:var(--muted);
     }
-
-    .pill {
-      border: none;
-      padding: 10px 14px;
-      border-radius: 12px;
-      background: transparent;
-      color: #fff;
-      cursor: pointer;
-      transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        color 0.2s ease;
-      font-weight: 500;
-      font-size: 14px;
-      letter-spacing: 0.02em;
+    #languageSelect{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.5);
+      background:#0f172a;
+      color:#e5e7eb;
+      min-width:140px;
+      font-size:13px;
+      outline:none;
     }
-
-    .pill:hover {
-      transform: translateY(-1px);
-      color: #e0f2fe;
-      box-shadow: 0 10px 30px rgba(15,23,42,0.9);
-      background: radial-gradient(circle at 0 0, rgba(148,163,184,0.3), transparent 60%);
+    #languageSelect:focus{
+      border-color:#22d3ee;
+      box-shadow:0 0 0 1px rgba(34,211,238,0.6);
     }
-
-    .pill.active {
-      background: linear-gradient(120deg, rgba(168,85,247,0.6), rgba(34,211,238,0.5));
-      transform: translateY(-1px);
-      box-shadow: 0 15px 40px rgba(15,23,42,0.95), 0 0 35px rgba(34,211,238,0.45);
+    .lang-warning{
+      margin-top:6px;
+      color:#fbbf24;
+      font-size:12px;
+      min-height:16px;
     }
-
-    .grid {
+.grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 18px;
@@ -603,12 +579,16 @@
   </a>
 
   <header class="site-header">
-    <h1 id="title">API Fikirleri - Canli</h1>
-    <p class="lead" id="subtitle">Mehmet Faruk Akbulut</p>
-    <div class="hero-actions">
-      <button class="pill active" data-lang="tr">Turkce</button>
-      <button class="pill" data-lang="en">English</button>
+    <h1 id="title">MFA API's</h1>
+    <p class="lead" id="subtitle">Mehmet Faruk Akbulut's Website</p>
+    <div class="lang-wrap">
+      <label for="languageSelect">Language</label>
+      <select id="languageSelect">
+        <option value="en" selected>English</option>
+        <option value="tr">Türkçe</option>
+      </select>
     </div>
+    <div id="lang-warning" class="lang-warning"></div>
   </header>
 
   <main class="grid" id="grid"></main>
@@ -711,5 +691,9 @@
       }
     })();
   </script>
+  <script src='lang-helper.js'></script>
+  <script src='scroll-helper.js'></script>
 </body>
 </html>
+
+

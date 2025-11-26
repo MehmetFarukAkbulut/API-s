@@ -139,6 +139,9 @@
       box-shadow:0 0 0 1px rgba(15,23,42,1);
       transition:border-color .2s, box-shadow .2s, background .2s, transform .15s;
     }
+    input::placeholder{
+      color:rgba(148,163,184,0.8);
+    }
     input:focus{
       border-color:var(--accent);
       box-shadow:
@@ -431,13 +434,15 @@
   <div class="cursor-glow" id="cursorGlow"></div>
 
   <header>
-    <h1>Tarif + Besin</h1>
-    <p class="lead">Malzeme ya da yemek adına göre arama; hızlı sonuç. İstersen rastgele öneri al.</p>
+    <h1 id="pageTitle">Tarif + Besin</h1>
+    <p class="lead" id="pageLead">
+      Malzeme ya da yemek adına göre arama; hızlı sonuç. İstersen rastgele öneri al.
+    </p>
   </header>
 
   <div class="panel">
     <div class="bar">
-      <a class="btn" href="../index.html">
+      <a class="btn" href="../index.html" id="homeBtn">
         <span>Ana sayfa</span>
       </a>
       <input id="q" placeholder="Tarif veya malzeme (örn: chicken, beef, pasta)">
@@ -451,8 +456,8 @@
 
     <div class="grid" id="grid">
       <div class="card" style="opacity:1;">
-        <h3>Tarif + Besin'e hoş geldiniz</h3>
-        <p class="muted">
+        <h3 id="welcomeTitle">Tarif + Besin'e hoş geldiniz</h3>
+        <p class="muted" id="welcomeBody">
           Sayfa yüklenirken sizin için rastgele tarifler getirilecektir.
           Dilerseniz yukarıdan bir mutfak / kategori filtresi seçebilir veya arama yapabilirsiniz.
         </p>
@@ -466,44 +471,182 @@
 
   <script>
   (function(){
-    const q      = document.getElementById("q");
+    // Dil ayarı (localStorage'daki prefLang ile senkron)
+    const pref = (typeof localStorage !== "undefined" && localStorage.getItem("prefLang")) || "en";
+    const prefLang = pref === "tr" ? "tr" : "en";
+    document.documentElement.lang = prefLang;
+
+    const TXT = {
+      tr:{
+        title:"Tarif + Besin",
+        heading:"Tarif + Besin",
+        lead:"Malzeme ya da yemek adına göre arama; hızlı sonuç. İstersen rastgele öneri al.",
+        home:"Ana sayfa",
+        searchPlaceholder:"Tarif veya malzeme (örn: chicken, beef, pasta)",
+        searchBtn:"Ara",
+        statusReady:"Hazır",
+        statusLoading:"Yükleniyor...",
+        statusError:"Hata",
+        welcomeTitle:"Tarif + Besin'e hoş geldiniz",
+        welcomeBody:"Sayfa yüklenirken sizin için rastgele tarifler getirilecektir. Dilerseniz yukarıdan bir mutfak / kategori filtresi seçebilir veya arama yapabilirsiniz.",
+        randomLoading:"Rastgele öneriler getiriliyor...",
+        randomEmptyCard:"Şu anda rastgele tarif alınamadı, lütfen tekrar deneyin.",
+        randomErrorCard:"Rastgele tarifler alınırken hata oluştu.",
+        noSearchHint:"Arama girin, filtre seçin veya hızlı öneriye tıklayın.",
+        noResults:"Sonuç bulunamadı.",
+        apiError:"Veri alınamadı, lütfen daha sonra tekrar deneyin.",
+        openRecipe:"Tarifi Aç",
+        badgeRandom:"Öneri",
+        loadMore:"Daha fazla göster",
+        loadMoreRandom:"Yeni öneriler",
+        filterRandomLabel:"Hızlı Öneri",
+        filterRandomSub:"Random",
+        filterKitchenSub:"Mutfak",
+        filterCategorySub:"Kategori",
+        kitchens:{
+          Turkish:"Türk",
+          Italian:"İtalyan",
+          Japanese:"Japon",
+          Indian:"Hint",
+          American:"Amerikan",
+          Chinese:"Çin",
+          Mexican:"Meksika"
+        },
+        categories:{
+          Chicken:"Tavuk",
+          Beef:"Et (Beef)",
+          Breakfast:"Kahvaltı",
+          Vegan:"Vegan",
+          Vegetarian:"Vejetaryen",
+          Seafood:"Deniz ürünü",
+          Dessert:"Tatlı",
+          Starter:"Başlangıç",
+          Side:"Yan yemek",
+          Pasta:"Makarna"
+        }
+      },
+      en:{
+        title:"Recipe + Nutrition",
+        heading:"Recipe + Nutrition",
+        lead:"Search by ingredient or meal name; get quick results or ask for random picks.",
+        home:"Home",
+        searchPlaceholder:"Recipe or ingredient (e.g. chicken, beef, pasta)",
+        searchBtn:"Search",
+        statusReady:"Ready",
+        statusLoading:"Loading...",
+        statusError:"Error",
+        welcomeTitle:"Welcome to Recipe + Nutrition",
+        welcomeBody:"On load, we will fetch random recipes for you. You can also pick a cuisine / category filter above or run a search.",
+        randomLoading:"Fetching random suggestions...",
+        randomEmptyCard:"Could not get random recipes right now, please try again.",
+        randomErrorCard:"An error occurred while fetching random recipes.",
+        noSearchHint:"Type a query, select a filter, or click quick suggestion.",
+        noResults:"No results found.",
+        apiError:"Unable to fetch data, please try again later.",
+        openRecipe:"Open recipe",
+        badgeRandom:"Pick",
+        loadMore:"Show more",
+        loadMoreRandom:"New suggestions",
+        filterRandomLabel:"Quick Pick",
+        filterRandomSub:"Random",
+        filterKitchenSub:"Cuisine",
+        filterCategorySub:"Category",
+        kitchens:{
+          Turkish:"Turkish",
+          Italian:"Italian",
+          Japanese:"Japanese",
+          Indian:"Indian",
+          American:"American",
+          Chinese:"Chinese",
+          Mexican:"Mexican"
+        },
+        categories:{
+          Chicken:"Chicken",
+          Beef:"Beef",
+          Breakfast:"Breakfast",
+          Vegan:"Vegan",
+          Vegetarian:"Vegetarian",
+          Seafood:"Seafood",
+          Dessert:"Dessert",
+          Starter:"Starter",
+          Side:"Side",
+          Pasta:"Pasta"
+        }
+      }
+    }[prefLang];
+
+    // Statik metinleri uygula
+    document.title = TXT.title;
+    const pageTitleEl = document.getElementById("pageTitle");
+    const pageLeadEl  = document.getElementById("pageLead");
+    const homeBtn     = document.getElementById("homeBtn");
+    const q           = document.getElementById("q");
+    const goBtn       = document.getElementById("go");
+    const status      = document.getElementById("status");
+    const welcomeTitle= document.getElementById("welcomeTitle");
+    const welcomeBody = document.getElementById("welcomeBody");
+    const loadMoreBtn = document.getElementById("loadMore");
+
+    if(pageTitleEl) pageTitleEl.textContent = TXT.heading;
+    if(pageLeadEl)  pageLeadEl.textContent  = TXT.lead;
+    if(homeBtn)     homeBtn.firstElementChild.textContent = TXT.home;
+    if(q)           q.placeholder           = TXT.searchPlaceholder;
+    if(goBtn)       goBtn.firstElementChild.textContent   = TXT.searchBtn;
+    if(status)      status.textContent      = TXT.statusReady;
+    if(welcomeTitle)welcomeTitle.textContent= TXT.welcomeTitle;
+    if(welcomeBody) welcomeBody.textContent = TXT.welcomeBody;
+    if(loadMoreBtn) loadMoreBtn.textContent = TXT.loadMore;
+
     const grid   = document.getElementById("grid");
-    const status = document.getElementById("status");
     const chips  = document.getElementById("chips");
     const glow   = document.getElementById("cursorGlow");
-    const loadMoreBtn = document.getElementById("loadMore");
 
     const PAGE_SIZE = 8;
     let currentMeals = [];
-    let currentMode = "";
-    let currentMeta = {};
+    let currentMode  = "";
+    let currentMeta  = {};
     let visibleCount = 0;
 
-    const filters = [
-      // Öneriler
-      {label:"Hızlı Öneri", sub:"Random", type:"random", value:""},
-      // Bölgeler
-      {label:"Türk",      sub:"Mutfak", type:"area",     value:"Turkish"},
-      {label:"İtalyan",   sub:"Mutfak", type:"area",     value:"Italian"},
-      {label:"Japon",     sub:"Mutfak", type:"area",     value:"Japanese"},
-      {label:"Hint",      sub:"Mutfak", type:"area",     value:"Indian"},
-      {label:"Amerikan",  sub:"Mutfak", type:"area",     value:"American"},
-      {label:"Çin",       sub:"Mutfak", type:"area",     value:"Chinese"},
-      {label:"Meksika",   sub:"Mutfak", type:"area",     value:"Mexican"},
-      // Kategoriler
-      {label:"Tavuk",     sub:"Kategori", type:"category", value:"Chicken"},
-      {label:"Et (Beef)", sub:"Kategori", type:"category", value:"Beef"},
-      {label:"Kahvaltı",  sub:"Kategori", type:"category", value:"Breakfast"},
-      {label:"Vegan",     sub:"Kategori", type:"category", value:"Vegan"},
-      {label:"Vejetaryen",sub:"Kategori", type:"category", value:"Vegetarian"},
-      {label:"Deniz Ürünü",sub:"Kategori",type:"category", value:"Seafood"},
-      {label:"Tatlı",     sub:"Kategori", type:"category", value:"Dessert"},
-      {label:"Başlangıç", sub:"Kategori", type:"category", value:"Starter"},
-      {label:"Yan Yemek", sub:"Kategori", type:"category", value:"Side"},
-      {label:"Makarna",   sub:"Kategori", type:"category", value:"Pasta"}
-    ];
+    // Filtreler (dil bazlı label/sub)
+    function buildFilters(){
+      const filters = [];
 
-    chips.innerHTML = filters.map((f,i)=>`
+      // Quick random
+      filters.push({
+        type:"random",
+        value:"",
+        label:TXT.filterRandomLabel,
+        sub:TXT.filterRandomSub
+      });
+
+      // Kitchens / areas
+      const areas = ["Turkish","Italian","Japanese","Indian","American","Chinese","Mexican"];
+      areas.forEach(a=>{
+        filters.push({
+          type:"area",
+          value:a,
+          label:TXT.kitchens[a] || a,
+          sub:TXT.filterKitchenSub
+        });
+      });
+
+      // Categories
+      const cats = ["Chicken","Beef","Breakfast","Vegan","Vegetarian","Seafood","Dessert","Starter","Side","Pasta"];
+      cats.forEach(c=>{
+        filters.push({
+          type:"category",
+          value:c,
+          label:TXT.categories[c] || c,
+          sub:TXT.filterCategorySub
+        });
+      });
+
+      return filters;
+    }
+
+    const filterDefs = buildFilters();
+
+    chips.innerHTML = filterDefs.map((f,i)=>`
       <button class="chip${i===0 ? " active" : ""}"
               data-type="${f.type}"
               data-val="${f.value}">
@@ -519,8 +662,8 @@
 
     function updateMeals(meals, mode, meta={}){
       currentMeals = meals;
-      currentMode = mode;
-      currentMeta = meta;
+      currentMode  = mode;
+      currentMeta  = meta;
       visibleCount = Math.min(meals.length, PAGE_SIZE);
       renderMeals();
     }
@@ -530,11 +673,12 @@
       const hasMore = currentMode === "random" || currentMeals.length > visibleCount;
       loadMoreBtn.style.display = hasMore && currentMeals.length ? "inline-flex" : "none";
       loadMoreBtn.disabled = false;
-      loadMoreBtn.textContent = currentMode === "random" ? "Yeni öneriler" : "Daha fazla göster";
+      loadMoreBtn.textContent = currentMode === "random" ? TXT.loadMoreRandom : TXT.loadMore;
     }
 
-    // Mouse glow ve kart tilt – Baseborn havası
+    // Mouse glow ve kart tilt
     document.addEventListener("mousemove", (e)=>{
+      if(!glow) return;
       glow.style.opacity = 0.85;
       glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
     });
@@ -572,39 +716,40 @@
 
     async function loadRandomMeals(count=9){
       try{
-        status.textContent = "Rastgele ?neriler getiriliyor...";
+        status.textContent = TXT.randomLoading;
         status.classList.remove("bad");
         const meals = await fetchRandomBatch(count);
         if(!meals.length){
           currentMeals = [];
-          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>?u anda rastgele tarif al?namad?, l?tfen tekrar deneyin.</p></div>";
-          status.textContent = "Haz?r";
+          grid.innerHTML = `<div class='card' style='opacity:1;'><p class='muted'>${TXT.randomEmptyCard}</p></div>`;
+          status.textContent = TXT.statusReady;
           toggleLoadMore();
           return;
         }
         updateMeals(meals,"random",{});
-        status.textContent = "Haz?r";
+        status.textContent = TXT.statusReady;
       }catch(err){
         console.error(err);
-        status.textContent = "Hata";
+        status.textContent = TXT.statusError;
         status.classList.add("bad");
-        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Rastgele tarifler al?n?rken hata olu?tu.</p></div>";
+        grid.innerHTML = `<div class='card' style='opacity:1;'><p class='muted'>${TXT.randomErrorCard}</p></div>`;
         toggleLoadMore();
       }
     }
 
     async function run(type, value){
       try{
-        status.textContent = "Y?kleniyor...";
+        status.textContent = TXT.statusLoading;
         status.classList.remove("bad");
 
         const term = q.value.trim();
-        let url = "";
+        let url  = "";
         let mode = "search";
         let meta = {};
 
         if(type === "random"){
-          setActiveChip(chips.querySelector(".chip[data-type='random']"));
+          const chipRandom = chips.querySelector(".chip[data-type='random']");
+          setActiveChip(chipRandom);
           await loadRandomMeals();
           return;
         }else if(type === "area"){
@@ -620,8 +765,8 @@
           mode = "search";
           meta = {};
         }else{
-          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Arama girin, filtre se?in veya h?zl? ?neriye t?klay?n.</p></div>";
-          status.textContent = "Haz?r";
+          grid.innerHTML = `<div class='card' style='opacity:1;'><p class='muted'>${TXT.noSearchHint}</p></div>`;
+          status.textContent = TXT.statusReady;
           currentMeals = [];
           toggleLoadMore();
           return;
@@ -631,20 +776,20 @@
         const j = await r.json();
         const meals = j.meals || [];
         if(!meals.length){
-          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Sonu? bulunamad?.</p></div>";
-          status.textContent = "Haz?r";
+          grid.innerHTML = `<div class='card' style='opacity:1;'><p class='muted'>${TXT.noResults}</p></div>`;
+          status.textContent = TXT.statusReady;
           currentMeals = [];
           toggleLoadMore();
           return;
         }
 
         updateMeals(meals.slice(0,24), mode, meta);
-        status.textContent = "Haz?r";
+        status.textContent = TXT.statusReady;
       }catch(e){
         console.error(e);
-        status.textContent = "Hata";
+        status.textContent = TXT.statusError;
         status.classList.add("bad");
-        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Veri al?namad?, l?tfen daha sonra tekrar deneyin.</p></div>";
+        grid.innerHTML = `<div class='card' style='opacity:1;'><p class='muted'>${TXT.apiError}</p></div>`;
         currentMeals = [];
         toggleLoadMore();
       }
@@ -652,26 +797,26 @@
 
     function renderMeals(){
       if(!currentMeals.length){
-        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Sonu? bulunamad?.</p></div>";
+        grid.innerHTML = `<div class='card' style='opacity:1;'><p class='muted'>${TXT.noResults}</p></div>`;
         toggleLoadMore();
         return;
       }
       const meals = currentMeals.slice(0, visibleCount);
       grid.innerHTML = meals.map((m,idx)=> {
-        const badgeText = (m.strArea || currentMeta.badge || "").trim();
-        const categoryText =
-          (m.strCategory || currentMeta.category || (currentMode === "search" ? "" : "Liste sonucu")).trim();
+        const areaLabel = m.strArea || currentMeta.badge || "";
+        const categoryLabel =
+          m.strCategory || currentMeta.category || (currentMode === "search" ? "" : "");
         const delay = 0.03 * idx;
         return `
           <div class="card" style="animation-delay:${delay}s;">
-            ${badgeText ? `<span class="badge">${badgeText}</span>` : ""}
-            ${m.strMealThumb ? `<img class="thumb" src="${m.strMealThumb}" alt="${m.strMeal || ''}">` : ""}
+            ${areaLabel ? `<span class="badge">${areaLabel}</span>` : ""}
+            ${m.strMealThumb ? `<img class="thumb" src="${m.strMealThumb}" alt="${m.strMeal || ""}">` : ""}
             <h3>${m.strMeal || ""}</h3>
-            <p class="muted">${categoryText}</p>
+            <p class="muted">${categoryLabel}</p>
             ${
               m.strSource
                 ? `<a class="btn" href="${m.strSource}" target="_blank" rel="noreferrer">
-                     <span>Tarifi A?</span>
+                     <span>${TXT.openRecipe}</span>
                    </a>`
                 : ""
             }
@@ -685,15 +830,13 @@
       if(!currentMeals.length) return;
       if(currentMode === "random"){
         loadMoreBtn.disabled = true;
-        loadMoreBtn.textContent = "Y?kleniyor...";
+        loadMoreBtn.textContent = TXT.statusLoading;
         try{
           const extra = await fetchRandomBatch(6);
           currentMeals = currentMeals.concat(extra);
         }catch(err){
           console.error(err);
         }
-        loadMoreBtn.disabled = false;
-        loadMoreBtn.textContent = "Yeni ?neriler";
       }
       visibleCount = Math.min(currentMeals.length, visibleCount + PAGE_SIZE);
       renderMeals();
@@ -717,5 +860,7 @@
 
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

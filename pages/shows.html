@@ -7,20 +7,107 @@
   <style>
     :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
     *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),
+        linear-gradient(135deg,#0b1221,#0f172a);
+      color:var(--text);
+    }
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+    }
     h1{margin:0;font-size:30px;}
     p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
-    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:220px;}
-    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-    .chip{padding:8px 12px;border-radius:999px;background:rgba(34,211,238,0.12);color:#7dd3fc;border:1px solid rgba(34,211,238,0.3);cursor:pointer;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
-    .card{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;display:flex;flex-direction:column;gap:6px;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
+    .panel{
+      max-width:1100px;
+      margin:0 auto 26px;
+      padding:16px;
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:14px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.35);
+    }
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    input{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:#0c1528;
+      color:#fff;
+      min-width:160px;
+      flex:1 1 180px;
+    }
+    .btn{
+      border:none;
+      padding:10px 14px;
+      border-radius:10px;
+      background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));
+      color:#fff;
+      cursor:pointer;
+      transition:all .2s;
+      box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 15px 40px rgba(34,211,238,0.25);
+    }
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      margin-bottom:10px;
+      padding-bottom:6px;
+      cursor:grab;
+      user-select:none;
+    }
+    .chips::-webkit-scrollbar{display:none;}
+    .chip{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(34,211,238,0.12);
+      color:#7dd3fc;
+      border:1px solid rgba(34,211,238,0.3);
+      cursor:pointer;
+      flex:0 0 auto;
+      white-space:nowrap;
+      min-width:max-content;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:12px;
+    }
+    .card{
+      padding:12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:#0f182c;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(34,211,238,0.12);
+      border:1px solid rgba(34,211,238,0.3);
+      color:#7dd3fc;
+      font-size:12px;
+    }
     .muted{color:var(--muted);}
     .poster{
       width:100%;
@@ -31,16 +118,27 @@
       box-shadow:0 10px 26px rgba(0,0,0,0.35);
     }
     .modal{
-      position:fixed;inset:0;background:rgba(0,0,0,0.65);
-      display:none;align-items:center;justify-content:center;
-      backdrop-filter:blur(8px);z-index:20;padding:14px;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      backdrop-filter:blur(8px);
+      z-index:20;
+      padding:14px;
     }
     .modal.open{display:flex;}
     .modal-content{
-      width:min(900px,100%);max-height:90vh;overflow:auto;
-      background:#0b1221;border:1px solid rgba(255,255,255,0.08);
-      border-radius:16px;box-shadow:0 30px 90px rgba(0,0,0,0.5);
-      padding:16px;position:relative;
+      width:min(900px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#0b1221;
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;
+      box-shadow:0 30px 90px rgba(0,0,0,0.5);
+      padding:16px;
+      position:relative;
     }
     .modal img{
       width:100%;
@@ -51,21 +149,48 @@
       box-shadow:0 16px 40px rgba(0,0,0,0.45);
     }
     .modal h2{margin:12px 0 6px;}
-    .modal .meta{color:var(--muted);font-size:14px;margin-bottom:8px;}
-    .modal .summary{color:var(--muted);line-height:1.6;}
+    .modal .meta{
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:8px;
+    }
+    .modal .summary{
+      color:var(--muted);
+      line-height:1.6;
+    }
     .modal .close{
-      position:absolute;top:10px;right:10px;border:none;
-      background:rgba(255,255,255,0.08);color:#fff;border-radius:10px;
-      padding:8px 10px;cursor:pointer;
+      position:absolute;
+      top:10px;
+      right:10px;
+      border:none;
+      background:rgba(255,255,255,0.08);
+      color:#fff;
+      border-radius:10px;
+      padding:8px 10px;
+      cursor:pointer;
     }
     .modal .link{
-      margin-top:10px;display:inline-flex;align-items:center;gap:6px;
-      padding:9px 12px;border-radius:10px;border:1px solid rgba(34,211,238,0.5);
-      color:#7dd3fc;text-decoration:none;background:rgba(34,211,238,0.12);
+      margin-top:10px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:9px 12px;
+      border-radius:10px;
+      border:1px solid rgba(34,211,238,0.5);
+      color:#7dd3fc;
+      text-decoration:none;
+      background:rgba(34,211,238,0.12);
     }
     @media(max-width:768px){
-      .bar,.chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:12px;}
-      .bar::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none;}
+      .bar,.chips{
+        flex-wrap:nowrap;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        padding-bottom:6px;
+        margin-bottom:12px;
+      }
+      .bar::-webkit-scrollbar,
+      .chips::-webkit-scrollbar{display:none;}
       .bar>*,.chips>*{flex:0 0 auto;}
       .modal-content{padding:12px;}
     }
@@ -88,22 +213,37 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
+@media(max-width:768px){
+  .top-bar{
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+    gap:8px;
+  }
+  .top-bar input{
+    min-width:140px;
+    flex:1 1 150px;
+  }
+  .top-bar .btn{
+    flex:0 0 auto;
+  }
+}
 </style>
 </head>
 <body>
   <header>
-    <h1>Diziler</h1>
-    <p class="lead">TVMaze ile arama; tür filtreleri ve puanlar.</p>
+    <h1 id="pageTitle">Diziler</h1>
+    <p class="lead" id="pageLead">TVMaze ile arama; tür filtreleri ve puanlar.</p>
   </header>
   <div class="panel">
-    <div class="bar">
-      <a class="btn" href="../index.html">Ana sayfa</a>
+    <div class="bar top-bar">
+      <a class="btn" href="../index.html" id="homeBtn">Ana sayfa</a>
       <input id="q" placeholder="Dizi adı (örn: Lost)">
       <button class="btn" id="go">Ara</button>
+      <button class="btn" id="random7">Puan 7+ Random</button>
       <span class="badge" id="status">Hazır</span>
     </div>
     <div class="chips" id="chips"></div>
-    <div class="grid" id="grid"><div class="card">Arama yapın veya tür seçin.</div></div>
+    <div class="grid" id="grid"><div class="card" id="initialCard">Arama yapın veya tür seçin.</div></div>
     <div class="bar" style="justify-content:flex-end;margin-top:10px;">
       <button class="btn" id="more">Daha fazla</button>
     </div>
@@ -121,24 +261,167 @@
   </div>
   <script>
   (function(){
+    // Dil seçimi (TR / EN) – RPS-25 sayfasındaki ile aynı mantık
+    const pref = (typeof localStorage!=="undefined" && localStorage.getItem("prefLang")) || "en";
+    const lang = pref==="tr" ? "tr" : "en";
+    document.documentElement.lang = lang;
+
+    const TXT = {
+      tr:{
+        title:"Diziler",
+        heading:"Diziler",
+        lead:"TVMaze ile arama; tür filtreleri ve puanlar.",
+        home:"Ana sayfa",
+        placeholder:"Dizi adı (örn: Lost)",
+        searchBtn:"Ara",
+        randomBtn:"Puan 7+ Random",
+        moreBtn:"Daha fazla",
+        statusReady:"Hazır",
+        statusLoading:"Yükleniyor...",
+        statusError:"Hata",
+        initialCard:"Arama yapın veya tür seçin.",
+        noResult:"Sonuç yok",
+        noData:"Veri alınamadı.",
+        scoreLabel:"Puan",
+        genreFallback:"Tür",
+        detailLink:"Detay",
+        modalClose:"Kapat",
+        modalLink:"Detay sayfasına git",
+        modalNoGenre:"Tür bilgisi yok",
+        modalNoSummary:"Özet bulunamadı.",
+        randomNo7:"7+ bulunamadı",
+        metaSep:" · ",
+        // placeholder meta pieces
+        ratingLabel:"Puan"
+      },
+      en:{
+        title:"Shows",
+        heading:"Shows",
+        lead:"Search via TVMaze; genre filters and ratings.",
+        home:"Home",
+        placeholder:"Show name (e.g. Lost)",
+        searchBtn:"Search",
+        randomBtn:"Rating 7+ Random",
+        moreBtn:"More",
+        statusReady:"Ready",
+        statusLoading:"Loading...",
+        statusError:"Error",
+        initialCard:"Search or pick a genre.",
+        noResult:"No result",
+        noData:"Could not load data.",
+        scoreLabel:"Rating",
+        genreFallback:"Genre",
+        detailLink:"Details",
+        modalClose:"Close",
+        modalLink:"Go to details page",
+        modalNoGenre:"No genre info",
+        modalNoSummary:"Summary not available.",
+        randomNo7:"No 7+ results found",
+        metaSep:" · ",
+        ratingLabel:"Rating"
+      }
+    }[lang];
+
+    // Başlık ve statik metinler
+    document.title = TXT.title;
+    const pageTitleEl  = document.getElementById("pageTitle");
+    const pageLeadEl   = document.getElementById("pageLead");
+    const homeBtn      = document.getElementById("homeBtn");
+    const q            = document.getElementById("q");
+    const goBtn        = document.getElementById("go");
+    const randomBtn    = document.getElementById("random7");
+    const moreBtn      = document.getElementById("more");
+    const status       = document.getElementById("status");
+    const initialCard  = document.getElementById("initialCard");
+    const modalClose   = document.getElementById("modalClose");
+    const modalLink    = document.getElementById("modalLink");
+
+    if(pageTitleEl) pageTitleEl.textContent = TXT.heading;
+    if(pageLeadEl)  pageLeadEl.textContent  = TXT.lead;
+    if(homeBtn)     homeBtn.textContent     = TXT.home;
+    if(q)           q.placeholder           = TXT.placeholder;
+    if(goBtn)       goBtn.textContent       = TXT.searchBtn;
+    if(randomBtn)   randomBtn.textContent   = TXT.randomBtn;
+    if(moreBtn)     moreBtn.textContent     = TXT.moreBtn;
+    if(status)      status.textContent      = TXT.statusReady;
+    if(initialCard) initialCard.textContent = TXT.initialCard;
+    if(modalClose)  modalClose.textContent  = TXT.modalClose;
+    if(modalLink)   modalLink.textContent   = TXT.modalLink;
+
     const chips=document.getElementById("chips");
     const grid=document.getElementById("grid");
-    const status=document.getElementById("status");
-    const q=document.getElementById("q");
-    const more=document.getElementById("more");
     const modal=document.getElementById("modal");
     const modalImg=document.getElementById("modalImg");
     const modalTitle=document.getElementById("modalTitle");
     const modalMeta=document.getElementById("modalMeta");
     const modalSummary=document.getElementById("modalSummary");
-    const modalLink=document.getElementById("modalLink");
-    const modalClose=document.getElementById("modalClose");
-    const genres=["Drama","Comedy","Science-Fiction","Documentary","Anime","Action","Fantasy"];
-    chips.innerHTML=genres.map(g=>`<span class="chip" data-genre="${g}">${g}</span>`).join("");
-    chips.addEventListener("click",e=>{const g=e.target.dataset.genre;if(g) filterGenre(g);});
 
-    document.getElementById("go").addEventListener("click",()=>load(q.value.trim(),null));
-    q.addEventListener("keydown",e=>{if(e.key==="Enter") load(q.value.trim(),null);});
+    // TVMaze yaygın türleri – label'ı dile göre göstereceğiz
+    const genres=["Drama","Comedy","Crime","Mystery","Action","Adventure","Science-Fiction","Fantasy","Thriller","Romance","Documentary","Reality"];
+    const GENRE_LABEL = {
+      tr:{
+        Drama:"Drama",
+        Comedy:"Komedi",
+        Crime:"Suç",
+        Mystery:"Gizem",
+        Action:"Aksiyon",
+        Adventure:"Macera",
+        "Science-Fiction":"Bilim Kurgu",
+        Fantasy:"Fantastik",
+        Thriller:"Gerilim",
+        Romance:"Romantik",
+        Documentary:"Belgesel",
+        Reality:"Reality"
+      },
+      en:{}
+    };
+    // EN tarafında olduğu gibi bırak
+    GENRE_LABEL.en = genres.reduce((acc,g)=>{acc[g]=g;return acc;}, {});
+
+    chips.innerHTML = genres.map(g=>{
+      const label = (GENRE_LABEL[lang] && GENRE_LABEL[lang][g]) || g;
+      return `<span class="chip" data-genre="${g}">${label}</span>`;
+    }).join("");
+
+    chips.addEventListener("click",e=>{
+      const g=e.target.dataset.genre;
+      if(g) filterGenre(g);
+    });
+
+    // Masaüstü için yatay kaydırma (wheel + drag)
+    chips.addEventListener("wheel",e=>{
+      if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){
+        e.preventDefault();
+        chips.scrollLeft+=e.deltaY;
+      }
+    },{passive:false});
+    (function initChipDrag(){
+      let isDown=false,startX=0,scrollLeft=0;
+      chips.addEventListener("mousedown",e=>{
+        isDown=true;
+        startX=e.pageX;
+        scrollLeft=chips.scrollLeft;
+        chips.classList.add("dragging");
+      });
+      window.addEventListener("mouseup",()=>{
+        isDown=false;
+        chips.classList.remove("dragging");
+      });
+      chips.addEventListener("mouseleave",()=>{
+        isDown=false;
+        chips.classList.remove("dragging");
+      });
+      chips.addEventListener("mousemove",e=>{
+        if(!isDown) return;
+        e.preventDefault();
+        const dx=e.pageX-startX;
+        chips.scrollLeft=scrollLeft-dx;
+      });
+    })();
+
+    document.getElementById("go").addEventListener("click",()=>load(q.value.trim()));
+    document.getElementById("random7").addEventListener("click",randomHighRated);
+    q.addEventListener("keydown",e=>{if(e.key==="Enter") load(q.value.trim());});
 
     function stripTags(str){return (str||"").replace(/<[^>]*>/g,"");}
 
@@ -146,53 +429,76 @@
     let currentList=[];
     async function load(term){
       try{
-        status.textContent="Yükleniyor...";
+        if(status) status.textContent=TXT.statusLoading;
         let url="";
-        if(term){ url=`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(term)}`; }
-        else { url="https://api.tvmaze.com/shows?page=1"; }
+        if(term){
+          url=`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(term)}`;
+        }else{
+          url="https://api.tvmaze.com/shows?page=1";
+        }
         const res=await fetch(url);
         const data=await res.json();
-        const shows = Array.isArray(data) ? (term ? data.map(s=>s.show) : data.slice(0,200)) : [];
+        const shows = Array.isArray(data)
+          ? (term ? data.map(s=>s.show) : data.slice(0,200))
+          : [];
         baseList=shows;
         page=0;
         render(shows);
-        status.textContent="Hazır";
+        if(status) status.textContent=TXT.statusReady;
       }catch(err){
-        status.textContent="Hata";
-        grid.innerHTML="<div class='card'>Veri alınamadı.</div>";
+        if(status) status.textContent=TXT.statusError;
+        grid.innerHTML=`<div class="card">${TXT.noData}</div>`;
       }
     }
 
-    function render(list){
-      if(!list.length){grid.innerHTML="<div class='card'>Sonuc yok</div>";currentList=[];return;}
-      const sorted=list.sort((a,b)=>(b.rating?.average||0)-(a.rating?.average||0));
+    function render(list,{skipSort=false}={}){
+      if(!list.length){
+        grid.innerHTML=`<div class="card">${TXT.noResult}</div>`;
+        currentList=[];
+        return;
+      }
+      const sorted=skipSort ? [...list] : [...list].sort(
+        (a,b)=>(b.rating?.average||0)-(a.rating?.average||0)
+      );
       const startIdx=page*pageSize;
       const finalList=sorted.slice(0,startIdx+pageSize);
       currentList=finalList;
       grid.innerHTML=finalList.map(show=>{
-          const poster = show.image?.medium || show.image?.original || "";
-          return `
+        const poster = show.image?.medium || show.image?.original || "";
+        const ratingVal = show.rating?.average ?? "?";
+        const genreText = show.genres?.[0] || TXT.genreFallback;
+        const cardScoreLabel = TXT.scoreLabel;
+        return `
           <div class="card" data-id="${show.id||""}">
-            <div class="badge">${show.genres?.[0]||"Tur"}</div>
+            <div class="badge">${genreText}</div>
             ${poster ? `<img class="poster" src="${poster}" alt="${show.name||""}" loading="lazy">` : ""}
             <strong>${show.name||""}</strong>
-            <div class="muted">Puan: ${show.rating?.average ?? "?"}</div>
+            <div class="muted">${cardScoreLabel}: ${ratingVal}</div>
             <p class="muted">${stripTags(show.summary).slice(0,140)}...</p>
-            ${show.url ? `<a class="btn" href="${show.url}" target="_blank" rel="noreferrer">Detay</a>` : ""}
+            ${
+              show.url
+                ? `<a class="btn" href="${show.url}" target="_blank" rel="noreferrer">${TXT.detailLink}</a>`
+                : ""
+            }
           </div>`;
-        }).join("");
+      }).join("");
     }
 
     function openModal(show){
       if(!show) return;
       const poster = show.image?.original || show.image?.medium || "";
-      if(poster){ modalImg.src = poster; modalImg.style.display = "block"; }
-      else { modalImg.src=""; modalImg.style.display="none"; }
+      if(poster){
+        modalImg.src = poster;
+        modalImg.style.display = "block";
+      }else{
+        modalImg.src="";
+        modalImg.style.display="none";
+      }
       modalTitle.textContent = show.name || "";
-      const genresText = (show.genres||[]).join(", ") || "Tur bilgisi yok";
+      const genresText = (show.genres||[]).join(", ") || TXT.modalNoGenre;
       const rating = show.rating?.average ?? "?";
-      modalMeta.textContent = `${genresText} · Puan: ${rating}`;
-      modalSummary.textContent = stripTags(show.summary || "Ozet bulunamadi.");
+      modalMeta.textContent = `${genresText}${TXT.metaSep}${TXT.ratingLabel}: ${rating}`;
+      modalSummary.textContent = stripTags(show.summary || TXT.modalNoSummary);
       if(show.url){
         modalLink.href = show.url;
         modalLink.style.display = "inline-flex";
@@ -221,15 +527,41 @@
     document.addEventListener("keydown",(e)=>{ if(e.key === "Escape" && modal.classList.contains("open")) closeModal(); });
 
     function filterGenre(g){
-      if(!baseList.length){load();return;}
+      if(!baseList.length){
+        load("");
+        return;
+      }
       const filtered=baseList.filter(s=>s.genres?.some(x=>x.toLowerCase().includes(g.toLowerCase())));
       page=0;
       render(filtered.length?filtered:baseList);
     }
-    more.addEventListener("click",()=>{ if(!baseList.length) return; page++; render(baseList); });
+
+    moreBtn.addEventListener("click",()=>{
+      if(!baseList.length) return;
+      page++;
+      render(baseList);
+    });
+
+    async function randomHighRated(){
+      if(!baseList.length){
+        await load("");
+      }
+      const high=baseList.filter(s=>(s.rating?.average||0)>=7);
+      if(!high.length){
+        if(status) status.textContent=TXT.randomNo7;
+        return;
+      }
+      const shuffled=[...high].sort(()=>Math.random()-0.5);
+      page=0;
+      render(shuffled,{skipSort:true});
+      if(status) status.textContent=TXT.statusReady;
+    }
+
     // ilk açılışta trend
     load("");
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>

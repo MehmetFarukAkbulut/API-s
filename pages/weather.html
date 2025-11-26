@@ -48,6 +48,40 @@
       100%{transform:translate3d(40px,-25px,0) scale(1.08);}
     }
 
+    /* Cursor glow */
+    .cursor-glow{
+      position:fixed;
+      width:260px;
+      height:260px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:0;
+      background:radial-gradient(circle at center, rgba(34,211,238,0.22), transparent 70%);
+      mix-blend-mode:screen;
+      opacity:0;
+      transition:opacity .25s ease-out;
+      transform:translate3d(-50%,-50%,0);
+    }
+    body:hover .cursor-glow{
+      opacity:1;
+    }
+
+    /* Scroll reveal */
+    .reveal-init{
+      opacity:0;
+      transform:translateY(12px) scale(0.985);
+      filter:blur(4px);
+      transition:
+        opacity .5s ease-out,
+        transform .5s ease-out,
+        filter .5s ease-out;
+    }
+    .reveal-visible{
+      opacity:1;
+      transform:translateY(0) scale(1);
+      filter:blur(0);
+    }
+
     header{
       max-width:1100px;
       margin:0 auto;
@@ -425,85 +459,93 @@
     gap:8px;
     padding-bottom:6px;
   }
-  .bar::-webkit-scrollbar, .chips::-webkit-scrollbar, .hero-actions::-webkit-scrollbar, .topbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar, .filter-bar::-webkit-scrollbar{display:none;}
+  .bar::-webkit-scrollbar,
+  .chips::-webkit-scrollbar,
+  .hero-actions::-webkit-scrollbar,
+  .topbar::-webkit-scrollbar,
+  .tab-bar::-webkit-scrollbar,
+  .filter-bar::-webkit-scrollbar{display:none;}
 }
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Hava Durumu</h1>
-    <p class="lead">Şehir adına göre bugün, yarın ve anlık bilgiler.</p>
+  <!-- Cursor glow katmanı -->
+  <div class="cursor-glow"></div>
+
+  <header class="reveal-init">
+    <h1 id="titleMain">Weather</h1>
+    <p class="lead" id="leadMain">Current, today and tomorrow by city.</p>
   </header>
 
-  <div class="panel" id="panel">
+  <div class="panel reveal-init" id="panel">
     <div class="bar">
       <a class="btn" href="../index.html">Ana sayfa</a>
-      <input id="city" placeholder="Şehir (örn: Istanbul)">
-      <button class="btn" id="search">Ara</button>
-      <span class="badge" id="status">Hazır</span>
+      <input id="city" placeholder="City (e.g. Istanbul)">
+      <button class="btn" id="search">Search</button>
+      <span class="badge" id="status">Ready</span>
     </div>
 
     <div class="popular-cities">
-      <h2>Popüler Şehirler</h2>
+      <h2 id="popularTitle">Popular cities</h2>
       <div class="city-grid" id="cityGrid">
         <!-- 1. satır -->
         <div class="city-item active" data-city="Istanbul">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇹🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Istanbul</div>
-                <div class="city-country">Türkiye</div>
+                <div class="city-country">Turkiye</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra">
             <div class="city-extra-inner">
-              Bir şehir seçin veya arama kutusundan yazın.
+              Select a city or type it in the search box.
             </div>
           </div>
         </div>
         <div class="city-item" data-city="Ankara">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇹🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Ankara</div>
-                <div class="city-country">Türkiye</div>
+                <div class="city-country">Turkiye</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Izmir">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇹🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Izmir</div>
-                <div class="city-country">Türkiye</div>
+                <div class="city-country">Trkiye</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="London">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇬🇧</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">London</div>
-                <div class="city-country">Birleşik Krallık</div>
+                <div class="city-country">United Kingdom</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -512,52 +554,52 @@
         <div class="city-item" data-city="Paris">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇫🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Paris</div>
-                <div class="city-country">Fransa</div>
+                <div class="city-country">France</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Berlin">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇩🇪</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Berlin</div>
-                <div class="city-country">Almanya</div>
+                <div class="city-country">Germany</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Madrid">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇪🇸</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Madrid</div>
-                <div class="city-country">İspanya</div>
+                <div class="city-country">Spain</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Rome">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇮🇹</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Rome</div>
-                <div class="city-country">İtalya</div>
+                <div class="city-country">Italy</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -566,52 +608,52 @@
         <div class="city-item" data-city="New York">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇺🇸</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">New York</div>
                 <div class="city-country">ABD</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Los Angeles">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇺🇸</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Los Angeles</div>
                 <div class="city-country">ABD</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Chicago">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇺🇸</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Chicago</div>
                 <div class="city-country">ABD</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Toronto">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇨🇦</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Toronto</div>
-                <div class="city-country">Kanada</div>
+                <div class="city-country">Canada</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -620,52 +662,52 @@
         <div class="city-item" data-city="Vancouver">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇨🇦</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Vancouver</div>
-                <div class="city-country">Kanada</div>
+                <div class="city-country">Canada</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Tokyo">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇯🇵</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Tokyo</div>
-                <div class="city-country">Japonya</div>
+                <div class="city-country">Japan</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Osaka">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇯🇵</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Osaka</div>
-                <div class="city-country">Japonya</div>
+                <div class="city-country">Japan</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Seoul">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇰🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Seoul</div>
-                <div class="city-country">Güney Kore</div>
+                <div class="city-country">South Korea</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -674,52 +716,52 @@
         <div class="city-item" data-city="Beijing">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇨🇳</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Beijing</div>
-                <div class="city-country">Çin</div>
+                <div class="city-country">China</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Shanghai">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇨🇳</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Shanghai</div>
-                <div class="city-country">Çin</div>
+                <div class="city-country">China</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Hong Kong">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇭🇰</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Hong Kong</div>
-                <div class="city-country">Çin (HK)</div>
+                <div class="city-country">China</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Singapore">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇸🇬</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Singapore</div>
-                <div class="city-country">Singapur</div>
+                <div class="city-country">Singapore</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -728,52 +770,52 @@
         <div class="city-item" data-city="Dubai">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇦🇪</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Dubai</div>
-                <div class="city-country">BAE</div>
+                <div class="city-country">United Arab Emirates</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Moscow">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇷🇺</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Moscow</div>
-                <div class="city-country">Rusya</div>
+                <div class="city-country">Russia</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Bangkok">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇹🇭</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Bangkok</div>
-                <div class="city-country">Tayland</div>
+                <div class="city-country">Thailand</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Mumbai">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇮🇳</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Mumbai</div>
-                <div class="city-country">Hindistan</div>
+                <div class="city-country">India</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -782,52 +824,52 @@
         <div class="city-item" data-city="Delhi">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇮🇳</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Delhi</div>
-                <div class="city-country">Hindistan</div>
+                <div class="city-country">India</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
-        <div class="city-item" data-city="São Paulo">
+        <div class="city-item" data-city="So Paulo">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇧🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">São Paulo</div>
-                <div class="city-country">Brezilya</div>
+                <div class="city-country">Brazil</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Rio de Janeiro">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇧🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Rio de Janeiro</div>
-                <div class="city-country">Brezilya</div>
+                <div class="city-country">Brazil</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Buenos Aires">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇦🇷</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Buenos Aires</div>
-                <div class="city-country">Arjantin</div>
+                <div class="city-country">Argentina</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
@@ -836,58 +878,82 @@
         <div class="city-item" data-city="Sydney">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇦🇺</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Sydney</div>
-                <div class="city-country">Avustralya</div>
+                <div class="city-country">Australia</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Melbourne">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇦🇺</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Melbourne</div>
-                <div class="city-country">Avustralya</div>
+                <div class="city-country">Australia</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Mexico City">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇲🇽</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Mexico City</div>
-                <div class="city-country">Meksika</div>
+                <div class="city-country">Mexico</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
         <div class="city-item" data-city="Johannesburg">
           <button class="city-btn" type="button">
             <div class="city-main">
-              <span class="city-flag">🇿🇦</span>
+              <span class="city-flag">????</span>
               <div>
                 <div class="city-name">Johannesburg</div>
-                <div class="city-country">Güney Afrika</div>
+                <div class="city-country">South Africa</div>
               </div>
             </div>
-            <span class="city-arrow">▶</span>
+            <span class="city-arrow">▼</span>
           </button>
           <div class="city-extra"><div class="city-extra-inner"></div></div>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+  // Cursor glow + scroll reveal
+  (function(){
+    const glow = document.querySelector('.cursor-glow');
+    const revealEls = document.querySelectorAll('.reveal-init');
+
+    window.addEventListener('pointermove', (e) => {
+      if(!glow) return;
+      glow.style.transform = 'translate3d(' + e.clientX + 'px,' + e.clientY + 'px,0)';
+    });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('reveal-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.15});
+
+    revealEls.forEach(el => io.observe(el));
+  })();
+  </script>
 
   <script>
   (function(){
@@ -898,38 +964,137 @@
     let firstRender = true;
 
     const countryMeta = {
-      TR:{name:"Türkiye",flag:"🇹🇷"},
-      GB:{name:"Birleşik Krallık",flag:"🇬🇧"},
-      FR:{name:"Fransa",flag:"🇫🇷"},
-      DE:{name:"Almanya",flag:"🇩🇪"},
-      ES:{name:"İspanya",flag:"🇪🇸"},
-      IT:{name:"İtalya",flag:"🇮🇹"},
-      US:{name:"ABD",flag:"🇺🇸"},
-      CA:{name:"Kanada",flag:"🇨🇦"},
-      JP:{name:"Japonya",flag:"🇯🇵"},
-      KR:{name:"Güney Kore",flag:"🇰🇷"},
-      CN:{name:"Çin",flag:"🇨🇳"},
-      HK:{name:"Çin (HK)",flag:"🇭🇰"},
-      SG:{name:"Singapur",flag:"🇸🇬"},
-      AE:{name:"BAE",flag:"🇦🇪"},
-      RU:{name:"Rusya",flag:"🇷🇺"},
-      TH:{name:"Tayland",flag:"🇹🇭"},
-      IN:{name:"Hindistan",flag:"🇮🇳"},
-      BR:{name:"Brezilya",flag:"🇧🇷"},
-      AR:{name:"Arjantin",flag:"🇦🇷"},
-      AU:{name:"Avustralya",flag:"🇦🇺"},
-      MX:{name:"Meksika",flag:"🇲🇽"},
-      ZA:{name:"Güney Afrika",flag:"🇿🇦"}
+      TR:{name:"Turkey"},
+      GB:{name:"United Kingdom"},
+      FR:{name:"France"},
+      DE:{name:"Germany"},
+      ES:{name:"Spain"},
+      IT:{name:"Italy"},
+      US:{name:"United States"},
+      CA:{name:"Canada"},
+      JP:{name:"Japan"},
+      KR:{name:"South Korea"},
+      CN:{name:"China"},
+      HK:{name:"China (HK)"},
+      SG:{name:"Singapore"},
+      AE:{name:"UAE"},
+      RU:{name:"Russia"},
+      TH:{name:"Thailand"},
+      IN:{name:"India"},
+      BR:{name:"Brazil"},
+      AR:{name:"Argentina"},
+      AU:{name:"Australia"},
+      MX:{name:"Mexico"},
+      ZA:{name:"South Africa"}
     };
+
+    const cityCountryMap = {
+      "Istanbul":"TR","Ankara":"TR","Izmir":"TR",
+      "London":"GB","Paris":"FR","Berlin":"DE","Madrid":"ES","Rome":"IT",
+      "New York":"US","Los Angeles":"US","Chicago":"US",
+      "Toronto":"CA","Vancouver":"CA",
+      "Tokyo":"JP","Osaka":"JP",
+      "Seoul":"KR","Beijing":"CN","Shanghai":"CN","Hong Kong":"HK",
+      "Singapore":"SG","Dubai":"AE",
+      "Moscow":"RU","Bangkok":"TH",
+      "Mumbai":"IN","Delhi":"IN",
+      "So Paulo":"BR","Rio de Janeiro":"BR","Buenos Aires":"AR",
+      "Sydney":"AU","Melbourne":"AU",
+      "Mexico City":"MX","Johannesburg":"ZA"
+    };
+
+    const flagEmoji = code => code ? code.toUpperCase().replace(/./g,c=>String.fromCodePoint(127397 + c.charCodeAt(0))) : "";
+    Object.keys(countryMeta).forEach(k=>{countryMeta[k].flag = flagEmoji(k);});
+
+    // Dil tercihi (prefLang) – sadece en/tr
+    const langPref = (localStorage.getItem('prefLang')||'en')==='tr'?'tr':'en';
+    document.documentElement.lang = langPref;
+
+    // Üst başlık ve genel UI metinleri
+    const uiText = {
+      en: {
+        title:       'Weather',
+        lead:        'Current, today and tomorrow by city.',
+        placeholder: 'City (e.g. Istanbul)',
+        search:      'Search',
+        status:      'Ready',
+        popular:     'Popular cities',
+        selectCity:  'Select a city or type it in the search box.'
+      },
+      tr: {
+        title:       'Hava Durumu',
+        lead:        'Şehir adına göre anlık, bugün ve yarın hava bilgileri.',
+        placeholder: 'Şehir (örn: İstanbul)',
+        search:      'Ara',
+        status:      'Hazır',
+        popular:     'Popüler şehirler',
+        selectCity:  'Bir şehir seçin veya arama kutusuna yazın.'
+      }
+    };
+
+    // Kart, durum ve hata etiketleri
+    const labels = {
+      en: {
+        today:          'Today',
+        tomorrow:       'Tomorrow',
+        rain:           'Rain',
+        prediction:     'Prediction range: 24 hours',
+        wind:           'Wind',
+        cloud:          'Cloud',
+        momentWind:     'Moment wind',
+        loading:        'Loading...',
+        error:          'Error',
+        cityNotFound:   'City not found',
+        errorPrefix:    'Error: ',
+        rainUnitSuffix: ' mm'
+      },
+      tr: {
+        today:          'Bugün',
+        tomorrow:       'Yarın',
+        rain:           'Yağış',
+        prediction:     'Tahmin aralığı: 24 saat',
+        wind:           'Rüzgar',
+        cloud:          'Bulutluluk',
+        momentWind:     'Anlık rüzgar',
+        loading:        'Yükleniyor...',
+        error:          'Hata',
+        cityNotFound:   'Şehir bulunamadı',
+        errorPrefix:    'Hata: ',
+        rainUnitSuffix: ' mm'
+      }
+    };
+
+    const ui  = uiText[langPref];
+    const lbl = labels[langPref];
+
+    const safeSet = (id,val)=>{
+      const el=document.getElementById(id);
+      if(el) el.textContent=val;
+    };
+
+    // Başlık ve bar metinleri
+    safeSet('titleMain', ui.title);
+    safeSet('leadMain', ui.lead);
+    if(cityEl) cityEl.placeholder = ui.placeholder;
+    safeSet('search', ui.search);
+    safeSet('status', ui.status);
+    safeSet('popularTitle', ui.popular);
+
+    // İstanbul kutusundaki başlangıç mesajı
+    const firstExtra = document.querySelector(".city-item.active .city-extra-inner");
+    if(firstExtra && !firstExtra.dataset.i18nApplied){
+      firstExtra.textContent = ui.selectCity;
+      firstExtra.dataset.i18nApplied = "1";
+    }
 
     cityEl.value = "Istanbul";
 
     async function geocode(q){
-      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&language=tr&count=1`;
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&language=${langPref}&count=1`;
       const r = await fetch(url);
       const j = await r.json();
       const p = j?.results?.[0];
-      if(!p) throw new Error("Şehir bulunamadı");
+      if(!p) throw new Error(lbl.cityNotFound);
       return {
         lat:p.latitude,
         lon:p.longitude,
@@ -944,16 +1109,82 @@
       return r.json();
     }
 
+    function resolveFlag(code){
+      if(!code) return "";
+      return countryMeta[code]?.flag || flagEmoji(code);
+    }
+
     function updateActiveHeader(cityName, countryCode){
       const activeItem = document.querySelector(".city-item.active");
       if(!activeItem) return;
-      const meta = countryMeta[countryCode] || {name:countryCode || "",flag:"🌍"};
+      const meta = countryMeta[countryCode] || {name:countryCode || "",flag:resolveFlag(countryCode)};
       const nameEl    = activeItem.querySelector(".city-name");
       const countryEl = activeItem.querySelector(".city-country");
       const flagEl    = activeItem.querySelector(".city-flag");
       if(nameEl)    nameEl.textContent    = cityName;
       if(countryEl) countryEl.textContent = meta.name || cityName;
-      if(flagEl)    flagEl.textContent    = meta.flag;
+      if(flagEl)    flagEl.textContent    = meta.flag || resolveFlag(countryCode);
+    }
+
+    // Popüler şehir listesi bayrak + ülke isimleri
+    document.querySelectorAll(".city-item").forEach(item=>{
+      const nameEl = item.querySelector(".city-name");
+      const countryEl = item.querySelector(".city-country");
+      const flagEl = item.querySelector(".city-flag");
+      const cityName = nameEl?.textContent?.trim() || "";
+      const code = cityCountryMap[cityName] || "";
+      if (code) {
+        if(flagEl) flagEl.textContent = resolveFlag(code);
+        const meta = countryMeta[code];
+        if (meta?.name && countryEl) countryEl.textContent = meta.name;
+        item.dataset.country = code;
+      }
+    });
+
+    function iconForCode(code){
+      const map = {
+        0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
+        45:"🌫️",48:"🌫️",
+        51:"🌦️",53:"🌦️",55:"🌧️",
+        56:"🌧️",57:"🌧️",
+        61:"🌧️",63:"🌧️",65:"🌧️",
+        66:"🌧️",67:"🌧️",
+        71:"🌨️",73:"🌨️",75:"🌨️",
+        80:"🌧️",81:"🌧️",82:"🌧️",
+        85:"🌨️",86:"🌨️",
+        95:"⛈️",96:"⛈️",99:"⛈️"
+      };
+      return map[code] || "";
+    }
+
+    function descForCode(code){
+      const maps = {
+        en: {
+          0: "Clear sky",1: "Mostly clear",2: "Partly cloudy",3: "Overcast",
+          45: "Foggy",48: "Foggy",
+          51: "Light drizzle",53: "Drizzle",55: "Heavy drizzle",
+          61: "Light rain",63: "Rain",65: "Heavy rain",
+          71: "Light snow",73: "Snow",75: "Heavy snow",
+          80: "Rain showers",81: "Rain showers",82: "Heavy rain showers",
+          85: "Snow showers",86: "Snow showers",
+          95: "Thunderstorm",96: "Thunderstorm",99: "Severe thunderstorm",
+          default: "Weather"
+        },
+        tr: {
+          0: "Açık gökyüzü",1: "Genelde açık",2: "Parçalı bulutlu",3: "Kapalı",
+          45: "Sisli",48: "Sisli",
+          51: "Hafif çiseleme",53: "Çiseleme",55: "Kuvvetli çiseleme",
+          61: "Hafif yağmur",63: "Yağmur",65: "Kuvvetli yağmur",
+          71: "Hafif kar",73: "Kar",75: "Yoğun kar",
+          80: "Sağanak yağmur",81: "Sağanak yağmur",82: "Kuvvetli sağanak yağmur",
+          85: "Kar sağanağı",86: "Kar sağanağı",
+          95: "Gök gürültülü fırtına",96: "Gök gürültülü fırtına",99: "Şiddetli fırtına",
+          default: "Hava durumu"
+        }
+      };
+
+      const map = maps[langPref] || maps.en;
+      return map[code] || map.default;
     }
 
     function render(displayName,data){
@@ -969,28 +1200,29 @@
       const rainToday   = data.daily.precipitation_sum[0];
       const desc        = descForCode(current.weathercode);
 
-      const rainText = (rainToday?.toFixed ? rainToday.toFixed(1) : (rainToday || 0)) + " mm";
+      const rainValue = (rainToday?.toFixed ? rainToday.toFixed(1) : (rainToday || 0));
+      const rainText = rainValue + lbl.rainUnitSuffix;
 
       const cardsHTML = `
         <div class="card">
-          <div class="badge">Bugün</div>
+          <div class="badge">${lbl.today}</div>
           <h3>${todayMax.toFixed(1)}/${todayMin.toFixed(1)}°C ${iconForCode(current.weathercode)}</h3>
           <div class="muted">${today}</div>
-          <div class="muted">Yağış: ${rainText}</div>
+          <div class="muted">${lbl.rain}: ${rainText}</div>
         </div>
         <div class="card">
-          <div class="badge">Yarın</div>
+          <div class="badge">${lbl.tomorrow}</div>
           <h3>${tomorrowMax.toFixed(1)}/${tomorrowMin.toFixed(1)}°C</h3>
           <div class="muted">${tomorrow}</div>
-          <div class="muted">Tahmin aralığı: 24 saat</div>
+          <div class="muted">${lbl.prediction}</div>
         </div>
         <div class="card">
           <div class="badge">${displayName}</div>
           <h3>${current.temperature.toFixed(1)}°C ${iconForCode(current.weathercode)}</h3>
           <div class="muted">${desc}</div>
-          <div class="muted">Rüzgar: ${current.windspeed.toFixed(1)} km/s</div>
-          <div class="muted">Bulut: ${cloud}%</div>
-          <div class="muted">Anlık rüzgar: ${windNow.toFixed(1)} km/s</div>
+          <div class="muted">${lbl.wind}: ${current.windspeed.toFixed(1)} km/h</div>
+          <div class="muted">${lbl.cloud}: ${cloud}%</div>
+          <div class="muted">${lbl.momentWind}: ${windNow.toFixed(1)} km/h</div>
         </div>
       `;
 
@@ -1013,7 +1245,6 @@
                 el.style.setProperty("--delay", (idx*90) + "ms");
               });
               extra.classList.remove("fade-out");
-              // küçük bir reflow ile animasyonu garantiye al
               void extra.offsetWidth;
               extra.classList.add("fade-in");
               setTimeout(()=>extra.classList.remove("fade-in"), 350);
@@ -1025,7 +1256,7 @@
 
     async function run(){
       try{
-        status.textContent = "Yükleniyor...";
+        status.textContent = lbl.loading;
         status.classList.add("is-loading");
 
         const q = cityEl.value.trim() || "Istanbul";
@@ -1037,14 +1268,14 @@
         const w = await fetchWeather(g.lat,g.lon);
         render(displayName,w);
 
-        status.textContent = "Hazır";
+        status.textContent = ui.status;
       }catch(e){
-        status.textContent = "Hata";
+        status.textContent = lbl.error;
         const activeItem = document.querySelector(".city-item.active");
         if(activeItem){
           const extra = activeItem.querySelector(".city-extra-inner");
           if(extra){
-            extra.textContent = "Hata: " + e.message;
+            extra.textContent = lbl.errorPrefix + e.message;
           }
         }
       }finally{
@@ -1052,37 +1283,6 @@
       }
     }
 
-    function iconForCode(code){
-      const map = {
-        0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
-        45:"🌫️",48:"🌫️",
-        51:"🌦️",53:"🌦️",55:"🌧️",
-        56:"🌧️",57:"🌧️",
-        61:"🌧️",63:"🌧️",65:"🌧️",
-        66:"🌧️",67:"🌧️",
-        71:"🌨️",73:"🌨️",75:"🌨️",
-        80:"🌧️",81:"🌧️",82:"🌧️",
-        85:"🌨️",86:"🌨️",
-        95:"⛈️",96:"⛈️",99:"⛈️"
-      };
-      return map[code] || "";
-    }
-
-    function descForCode(code){
-      const map = {
-        0:"Açık hava",1:"Hafif bulutlu",2:"Parçalı bulutlu",3:"Kapalı",
-        45:"Sisli",48:"Sisli",
-        51:"Çiseleme",53:"Yağmurlu",55:"Yağmurlu",
-        61:"Hafif yağmur",63:"Yağmur",65:"Kuvvetli yağmur",
-        71:"Hafif kar",73:"Kar",75:"Yoğun kar",
-        80:"Sağanak",81:"Sağanak",82:"Kuvvetli sağanak",
-        85:"Kar sağanağı",86:"Kar sağanağı",
-        95:"Fırtına",96:"Fırtına",99:"Fırtına"
-      };
-      return map[code] || "Hava durumu";
-    }
-
-    // Arama alanı
     document.getElementById("search").addEventListener("click", run);
     cityEl.addEventListener("keydown",e=>{ if(e.key==="Enter") run(); });
 
@@ -1091,7 +1291,6 @@
       if(item) item.classList.add("active");
     }
 
-    // Şehir kutularına tıklama
     cityItems.forEach(item=>{
       const btn = item.querySelector(".city-btn");
       btn.addEventListener("click", ()=>{
@@ -1102,7 +1301,6 @@
       });
     });
 
-    // Panel hover ışık efekti
     if(panel){
       panel.addEventListener("mousemove", (e)=>{
         const rect = panel.getBoundingClientRect();
@@ -1117,5 +1315,7 @@
     run();
   })();
   </script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
 </body>
 </html>
