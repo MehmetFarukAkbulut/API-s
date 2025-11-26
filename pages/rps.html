@@ -208,6 +208,16 @@
       from{opacity:0;transform:translateY(14px);}
       to{opacity:1;transform:translateY(0);}
     }
+
+    @media (max-width:768px){
+      .grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));}
+      .fighters{height:160px;}
+      .fighter{max-width:48vw;box-shadow:0 10px 28px rgba(0,0,0,0.5);}
+      .arena{box-shadow:0 8px 22px rgba(0,0,0,0.35) inset,0 8px 24px rgba(8,47,73,0.25);}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none !important;transition:none !important;}
+    }
   </style>
 </head>
 <body>
@@ -292,6 +302,7 @@
 
     const grid=document.getElementById("grid");
     const resultBox=document.getElementById("result");
+    const arena=document.getElementById("arena");
     const status=document.getElementById("status");
     const fighterA=document.getElementById("fighterA");
     const fighterB=document.getElementById("fighterB");
@@ -550,6 +561,9 @@
               önceki 12 hamleye yenilir.
             </div>`;
           status.textContent="Çarpışma tamamlandı, yeni hamle seç.";
+          if(window.innerWidth < 980 && arena){
+            arena.scrollIntoView({behavior:"smooth", block:"center"});
+          }
           animateBattle(myIdx, foe, outcome);
         });
       });
