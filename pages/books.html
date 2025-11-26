@@ -323,6 +323,16 @@
         border-color .25s ease-out;
     }
 
+    .cover{
+      width:100%;
+      aspect-ratio:128/181;
+      height:auto;
+      object-fit:cover;
+      border-radius:12px;
+      box-shadow:0 12px 30px rgba(0,0,0,0.35);
+      margin-bottom:8px;
+    }
+
     .card::before {
       content:"";
       position:absolute;
@@ -449,12 +459,58 @@
     .card.revealed:nth-child(9)  { transition-delay:0.18s; }
     .card.revealed:nth-child(10) { transition-delay:0.20s; }
 
+    .modal{
+      position:fixed;inset:0;background:rgba(0,0,0,0.65);
+      display:none;align-items:center;justify-content:center;
+      backdrop-filter:blur(8px);z-index:30;padding:16px;
+    }
+    .modal.open{display:flex;}
+    .modal-content{
+      width:min(900px,100%);max-height:90vh;overflow:auto;
+      background:#0b1221;border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;box-shadow:0 30px 90px rgba(0,0,0,0.55);
+      padding:16px;position:relative;
+    }
+    .modal img{
+      width:100%;
+      height:auto;
+      max-height:80vh;
+      object-fit:contain;
+      border-radius:12px;
+      box-shadow:0 18px 44px rgba(0,0,0,0.45);
+    }
+    .modal h2{margin:12px 0 6px;}
+    .modal .meta{color:var(--muted);font-size:14px;margin-bottom:8px;}
+    .modal .summary{color:var(--muted);line-height:1.6;}
+    .modal .close{
+      position:absolute;top:12px;right:12px;border:none;
+      background:rgba(255,255,255,0.08);color:#fff;border-radius:10px;
+      padding:8px 10px;cursor:pointer;
+    }
+    .modal .link{
+      margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+      padding:9px 12px;border-radius:10px;border:1px solid rgba(34,211,238,0.5);
+      color:#7dd3fc;text-decoration:none;background:rgba(34,211,238,0.12);
+    }
+
     /* Small screens */
     @media (max-width:640px) {
       h1 { font-size:24px; }
       .panel { border-radius:16px; padding:16px 12px 16px; }
       .bar { gap:8px; }
       .btn { padding:9px 14px; }
+      .bar, .chips{
+        flex-wrap:nowrap;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        padding-bottom:6px;
+      }
+      .bar::-webkit-scrollbar,
+      .chips::-webkit-scrollbar{display:none;}
+      .bar > *, .chips > *{flex:0 0 auto;}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none !important;transition:none !important;}
     }
   </style>
 </head>
@@ -489,6 +545,17 @@
         <button class="btn" id="more">Daha fazla</button>
       </div>
     </div>
+
+    <div class="modal" id="bookModal">
+      <div class="modal-content">
+        <button class="close" id="bookModalClose">Kapat</button>
+        <img id="bookModalImg" alt="">
+        <h2 id="bookModalTitle"></h2>
+        <div class="meta" id="bookModalMeta"></div>
+        <div class="summary" id="bookModalSummary"></div>
+        <a class="link" id="bookModalLink" href="#" target="_blank" rel="noreferrer">Detay sayfasına git</a>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -498,7 +565,19 @@
     const status  = document.getElementById("status");
     const q       = document.getElementById("q");
     const goBtn   = document.getElementById("go");
+    const moreBtn = document.getElementById("more");
     const subjects = ["science","history","fantasy","technology","business","philosophy","space"];
+    const PAGE_SIZE = 12;
+    const DEFAULT_TERM = "book";
+    let currentItems = [];
+    let visibleCount = 0;
+    const bookModal = document.getElementById("bookModal");
+    const bookModalImg = document.getElementById("bookModalImg");
+    const bookModalTitle = document.getElementById("bookModalTitle");
+    const bookModalMeta = document.getElementById("bookModalMeta");
+    const bookModalSummary = document.getElementById("bookModalSummary");
+    const bookModalLink = document.getElementById("bookModalLink");
+    const bookModalClose = document.getElementById("bookModalClose");
 
     // Hazır konu chipleri
     chips.innerHTML = subjects.map(s =>
@@ -546,6 +625,69 @@
 
     observeCards(); // başlangıç kartı
 
+    function setItems(items){
+      currentItems = items;
+      visibleCount = Math.min(items.length, PAGE_SIZE);
+      renderItems();
+    }
+
+    function toggleMore(){
+      if(!moreBtn) return;
+      moreBtn.style.display = currentItems.length > visibleCount ? "inline-flex" : "none";
+    }
+
+    function renderItems(){
+      if(!currentItems.length){
+        grid.innerHTML = "<div class='card revealed'><div class='badge'>Sonuç</div><strong>Sonuç bulunamadı.</strong><div class='muted'>Başka bir konu veya başlık dene.</div></div>";
+        toggleMore();
+        observeCards();
+        return;
+      }
+      const subset = currentItems.slice(0, visibleCount);
+      grid.innerHTML = subset.map(item => {
+        const idx = currentItems.indexOf(item);
+        return `
+        <div class="card" data-idx="${idx}">
+          ${item.badge ? `<div class="badge">${item.badge}</div>` : ""}
+          ${item.cover ? `<img class="cover" src="${item.cover}" alt="${item.title || ""}" loading="lazy">` : ""}
+          <strong>${item.title || ""}</strong>
+          <div class="muted">${item.subtitle || ""}</div>
+          <div class="muted" style="margin-top:4px;">Puan: ${item.rating ?? "?"}</div>
+          ${item.link ? `<div style="margin-top:8px;"><a class="btn" href="${item.link}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
+        </div>
+      `;
+      }).join("");
+      toggleMore();
+      observeCards();
+    }
+
+    function openBookModal(item){
+      if(!item) return;
+      if(item.cover){
+        bookModalImg.src = item.cover;
+        bookModalImg.style.display = "block";
+      }else{
+        bookModalImg.src = "";
+        bookModalImg.style.display = "none";
+      }
+      bookModalTitle.textContent = item.title || "";
+      bookModalMeta.textContent = `${item.badge || "Kategori"} · Puan: ${item.rating ?? "?"}`;
+      bookModalSummary.textContent = item.desc || item.subtitle || "Özet bulunamadı.";
+      if(item.link){
+        bookModalLink.href = item.link;
+        bookModalLink.style.display = "inline-flex";
+      }else{
+        bookModalLink.style.display = "none";
+      }
+      bookModal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeBookModal(){
+      bookModal.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
     // Chip click
     chips.addEventListener("click", (e) => {
       const el = e.target.closest(".chip");
@@ -577,81 +719,107 @@
 
     async function loadSubject(sub){
       try{
-        setStatus("Yükleniyor...", "loading");
-        const res = await fetch(`https://openlibrary.org/subjects/${sub}.json?limit=18`);
+        setStatus("Y?kleniyor...", "loading");
+        const res = await fetch(`https://openlibrary.org/subjects/${sub}.json?limit=60`);
         const j   = await res.json();
         const works = j.works || [];
         if(!works.length){
-          grid.innerHTML = `<div class="card"><div class="badge">${sub}</div><strong>Sonuç yok.</strong><div class="muted">Bu konu için sonuç bulunamadı.</div></div>`;
-          setStatus("Hazır");
-          observeCards();
+          setItems([]);
+          setStatus("Haz?r");
           return;
         }
-        grid.innerHTML = works
+        const items = works
           .sort((a,b)=>(b.ratings_average||0)-(a.ratings_average||0))
-          .slice(0,18)
-          .map(w => `
-            <div class="card">
-              <div class="badge">${sub}</div>
-              <strong>${w.title || ""}</strong>
-              <div class="muted">${w.authors?.[0]?.name || ""} · ${w.first_publish_year || ""}</div>
-              <div class="muted" style="margin-top:4px;">Puan: ${w.ratings_average ? w.ratings_average.toFixed(1) : "?"}</div>
-              ${w.key ? `<div style="margin-top:8px;"><a class="btn" href="https://openlibrary.org${w.key}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
-            </div>
-          `).join("");
-        setStatus("Hazır");
-        observeCards();
+          .slice(0,60)
+          .map(w => {
+            const coverId = w.cover_id;
+            const coverKey = w.cover_edition_key;
+            const cover = coverId
+              ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
+              : (coverKey ? `https://covers.openlibrary.org/b/olid/${coverKey}-M.jpg` : "");
+            const author = w.authors?.[0]?.name || "";
+            const year = w.first_publish_year || "";
+            const tags = Array.isArray(w.subject) ? w.subject.slice(0,6).join(", ") : "";
+            return {
+              badge: sub,
+              title: w.title || "",
+              subtitle: `${author}${author && year ? " - " : ""}${year}`,
+              rating: w.ratings_average ? w.ratings_average.toFixed(1) : "?",
+              link: w.key ? `https://openlibrary.org${w.key}` : "",
+              cover,
+              desc: tags
+            };
+          });
+        setItems(items);
+        setStatus("Haz?r");
       }catch(err){
         console.error(err);
         setStatus("Hata", "error");
-        grid.innerHTML = "<div class='card revealed'><div class='badge'>Hata</div><strong>Veri alınamadı.</strong><div class='muted'>İnternet bağlantını veya API erişimini kontrol et.</div></div>";
+        setItems([]);
       }
     }
 
     async function search(term){
-      if(!term){
-        grid.innerHTML = "<div class='card revealed'><div class='badge'>Arama</div><strong>Arama yapın.</strong><div class='muted'>Üstteki alana bir başlık veya konu yazabilirsiniz.</div></div>";
-        setStatus("Hazır");
-        return;
-      }
+      const actualTerm = term || DEFAULT_TERM;
       try{
-        setStatus("Yükleniyor...", "loading");
+        setStatus("Y?kleniyor...", "loading");
         const res = await fetch(
-          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(term)}&orderBy=relevance&maxResults=20&langRestrict=tr,en`
+          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(actualTerm)}&orderBy=relevance&maxResults=30&langRestrict=tr,en`
         );
         const j = await res.json();
-        const items = j.items || [];
-        if(!items.length){
-          grid.innerHTML = "<div class='card revealed'><div class='badge'>Sonuç</div><strong>Sonuç yok.</strong><div class='muted'>Farklı bir anahtar kelime ile tekrar deneyebilirsin.</div></div>";
-          setStatus("Hazır");
+        const itemsRaw = j.items || [];
+        if(!itemsRaw.length){
+          setItems([]);
+          setStatus("Haz?r");
           return;
         }
-        grid.innerHTML = items
+        const items = itemsRaw
           .sort((a,b)=>( (b.volumeInfo?.averageRating||0) - (a.volumeInfo?.averageRating||0) ))
-          .slice(0,16)
           .map(it => {
             const info = it.volumeInfo || {};
-            return `
-              <div class="card">
-                <div class="badge">${(info.categories && info.categories[0]) || "Kategori"}</div>
-                <strong>${info.title || ""}</strong>
-                <div class="muted">
-                  ${(info.authors && info.authors[0]) || "Bilinmiyor"} · ${info.publishedDate || ""}
-                </div>
-                <div class="muted" style="margin-top:4px;">Puan: ${info.averageRating ?? "?"}</div>
-                ${info.infoLink ? `<div style="margin-top:8px;"><a class="btn" href="${info.infoLink}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
-              </div>
-            `;
-          }).join("");
-        setStatus("Hazır");
-        observeCards();
+            const thumb = (info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || "").replace('http://','https://');
+            const author = (info.authors && info.authors[0]) || "Bilinmiyor";
+            const year = info.publishedDate || "";
+            return {
+              badge: (info.categories && info.categories[0]) || "Kategori",
+              title: info.title || "",
+              subtitle: `${author}${year ? " - " + year : ""}`,
+              rating: info.averageRating ?? "?",
+              link: info.infoLink || "",
+              cover: thumb,
+              desc: info.description || ""
+            };
+          });
+        setItems(items);
+        setStatus("Haz?r");
       }catch(err){
         console.error(err);
         setStatus("Hata", "error");
-        grid.innerHTML = "<div class='card revealed'><div class='badge'>Hata</div><strong>Veri alınamadı.</strong><div class='muted'>İnternet veya Google Books API erişimi ile ilgili bir sorun olabilir.</div></div>";
+        setItems([]);
       }
     }
+
+    moreBtn?.addEventListener("click", () => {
+      if(!currentItems.length) return;
+      visibleCount = Math.min(currentItems.length, visibleCount + PAGE_SIZE);
+      renderItems();
+    });
+
+    grid.addEventListener("click",(e)=>{
+      const card = e.target.closest(".card[data-idx]");
+      if(!card) return;
+      const idx = Number(card.dataset.idx);
+      const item = currentItems[idx];
+      openBookModal(item);
+    });
+    bookModal.addEventListener("click",(e)=>{ if(e.target === bookModal) closeBookModal(); });
+    bookModalClose.addEventListener("click", closeBookModal);
+    document.addEventListener("keydown",(e)=>{ if(e.key === "Escape" && bookModal.classList.contains("open")) closeBookModal(); });
+
+    // ilk açılışta genel sonuçları getir
+    search(DEFAULT_TERM);
   })();
+
   </script>
 </body>
 </html>
