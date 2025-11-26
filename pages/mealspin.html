@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rastgele Tarif</title>
+  <style>
+    :root {
+      --bg:#050816;
+      --panel:#0b1021;
+      --accent:#22d3ee;
+      --accent-soft: rgba(34,211,238,0.18);
+      --accent-2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border-soft:rgba(148,163,184,0.3);
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      min-height:100vh;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 10% 0%,rgba(34,211,238,0.18),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.24),transparent 55%),
+        radial-gradient(circle at -10% 80%,rgba(15,23,42,0.8),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#0b1221 100%);
+      overflow-x:hidden;
+    }
+
+    /* Parlak blur arka plan orb'ları */
+    .bg-orb{
+      position:fixed;
+      border-radius:999px;
+      filter:blur(40px);
+      opacity:0.45;
+      pointer-events:none;
+      z-index:-1;
+      mix-blend-mode:screen;
+    }
+    .bg-orb.orb-1{
+      width:380px;height:380px;
+      top:-120px;left:-80px;
+      background:radial-gradient(circle,var(--accent),transparent 60%);
+      animation: floatSlow 18s ease-in-out infinite alternate;
+    }
+    .bg-orb.orb-2{
+      width:420px;height:420px;
+      bottom:-140px;right:-60px;
+      background:radial-gradient(circle,var(--accent-2),transparent 60%);
+      animation: floatSlow 22s ease-in-out infinite alternate;
+    }
+    .bg-orb.orb-3{
+      width:260px;height:260px;
+      top:40%;left:65%;
+      background:radial-gradient(circle,rgba(56,189,248,0.9),transparent 60%);
+      opacity:0.25;
+      animation: floatSlow 26s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatSlow{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(30px,-20px,0) scale(1.06);}
+      100%{transform:translate3d(-10px,25px,0) scale(0.98);}
+    }
+
+    header{
+      max-width:900px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:2;
+    }
+
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.03em;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    h1::after{
+      content:"";
+      width:36px;
+      height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),transparent);
+      opacity:0.8;
+    }
+
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .btn{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.25),rgba(15,23,42,0.85));
+      color:#e0f2fe;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      transition:
+        border-color 150ms ease,
+        background 180ms ease,
+        transform 150ms ease,
+        box-shadow 180ms ease,
+        color 150ms ease;
+      box-shadow:0 10px 35px rgba(15,23,42,0.75);
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 10% 0%,rgba(255,255,255,0.14),transparent 55%);
+      opacity:0;
+      transform:translate3d(-40%,0,0);
+      transition:opacity 200ms ease,transform 260ms ease;
+    }
+
+    .btn:hover{
+      border-color:rgba(226,232,240,0.7);
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.3),rgba(15,23,42,0.9));
+      transform:translateY(-1px) scale(1.02);
+      box-shadow:0 16px 45px rgba(15,23,42,0.95);
+      color:#f9fafb;
+    }
+
+    .btn:hover::before{
+      opacity:1;
+      transform:translate3d(0,0,0);
+    }
+
+    .panel{
+      max-width:900px;
+      margin:10px auto 40px;
+      padding:18px 18px 20px;
+      background:radial-gradient(circle at top left,rgba(34,211,238,0.1),transparent 55%),
+                 radial-gradient(circle at bottom right,rgba(168,85,247,0.14),transparent 60%),
+                 rgba(15,23,42,0.96);
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,0.28);
+      box-shadow:
+        0 24px 80px rgba(0,0,0,0.85),
+        0 0 0 1px rgba(15,23,42,0.9);
+      backdrop-filter: blur(28px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 20% -20%,rgba(56,189,248,0.22),transparent 55%),
+        radial-gradient(circle at 120% 120%,rgba(168,85,247,0.2),transparent 55%);
+      opacity:0.45;
+      mix-blend-mode:soft-light;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .panel-inner{
+      position:relative;
+      z-index:1;
+    }
+
+    .panel-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+    }
+
+    .status-pill{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.4);
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:rgba(15,23,42,0.9);
+    }
+
+    .status-dot{
+      width:7px;height:7px;border-radius:999px;
+      background:radial-gradient(circle,var(--accent),rgba(34,211,238,0));
+      box-shadow:0 0 10px rgba(56,189,248,0.8);
+      animation:pulseDot 1.8s ease-out infinite;
+    }
+
+    @keyframes pulseDot{
+      0%{transform:scale(0.95);opacity:0.6;}
+      50%{transform:scale(1.12);opacity:1;}
+      100%{transform:scale(0.95);opacity:0.6;}
+    }
+
+    .card{
+      padding:14px 14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.32);
+      background:radial-gradient(circle at top,rgba(15,23,42,0.96),rgba(15,23,42,0.96));
+      box-shadow:0 18px 60px rgba(15,23,42,0.85);
+      position:relative;
+      overflow:hidden;
+      transition:
+        transform 180ms ease,
+        box-shadow 200ms ease,
+        border-color 200ms ease,
+        background 200ms ease;
+    }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:-60%;
+      background:conic-gradient(from 220deg,rgba(34,211,238,0.13),transparent 35%,rgba(168,85,247,0.18),transparent 70%,rgba(34,211,238,0.08));
+      mix-blend-mode:soft-light;
+      opacity:0;
+      transform:translate3d(-15%,0,0) rotate(0deg);
+      transition:opacity 220ms ease,transform 280ms ease;
+      pointer-events:none;
+    }
+
+    .card:hover{
+      transform:translateY(-3px);
+      box-shadow:0 26px 70px rgba(15,23,42,0.98);
+      border-color:rgba(226,232,240,0.7);
+      background:radial-gradient(circle at top,rgba(15,23,42,0.98),rgba(15,23,42,0.96));
+    }
+
+    .card:hover::after{
+      opacity:0.9;
+      transform:translate3d(0,0,0) rotate(6deg);
+    }
+
+    .muted{color:var(--muted);}
+
+    .meal-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:4px;
+    }
+
+    .meal-title h3{
+      margin:0;
+      font-size:20px;
+      letter-spacing:0.02em;
+    }
+
+    .badge{
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      color:var(--muted);
+      background:rgba(15,23,42,0.9);
+    }
+
+    .meta{
+      font-size:12px;
+      margin-bottom:8px;
+    }
+
+    .img-wrap{
+      position:relative;
+      margin:12px 0 10px;
+      border-radius:14px;
+      padding:2px;
+      background:linear-gradient(135deg,rgba(34,211,238,0.5),rgba(168,85,247,0.4));
+      overflow:hidden;
+    }
+
+    .img-inner{
+      border-radius:12px;
+      overflow:hidden;
+      background:#020617;
+      position:relative;
+    }
+
+    img{
+      width:100%;
+      display:block;
+      border-radius:12px;
+      transform-origin:center;
+      will-change:transform,opacity;
+      transition:
+        transform 200ms ease-out,
+        opacity 200ms ease-out,
+        filter 220ms ease-out;
+      cursor:grab;
+    }
+
+    img:active{
+      cursor:grabbing;
+      transform:scale(1.02);
+      filter:brightness(1.04);
+    }
+
+    .img-hint{
+      position:absolute;
+      right:10px;
+      bottom:10px;
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.86);
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:6px;
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(148,163,184,0.5);
+    }
+
+    .img-hint span{
+      font-size:16px;
+      line-height:1;
+    }
+
+    ul{
+      margin:8px 0 10px 18px;
+      padding:0;
+      font-size:13px;
+    }
+
+    ul li{
+      margin-bottom:2px;
+    }
+
+    .instructions{
+      font-size:13px;
+      line-height:1.45;
+      margin-top:4px;
+    }
+
+    .actions{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn-secondary{
+      background:radial-gradient(circle at 100% 0,rgba(168,85,247,0.28),rgba(15,23,42,0.95));
+      border-color:rgba(192,132,252,0.6);
+      color:#f5f3ff;
+    }
+
+    .btn-secondary:hover{
+      background:radial-gradient(circle at 100% 0,rgba(216,180,254,0.35),rgba(15,23,42,0.95));
+    }
+
+    /* Kart geçiş animasyonları */
+    .card-enter{
+      animation: cardEnter 380ms cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @keyframes cardEnter{
+      0%{opacity:0;transform:translateY(14px) scale(0.97);}
+      60%{opacity:1;transform:translateY(-2px) scale(1.01);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
+    }
+
+    .card-spin-out{
+      animation: cardSpinOut 260ms cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @keyframes cardSpinOut{
+      0%{opacity:1;transform:translateY(0) scale(1);}
+      100%{opacity:0;transform:translateY(12px) scale(0.97);}
+    }
+
+    .card-spin-in{
+      animation: cardSpinIn 260ms cubic-bezier(0.16,1,0.3,1);
+    }
+
+    @keyframes cardSpinIn{
+      0%{opacity:0;transform:translateY(-10px) scale(0.97);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
+    }
+
+    /* Swipe sırasında kart blur efekti için */
+    .card-swipe-loading{
+      filter:none;
+      opacity:1;
+    }
+
+    /* Spin ikon benzeri ufak pseudo animasyon */
+    .spin-icon{
+      width:14px;height:14px;
+      border-radius:999px;
+      border:2px solid rgba(125,211,252,0.7);
+      border-top-color:rgba(244,244,245,1);
+      animation: spinCircle 900ms linear infinite;
+    }
+
+    @keyframes spinCircle{
+      to{transform:rotate(360deg);}
+    }
+
+    .spin-label{
+      font-weight:500;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      font-size:11px;
+    }
+
+    @media (max-width:640px){
+      h1{font-size:24px;}
+      .panel{margin:6px 10px 28px;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Arka plan orb'ları -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <header>
+    <a class="btn" href="../index.html">
+      ← Ana sayfa
+    </a>
+    <div>
+      <h1>Rastgele Tarif</h1>
+      <p class="lead">TheMealDB'den tek tıkla – veya sola doğru bir swipe ile – yeni tarif keşfet.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="panel-inner">
+      <div class="panel-header">
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          Canlı tarif motoru
+        </div>
+        <button class="btn" id="spin">
+          <div class="spin-icon"></div>
+          <span class="spin-label">Spin</span>
+        </button>
+      </div>
+      <div class="card card-enter" id="card">
+        Yükleniyor...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById("card");
+    const spinBtn = document.getElementById("spin");
+
+    async function fetchRandomMeal(){
+      card.classList.remove("card-spin-in","card-enter");
+      card.classList.add("card-spin-out");
+      try{
+        const r = await fetch("https://www.themealdb.com/api/json/v1/1/random.php");
+        const j = await r.json();
+        const m = j.meals?.[0];
+        if(!m){
+          card.innerHTML = "Tarif bulunamadı.";
+          card.classList.remove("card-spin-out");
+          card.classList.add("card-spin-in");
+          return;
+        }
+        renderMeal(m);
+      }catch(e){
+        card.innerHTML = "Veri alınamadı.";
+        card.classList.remove("card-spin-out");
+        card.classList.add("card-spin-in");
+      }
+    }
+
+    function renderMeal(m){
+      const ingredients = [];
+      for(let i=1;i<=20;i++){
+        const ing = m[`strIngredient${i}`];
+        const mea = m[`strMeasure${i}`];
+        if(ing && ing.trim()){
+          ingredients.push(`${ing} - ${mea || ""}`);
+        }
+      }
+
+      const instructions = (m.strInstructions || "")
+        .split("\n")
+        .filter(Boolean)
+        .slice(0,6)
+        .join("<br>");
+
+      card.innerHTML = `
+        <div class="meal-title">
+          <h3>${m.strMeal}</h3>
+          <span class="badge">${m.strTags ? m.strTags.split(",")[0] : "Chef's pick"}</span>
+        </div>
+        <div class="meta muted">
+          ${(m.strArea || "Bilinmeyen bölge")} · ${(m.strCategory || "Kategori yok")}
+        </div>
+
+        <div class="img-wrap">
+          <div class="img-inner">
+            <img id="meal-image" src="${m.strMealThumb}" alt="${m.strMeal}">
+            <div class="img-hint">
+              <span>↔</span> Sola sürükle
+            </div>
+          </div>
+        </div>
+
+        <strong>Malzemeler</strong>
+        <ul>
+          ${ingredients.map(i => `<li>${i}</li>`).join("")}
+        </ul>
+
+        <p class="instructions muted">${instructions}...</p>
+
+        <div class="actions">
+          ${m.strYoutube ? `<a class="btn btn-secondary" href="${m.strYoutube}" target="_blank">YouTube'da izle</a>` : ""}
+        </div>
+      `;
+
+      // Kart animasyonu reset
+      card.classList.remove("card-spin-out");
+      void card.offsetWidth; // reflow
+      card.classList.add("card-spin-in");
+
+      attachSwipeHandler();
+    }
+
+    function attachSwipeHandler(){
+      const img = document.getElementById("meal-image");
+      if(!img) return;
+
+      // Tarayıcının kendi sürükleme davranışını kapat
+      img.addEventListener("dragstart", e => e.preventDefault());
+
+      let isDragging = false;
+      let startX = 0;
+      let currentX = 0;
+      let pointerId = null;
+
+      function resetImage(){
+        img.style.transition = "transform 200ms ease, opacity 200ms ease, filter 200ms ease";
+        img.style.transform = "translateX(0) rotate(0deg)";
+        img.style.opacity = "1";
+        img.style.filter = "";
+        card.classList.remove("card-swipe-loading");
+      }
+
+      function handleDown(e){
+        // Sadece sol tuş (button === 0) ile çalışsın
+        if(e.button !== 0) return;
+
+        e.preventDefault();        // varsayılan davranışı engelle (image drag vs.)
+        isDragging = true;
+        pointerId = e.pointerId;
+        startX = e.clientX;
+        currentX = 0;
+        img.setPointerCapture(pointerId);
+        img.style.transition = "none";
+      }
+
+      function handleMove(e){
+        if(!isDragging) return;
+        currentX = e.clientX - startX;
+
+        if(currentX < 0){
+          const dragRatio = Math.max(currentX / -180, -1); // 0..1
+          img.style.transform = `translateX(${currentX}px) rotate(${currentX/25}deg)`;
+          img.style.opacity = String(1 - dragRatio * 0.6);
+          img.style.filter = `blur(${dragRatio*2}px) brightness(${1 - dragRatio*0.1})`;
+          card.classList.add("card-swipe-loading");
+        }
+      }
+
+      function handleUp(e){
+        if(!isDragging) return;
+        isDragging = false;
+        if(pointerId !== null){
+          try{ img.releasePointerCapture(pointerId); }catch(_){}
+        }
+
+        const threshold = -120; // sola minimum sürükleme mesafesi
+        if(currentX < threshold){
+          // Swipe kabul edildi
+          img.style.transition = "transform 220ms ease, opacity 220ms ease, filter 220ms ease";
+          img.style.transform = "translateX(-220px) rotate(-18deg)";
+          img.style.opacity = "0";
+          img.style.filter = "blur(3px)";
+          card.classList.add("card-swipe-loading");
+
+          setTimeout(() => {
+            fetchRandomMeal();
+          }, 210);
+        } else {
+          resetImage();
+        }
+      }
+
+      img.addEventListener("pointerdown", handleDown);
+      img.addEventListener("pointermove", handleMove);
+      img.addEventListener("pointerup", handleUp);
+      img.addEventListener("pointercancel", handleUp);
+      img.addEventListener("pointerleave", (e)=>{
+        if(isDragging) handleUp(e);
+      });
+    }
+
+    spinBtn.addEventListener("click", () => {
+      fetchRandomMeal();
+    });
+
+    // Sayfa ilk açıldığında otomatik tarif getir
+    window.addEventListener("load", () => {
+      fetchRandomMeal();
+    });
+  </script>
+</body>
+</html>

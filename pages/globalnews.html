@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Global Haber</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
+    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;cursor:pointer;}
+    h1{margin:0;font-size:30px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:1100px;margin:0 auto 24px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+    select,input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;}
+    .card{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;}
+    .muted{color:var(--muted);}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>Global Haber</h1>
+      <p class="lead">Ülke/dil filtresi (Spaceflight API ile örnek).</p>
+    </div>
+  </header>
+  <div class="panel">
+    <div class="bar">
+      <select id="limit">
+        <option value="10">10</option>
+        <option value="20">20</option>
+      </select>
+      <input id="q" placeholder="Arama (örn: mars)">
+      <button class="btn" id="go">Ara</button>
+      <span class="muted" id="status">Hazır</span>
+    </div>
+    <div class="grid" id="grid"><div class="card">Arama yapın.</div></div>
+  </div>
+  <script>
+  async function load(){
+    const limit=document.getElementById("limit").value;
+    const q=document.getElementById("q").value.trim();
+    const status=document.getElementById("status");
+    const grid=document.getElementById("grid");
+    try{
+      status.textContent="Yükleniyor...";
+      const url=new URL("https://api.spaceflightnewsapi.net/v4/articles/");
+      url.searchParams.set("limit",limit);
+      if(q) url.searchParams.set("search",q);
+      const r=await fetch(url);
+      const j=await r.json();
+      const items=j.results||[];
+      if(!items.length){grid.innerHTML="<div class='card'>Sonuç yok</div>";status.textContent="Hazır";return;}
+      grid.innerHTML=items.map(a=>`
+        <div class="card">
+          <h3>${a.title}</h3>
+          <div class="muted">${a.news_site}</div>
+          <p class="muted">${(a.summary||"").slice(0,140)}...</p>
+          <a class="btn" href="${a.url}" target="_blank">Oku</a>
+        </div>
+      `).join("");
+      status.textContent="Hazır";
+    }catch(e){
+      status.textContent="Hata";
+      grid.innerHTML="<div class='card'>Veri alınamadı.</div>";
+    }
+  }
+  document.getElementById("go").addEventListener("click",load);
+  </script>
+</body>
+</html>

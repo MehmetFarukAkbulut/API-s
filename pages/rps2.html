@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RPS-25 (Lokal)</title>
+  <style>
+    :root{--bg:#050816;--panel:#0b1120;--accent:#22d3ee;--accent2:#a855f7;--text:#e5e7eb;--muted:#94a3b8;}
+    *{box-sizing:border-box;}
+    body{
+      margin:0;font-family:"Inter","Segoe UI",sans-serif;color:var(--text);
+      background:
+        radial-gradient(circle at 10% 0%,rgba(34,211,238,0.14),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#0b1221);
+      min-height:100vh;overflow-x:hidden;
+    }
+    body::before,body::after{
+      content:"";position:fixed;inset:auto;width:420px;height:420px;border-radius:999px;
+      background:radial-gradient(circle at 30% 30%,rgba(34,211,238,0.34),transparent 60%);
+      mix-blend-mode:screen;filter:blur(4px);opacity:0.75;z-index:-1;pointer-events:none;
+      animation:blobA 22s ease-in-out infinite alternate;
+    }
+    body::after{width:520px;height:520px;background:radial-gradient(circle at 70% 70%,rgba(168,85,247,0.33),transparent 60%);animation:blobB 26s ease-in-out infinite alternate;}
+    @keyframes blobA{0%{transform:translate3d(-20%,-10%,0) scale(1);}50%{transform:translate3d(10%,30%,0) scale(1.15);}100%{transform:translate3d(-5%,55%,0) scale(0.9);}}
+    @keyframes blobB{0%{transform:translate3d(40%,-30%,0) scale(1.1);}50%{transform:translate3d(10%,10%,0) scale(0.95);}100%{transform:translate3d(35%,40%,0) scale(1.2);}}
+
+    header{
+      max-width:1100px;margin:0 auto;padding:26px 16px 10px;
+      display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+      animation:fadeDown .7s ease-out forwards;opacity:0;
+    }
+    h1{margin:0;font-size:30px;letter-spacing:0.3px;display:flex;gap:8px;align-items:center;}
+    h1::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(34,211,238,0.5),transparent);opacity:.6;}
+    .lead{margin:4px 0 0;font-size:14px;color:var(--muted);max-width:560px;}
+    .btn{
+      padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);
+      background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;cursor:pointer;
+      transition:transform .2s,box-shadow .2s;
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.18);}
+
+    .panel{
+      max-width:1100px;margin:0 auto 20px;padding:14px;
+      border-radius:18px;border:1px solid rgba(148,163,184,0.35);
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(145deg,rgba(15,23,42,0.97),rgba(15,23,42,0.88));
+      box-shadow:0 24px 80px rgba(15,23,42,0.95),0 0 0 1px rgba(15,23,42,0.9) inset;
+      backdrop-filter:blur(16px);position:relative;overflow:hidden;
+      animation:fadeUp .8s ease-out forwards;opacity:0;
+    }
+
+    .score{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .score strong{font-size:18px;}
+    .badge{
+      display:inline-block;padding:4px 8px;border-radius:999px;
+      background:rgba(15,23,42,1);border:1px solid rgba(34,211,238,0.55);
+      color:#7dd3fc;font-size:12px;
+    }
+    .muted{color:var(--muted);}
+
+    /* ARENA – Çarpışma alanı */
+    .arena{
+      margin-top:14px;margin-bottom:14px;
+      padding:12px 16px;border-radius:16px;
+      border:1px solid rgba(148,163,184,0.35);
+      display:flex;align-items:center;gap:18px;
+      position:relative;overflow:hidden;
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.96));
+      box-shadow:0 18px 40px rgba(15,23,42,0.95);
+    }
+    .arena .vs{
+      font-weight:600;letter-spacing:.18em;font-size:13px;
+      text-transform:uppercase;color:rgba(148,163,184,0.9);
+    }
+    .arena::before{
+      content:"";position:absolute;inset:-40%;
+      background:radial-gradient(circle at 50% 50%,rgba(248,250,252,0.35),transparent 60%);
+      opacity:0;pointer-events:none;
+    }
+    .arena.clash::before{animation:arenaFlash .35s ease-out;}
+    @keyframes arenaFlash{
+      0%{opacity:0;}
+      20%{opacity:.85;}
+      100%{opacity:0;}
+    }
+
+    .fighter{
+      flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+      min-height:110px;
+    }
+    .fighter-name{
+      margin-top:8px;font-size:13px;color:var(--muted);
+      letter-spacing:.04em;text-transform:uppercase;
+    }
+    .fighter-icon{
+      font-size:52px;
+      width:86px;height:86px;
+      border-radius:24px;
+      display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(circle at 30% 20%,rgba(15,23,42,0.4),rgba(15,23,42,0.95));
+      box-shadow:0 0 0 1px rgba(148,163,184,0.45),0 18px 40px rgba(15,23,42,0.9);
+      transition:transform .2s,box-shadow .2s,filter .2s;
+    }
+
+    /* Giriş animasyonları */
+    .fighter.enter-left{animation:fighterEnterLeft .35s ease-out;}
+    .fighter.enter-right{animation:fighterEnterRight .35s ease-out;}
+    @keyframes fighterEnterLeft{
+      0%{transform:translateX(-80px);opacity:0;}
+      100%{transform:translateX(0);opacity:1;}
+    }
+    @keyframes fighterEnterRight{
+      0%{transform:translateX(80px);opacity:0;}
+      100%{transform:translateX(0);opacity:1;}
+    }
+
+    /* Sonuç animasyonları */
+    @keyframes winnerPulse{
+      0%{transform:scale(1);}
+      40%{transform:scale(1.18);}
+      100%{transform:scale(1.05);}
+    }
+    @keyframes loserFall{
+      0%{transform:scale(1) translateY(0) rotate(0deg);opacity:1;}
+      100%{transform:scale(.7) translateY(40px) rotate(-18deg);opacity:0;filter:blur(1px);}
+    }
+    @keyframes drawShake{
+      0%,100%{transform:translateX(0);}
+      25%{transform:translateX(-6px);}
+      50%{transform:translateX(6px);}
+      75%{transform:translateX(-3px);}
+    }
+
+    .fighter-icon.winner{
+      animation:winnerPulse .8s ease-out .22s forwards;
+      box-shadow:0 0 0 1px rgba(248,250,252,0.9),0 0 40px rgba(34,211,238,0.65);
+    }
+    .fighter-icon.loser{
+      animation:loserFall .7s ease-in .2s forwards;
+    }
+    .fighter-icon.draw{
+      animation:drawShake .7s ease-in-out .2s forwards;
+    }
+
+    /* MOVE AURASI – her sembol için farklı glow / renk */
+    .move-rock{box-shadow:0 0 26px rgba(148,163,184,0.55);}
+    .move-gun{box-shadow:0 0 26px rgba(249,250,251,0.75);}
+    .move-dynamite{box-shadow:0 0 32px rgba(248,113,113,0.75);}
+    .move-nuke{box-shadow:0 0 32px rgba(190,242,100,0.8);}
+    .move-lightning{box-shadow:0 0 30px rgba(250,250,115,0.8);}
+    .move-devil{box-shadow:0 0 30px rgba(248,113,113,0.9);}
+    .move-dragon{box-shadow:0 0 32px rgba(245,158,11,0.9);}
+    .move-alien{box-shadow:0 0 32px rgba(56,189,248,0.9);}
+    .move-water{box-shadow:0 0 28px rgba(56,189,248,0.8);}
+    .move-bowl{box-shadow:0 0 24px rgba(226,232,240,0.55);}
+    .move-air{box-shadow:0 0 26px rgba(191,219,254,0.7);}
+    .move-moon{box-shadow:0 0 30px rgba(129,140,248,0.9);}
+    .move-paper{box-shadow:0 0 22px rgba(248,250,252,0.8);}
+    .move-sponge{box-shadow:0 0 26px rgba(251,191,36,0.85);}
+    .move-wolf{box-shadow:0 0 28px rgba(156,163,175,0.9);}
+    .move-cockroach{box-shadow:0 0 26px rgba(251,146,60,0.85);}
+    .move-tree{box-shadow:0 0 32px rgba(74,222,128,0.9);}
+    .move-man{box-shadow:0 0 26px rgba(96,165,250,0.85);}
+    .move-woman{box-shadow:0 0 26px rgba(244,114,182,0.9);}
+    .move-monkey{box-shadow:0 0 26px rgba(251,191,36,0.85);}
+    .move-snake{box-shadow:0 0 30px rgba(74,222,128,0.9);}
+    .move-axe{box-shadow:0 0 28px rgba(148,163,184,0.8);}
+    .move-scissors{box-shadow:0 0 30px rgba(248,250,252,0.9);}
+    .move-fire{box-shadow:0 0 34px rgba(248,113,113,0.95);}
+    .move-sun{box-shadow:0 0 38px rgba(252,211,77,0.95);}
+
+    /* Hamle grid’i */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+    .tile{
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.98));
+      border:1px solid rgba(148,163,184,0.4);
+      border-radius:12px;padding:12px;cursor:pointer;
+      transition:transform .2s,box-shadow .2s,border-color .2s;
+      display:flex;align-items:center;gap:10px;
+      box-shadow:0 16px 40px rgba(15,23,42,0.95),0 0 0 1px rgba(15,23,42,1) inset;
+    }
+    .tile:hover{
+      transform:translateY(-2px) scale(1.03);
+      border-color:rgba(34,211,238,0.35);
+      box-shadow:0 18px 46px rgba(8,47,73,0.95),0 0 0 1px rgba(15,23,42,1) inset;
+    }
+    .tile .icon{
+      font-size:26px;width:36px;height:36px;border-radius:10px;
+      background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(168,85,247,0.25));
+      display:flex;align-items:center;justify-content:center;
+    }
+    .tile strong {color: #e5edf7;font-weight: 600;}
+    .tile .muted {color: #8aa4c4 !important;}
+    .tile:hover strong {color: #ffffff;}
+    .tile:hover .muted {color: #c3d4e6 !important;}
+
+    .result{
+      margin-top:12px;padding:14px;border-radius:12px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.98));
+      box-shadow:0 12px 32px rgba(15,23,42,0.9);
+      font-size:14px;
+    }
+
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>RPS-25</h1>
+      <p class="lead">Tamamen lokal, 25 hamleli taş-kâğıt-makas varyasyonu. Her hamle kendisinden sonraki 12 hamleyi yener.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="score">
+      <span class="badge">Kurallar: Dairedeki sıraya göre her hamle sonraki 12 hamleyi yener.</span>
+      <span class="badge" id="status">Hamle seç, rakip rastgele.</span>
+    </div>
+
+    <!-- Çarpışma arenası -->
+    <div class="arena" id="arena">
+      <div class="fighter" id="fighter-left">
+        <div class="fighter-icon" id="fighter-left-icon">❔</div>
+        <div class="fighter-name" id="fighter-left-name">Sen</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="fighter" id="fighter-right">
+        <div class="fighter-icon" id="fighter-right-icon">❔</div>
+        <div class="fighter-name" id="fighter-right-name">Rakip</div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="result" id="result">Sonuç bekleniyor...</div>
+  </div>
+
+  <script>
+  (function(){
+    const moves=[
+      {name:"Rock",icon:"🪨",cls:"move-rock"},
+      {name:"Gun",icon:"🔫",cls:"move-gun"},
+      {name:"Dynamite",icon:"🧨",cls:"move-dynamite"},
+      {name:"Nuke",icon:"☢️",cls:"move-nuke"},
+      {name:"Lightning",icon:"⚡",cls:"move-lightning"},
+      {name:"Devil",icon:"😈",cls:"move-devil"},
+      {name:"Dragon",icon:"🐉",cls:"move-dragon"},
+      {name:"Alien",icon:"👽",cls:"move-alien"},
+      {name:"Water",icon:"💧",cls:"move-water"},
+      {name:"Bowl",icon:"🥣",cls:"move-bowl"},
+      {name:"Air",icon:"🌬️",cls:"move-air"},
+      {name:"Moon",icon:"🌙",cls:"move-moon"},
+      {name:"Paper",icon:"📄",cls:"move-paper"},
+      {name:"Sponge",icon:"🧽",cls:"move-sponge"},
+      {name:"Wolf",icon:"🐺",cls:"move-wolf"},
+      {name:"Cockroach",icon:"🪳",cls:"move-cockroach"},
+      {name:"Tree",icon:"🌳",cls:"move-tree"},
+      {name:"Man",icon:"👨",cls:"move-man"},
+      {name:"Woman",icon:"👩",cls:"move-woman"},
+      {name:"Monkey",icon:"🐒",cls:"move-monkey"},
+      {name:"Snake",icon:"🐍",cls:"move-snake"},
+      {name:"Axe",icon:"🪓",cls:"move-axe"},
+      {name:"Scissors",icon:"✂️",cls:"move-scissors"},
+      {name:"Fire",icon:"🔥",cls:"move-fire"},
+      {name:"Sun",icon:"☀️",cls:"move-sun"}
+    ];
+
+    const grid=document.getElementById("grid");
+    const resultBox=document.getElementById("result");
+    const status=document.getElementById("status");
+
+    const arena=document.getElementById("arena");
+    const fighterLeft=document.getElementById("fighter-left");
+    const fighterRight=document.getElementById("fighter-right");
+    const leftIcon=document.getElementById("fighter-left-icon");
+    const rightIcon=document.getElementById("fighter-right-icon");
+    const leftName=document.getElementById("fighter-left-name");
+    const rightName=document.getElementById("fighter-right-name");
+
+    function decide(aIdx,bIdx){
+      if(aIdx===bIdx) return "draw";
+      const diff=(bIdx - aIdx + moves.length) % moves.length;
+      return diff<=12 ? "a" : "b"; // sıralamada sonraki 12 hamle yenilir
+    }
+
+    function resetIcon(el){
+      el.className="fighter-icon";
+    }
+
+    function playBattle(myIdx,foeIdx,outcome){
+      // sınıfları sıfırla
+      fighterLeft.classList.remove("enter-left");
+      fighterRight.classList.remove("enter-right");
+      arena.classList.remove("clash");
+
+      resetIcon(leftIcon);
+      resetIcon(rightIcon);
+
+      // reflow – animasyonu yeniden tetiklemek için
+      void arena.offsetWidth;
+
+      // içerikleri doldur
+      leftIcon.textContent=moves[myIdx].icon;
+      rightIcon.textContent=moves[foeIdx].icon;
+      leftName.textContent=moves[myIdx].name+" (Sen)";
+      rightName.textContent=moves[foeIdx].name+" (Rakip)";
+
+      leftIcon.classList.add(moves[myIdx].cls);
+      rightIcon.classList.add(moves[foeIdx].cls);
+
+      // giriş animasyonları
+      fighterLeft.classList.add("enter-left");
+      fighterRight.classList.add("enter-right");
+
+      // sonuç animasyonları
+      if(outcome==="draw"){
+        leftIcon.classList.add("draw");
+        rightIcon.classList.add("draw");
+      }else if(outcome==="a"){
+        leftIcon.classList.add("winner");
+        rightIcon.classList.add("loser");
+      }else{
+        leftIcon.classList.add("loser");
+        rightIcon.classList.add("winner");
+      }
+
+      // çarpışma flaşı
+      arena.classList.add("clash");
+    }
+
+    function render(){
+      grid.innerHTML=moves.map((m,idx)=>`<button class="tile" data-idx="${idx}">
+        <span class="icon">${m.icon}</span>
+        <div>
+          <strong>${m.name}</strong>
+          <div class="muted">#${idx+1}</div>
+        </div>
+      </button>`).join("");
+
+      grid.querySelectorAll(".tile").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const myIdx=Number(btn.dataset.idx);
+          const foe=Math.floor(Math.random()*moves.length);
+          const outcome=decide(myIdx,foe);
+          let text="";
+          if(outcome==="draw"){
+            text=`Berabere! ${moves[myIdx].name} = ${moves[foe].name}`;
+          }else if(outcome==="a"){
+            text=`Kazandın! ${moves[myIdx].name} -> ${moves[foe].name}`;
+          }else{
+            text=`Kaybettin. ${moves[foe].name} -> ${moves[myIdx].name}`;
+          }
+
+          resultBox.innerHTML=`<div class="badge">Sen: ${moves[myIdx].name} ${moves[myIdx].icon}</div>
+            <div class="badge">Rakip: ${moves[foe].name} ${moves[foe].icon}</div>
+            <h3 style="margin:8px 0 4px;font-size:16px;">${text}</h3>
+            <div class="muted">Yöntem: Dairede her hamle kendisinden sonraki 12 hamleyi yener, öncekilere yenilir.</div>`;
+
+          status.textContent="Oyun tamamlandı, yeni hamle seç.";
+
+          // çarpışma animasyonunu oynat
+          playBattle(myIdx,foe,outcome);
+        });
+      });
+    }
+
+    render();
+  })();
+  </script>
+</body>
+</html>

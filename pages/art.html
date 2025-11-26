@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sanat Galerisi</title>
+  <style>
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.45);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),
+        radial-gradient(circle at 80% 0,rgba(56,189,248,0.08),transparent 35%),
+        linear-gradient(135deg,#020617,#0f172a 40%,#020617 100%);
+      color:var(--text);
+      min-height:100vh;
+      overflow-x:hidden;
+      position:relative;
+      background-size:160% 160%;
+      animation:bgShift 24s ease-in-out infinite alternate;
+    }
+
+    /* Hafif noise layer */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-50px;
+      pointer-events:none;
+      opacity:0.22;
+      mix-blend-mode:soft-light;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E");
+      z-index:-1;
+      animation:noiseMove 4s steps(4,end) infinite;
+    }
+
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+
+    .btn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:linear-gradient(135deg,rgba(15,23,42,0.8),rgba(15,23,42,0.95));
+      color:#e0f2fe;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .2s ease,
+        background .25s ease;
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.35),transparent 55%);
+      opacity:0;
+      transform:translateX(-40%);
+      transition:opacity .25s ease,transform .45s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 30px rgba(15,23,42,0.8);
+      border-color:var(--accent-soft);
+      background:linear-gradient(135deg,rgba(15,23,42,0.9),rgba(15,23,42,1));
+    }
+
+    .btn:hover::before{
+      opacity:1;
+      transform:translateX(30%);
+    }
+
+    h1{
+      margin:0;
+      font-size:32px;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      position:relative;
+    }
+
+    h1::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:-6px;
+      width:56px;
+      height:2px;
+      background:linear-gradient(90deg,var(--accent),transparent);
+      opacity:.85;
+    }
+
+    p.lead{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      max-width:420px;
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:0 auto 24px;
+      padding:16px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.06),transparent 55%),
+                 radial-gradient(circle at 100% 100%,rgba(56,189,248,0.04),transparent 55%),
+                 var(--panel);
+      border:1px solid rgba(148,163,184,0.5);
+      border-radius:18px;
+      box-shadow:
+        0 24px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.9);
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(26px);
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background:radial-gradient(circle at 10% 0,rgba(34,211,238,0.12),transparent 55%),
+                 radial-gradient(circle at 90% 100%,rgba(56,189,248,0.08),transparent 55%);
+      opacity:0.8;
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+
+    .panel::after{
+      content:"";
+      position:absolute;
+      inset:1px;
+      border-radius:16px;
+      border:1px solid rgba(15,23,42,0.9);
+      pointer-events:none;
+      mix-blend-mode:overlay;
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:10px;
+      position:relative;
+      z-index:1;
+    }
+
+    input{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.55);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.1),transparent 50%),
+                 #020617;
+      color:#fff;
+      min-width:220px;
+      font-size:13px;
+      outline:none;
+      transition:border-color .25s ease,box-shadow .25s ease,background .25s ease;
+    }
+
+    input::placeholder{color:rgba(148,163,184,0.8);}
+
+    input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.7),0 0 0 10px rgba(34,211,238,0.05);
+      background:#020617;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    .card{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(15,23,42,1);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+                 #020617;
+      cursor:pointer;
+      transition:
+        transform .25s cubic-bezier(.21,.98,.6,.99),
+        box-shadow .25s ease,
+        border-color .25s ease,
+        background .25s ease;
+      overflow:hidden;
+      position:relative;
+      isolation:isolate;
+      will-change:transform,box-shadow;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.6),transparent 60%),
+        radial-gradient(circle at 100% 100%,rgba(56,189,248,0.5),transparent 65%);
+      opacity:0;
+      transform:translate3d(-20%,20%,0);
+      transition:opacity .25s ease,transform .55s ease;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:-1;
+    }
+
+    .card:hover{
+      transform:translateY(-6px) rotate3d(1,-1,0,10deg) scale(1.02);
+      box-shadow:
+        0 26px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(34,211,238,0.35);
+      border-color:rgba(34,211,238,0.4);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.18),transparent 55%),
+                 #020617;
+    }
+
+    .card:hover::before{
+      opacity:1;
+      transform:translate3d(10%,-10%,0);
+    }
+
+    .card h3{
+      margin:0 0 6px;
+      font-size:15px;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+    }
+
+    .muted{color:var(--muted);font-size:12px;}
+
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(34,211,238,0.3);
+      color:#7dd3fc;
+      margin:4px 4px 0 0;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:radial-gradient(circle at 10% 0,rgba(34,211,238,0.22),transparent 55%),
+                 rgba(3,7,18,0.92);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      backdrop-filter:blur(30px);
+    }
+
+    .modal.active{display:flex;}
+
+    .modal-card{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+                 #020617;
+      border:1px solid rgba(148,163,184,0.6);
+      border-radius:18px;
+      max-width:800px;
+      width:90%;
+      max-height:90vh;
+      overflow:auto;
+      padding:16px;
+      position:relative;
+      box-shadow:0 30px 120px rgba(0,0,0,0.9);
+      transform:translateY(20px) scale(.97);
+      opacity:0;
+      animation:modalIn .4s cubic-bezier(.21,.98,.6,.99) forwards;
+    }
+
+    .modal-card img{
+      width:100%;
+      border-radius:12px;
+      margin:10px 0;
+    }
+
+    .modal .btn{
+      background:rgba(15,23,42,0.9);
+    }
+
+    /* Kart görseli */
+    .card img{
+      width:100%;
+      height:200px;
+      object-fit:cover;
+      border-radius:12px;
+      margin-top:8px;
+      filter:saturate(1.15) contrast(1.05);
+      transition:transform .4s ease,filter .35s ease;
+      transform-origin:center center;
+    }
+
+    .card:hover img{
+      transform:scale(1.04) translate3d(0,-2px,0);
+      filter:saturate(1.25) contrast(1.08);
+    }
+
+    /* Scroll reveal */
+    .reveal{
+      opacity:0;
+      transform:translateY(26px) translateZ(0);
+      filter:blur(4px);
+      will-change:transform,opacity,filter;
+      transition:
+        opacity .7s cubic-bezier(.21,.98,.6,.99),
+        transform .7s cubic-bezier(.21,.98,.6,.99),
+        filter .7s cubic-bezier(.21,.98,.6,.99);
+    }
+
+    .reveal.visible{
+      opacity:1;
+      transform:none;
+      filter:blur(0);
+    }
+
+    /* Mouse-follow glow */
+    .cursor-blob{
+      position:fixed;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 20%,rgba(56,189,248,0.6),transparent 55%),
+        radial-gradient(circle at 70% 80%,rgba(45,212,191,0.4),transparent 55%);
+      mix-blend-mode:screen;
+      opacity:.22;
+      pointer-events:none;
+      z-index:0;
+      transform:translate3d(-50%,-50%,0);
+      filter:blur(10px);
+    }
+
+    /* Küçük "status" badge */
+    #status{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.5);
+    }
+
+    /* Alt buton container */
+    .more-wrap{
+      text-align:center;
+      margin-top:10px;
+      position:relative;
+      z-index:1;
+    }
+
+    .more-wrap::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg,transparent,rgba(148,163,184,0.3),transparent);
+      opacity:.2;
+      pointer-events:none;
+    }
+
+    /* Animations */
+    @keyframes bgShift{
+      0%{background-position:0% 0%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:50% 100%;}
+    }
+
+    @keyframes noiseMove{
+      0%{transform:translate3d(0,0,0);}
+      25%{transform:translate3d(-20px,10px,0);}
+      50%{transform:translate3d(15px,-10px,0);}
+      75%{transform:translate3d(-10px,-20px,0);}
+      100%{transform:translate3d(0,0,0);}
+    }
+
+    @keyframes modalIn{
+      to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width:640px){
+      h1{font-size:26px;}
+      .panel{margin:8px 12px 24px;}
+      .card img{height:180px;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Mouse-follow glow -->
+  <div class="cursor-blob" id="cursor-blob"></div>
+
+  <header class="reveal">
+    <a class="btn" href="../index.html">
+      <span>← Ana sayfa</span>
+    </a>
+    <div>
+      <h1>Sanat Galerisi</h1>
+      <p class="lead">Art Institute of Chicago API ile arama, detay ve daha fazla.</p>
+    </div>
+  </header>
+
+  <div class="panel reveal" id="panel">
+    <div class="bar">
+      <input id="q" placeholder="Arama (örn: portrait)">
+      <button class="btn" id="go">Ara</button>
+      <span class="muted" id="status">Hazır</span>
+    </div>
+    <div class="bar" id="chips"></div>
+    <div class="grid" id="grid">
+      <div class="card reveal visible">Arama yapın.</div>
+    </div>
+    <div class="more-wrap">
+      <button class="btn" id="more">Daha fazla</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <button class="btn" id="close" style="float:right;">Kapat</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+  // Preset "chip" butonları
+  const presets=["portrait","landscape","abstract","impressionism","Monet","Van Gogh","Picasso","Rembrandt","Da Vinci","Kandinsky","Joan Miro"];
+  const chipsEl=document.getElementById("chips");
+  chipsEl.innerHTML=presets.map(p=>`<button class="btn" data-q="${p}" style="font-size:11px;">${p}</button>`).join("");
+  chipsEl.addEventListener("click",(e)=>{
+    const v=e.target.dataset.q;
+    if(v){
+      document.getElementById("q").value=v;
+      search(true);
+    }
+  });
+
+  // Modal
+  const modal=document.getElementById("modal");
+  const modalBody=document.getElementById("modal-body");
+  document.getElementById("close").onclick=()=>modal.classList.remove("active");
+  modal.addEventListener("click",e=>{if(e.target===modal) modal.classList.remove("active");});
+
+  // Scroll reveal observer
+  let revealObserver=null;
+  if("IntersectionObserver" in window){
+    revealObserver=new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add("visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    },{
+      threshold:0.2
+    });
+  }
+
+  // Başlangıç reveal elemanları
+  const initialReveals=document.querySelectorAll(".reveal");
+  initialReveals.forEach(el=>{
+    if(revealObserver) revealObserver.observe(el);
+  });
+
+  // Mouse-follow glow
+  (function initCursorBlob(){
+    const blob=document.getElementById("cursor-blob");
+    if(!blob) return;
+    let targetX=window.innerWidth/2;
+    let targetY=window.innerHeight/2;
+    let currentX=targetX;
+    let currentY=targetY;
+
+    window.addEventListener("mousemove",(e)=>{
+      targetX=e.clientX;
+      targetY=e.clientY;
+    });
+
+    function animate(){
+      const lerp=0.12;
+      currentX+=(targetX-currentX)*lerp;
+      currentY+=(targetY-currentY)*lerp;
+      blob.style.transform=`translate3d(${currentX-130}px,${currentY-130}px,0)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+
+  let page=1, lastQ="painting";
+
+  async function search(reset=true){
+    const q=document.getElementById("q").value.trim()||lastQ;
+    lastQ=q;
+    if(reset) page=1;
+    const grid=document.getElementById("grid");
+    const status=document.getElementById("status");
+
+    try{
+      status.textContent="Yükleniyor...";
+      status.style.borderColor="rgba(34,211,238,0.7)";
+      const res=await fetch(`https://api.artic.edu/api/v1/artworks/search?q=${encodeURIComponent(q)}&limit=12&page=${page}&fields=id,title,image_id,artist_display,date_display`);
+      const j=await res.json();
+      const items=j.data||[];
+
+      if(!items.length){
+        if(reset) grid.innerHTML="<div class='card reveal visible'>Sonuç yok</div>";
+        status.textContent="Hazır";
+        status.style.borderColor="rgba(148,163,184,0.5)";
+        return;
+      }
+
+      const html=items.map(it=>`
+        <div class="card reveal" data-id="${it.id}">
+          <h3>${it.title||"Eser"}</h3>
+          <div class="muted">${it.artist_display||""} · ${it.date_display||""}</div>
+          ${it.image_id?`<img src="https://www.artic.edu/iiif/2/${it.image_id}/full/843,/0/default.jpg" alt="${(it.title||"").replace(/"/g,"&quot;")}">`:""}
+        </div>
+      `).join("");
+
+      if(reset) grid.innerHTML=html;
+      else grid.insertAdjacentHTML("beforeend",html);
+
+      // Kart click + reveal bağlama
+      const cards=grid.querySelectorAll(".card");
+      cards.forEach(c=>{
+        c.onclick=()=>showDetail(c.dataset.id);
+        if(revealObserver && !c.classList.contains("visible")){
+          revealObserver.observe(c);
+        }
+      });
+
+      status.textContent="Hazır";
+      status.style.borderColor="rgba(148,163,184,0.5)";
+    }catch(e){
+      console.error(e);
+      status.textContent="Hata";
+      status.style.borderColor="rgba(248,113,113,0.9)";
+      if(reset) grid.innerHTML="<div class='card reveal visible'>Veri alınamadı.</div>";
+    }
+  }
+
+  document.getElementById("go").addEventListener("click",()=>search(true));
+  document.getElementById("more").addEventListener("click",()=>{page++;search(false);});
+  document.getElementById("q").addEventListener("keydown",e=>{
+    if(e.key==="Enter") search(true);
+  });
+
+  async function showDetail(id){
+    try{
+      const r=await fetch(`https://api.artic.edu/api/v1/artworks/${id}?fields=id,title,image_id,artist_display,date_display,place_of_origin,medium_display,dimensions,thumbnail`);
+      const j=await r.json();
+      const d=j.data;
+      if(!d) return;
+
+      modalBody.innerHTML=`
+        <h2 style="margin-top:0;font-size:22px;letter-spacing:.04em;text-transform:uppercase;">${d.title||"Eser"}</h2>
+        <div class="muted">${d.artist_display||""} · ${d.date_display||""}</div>
+        ${d.image_id?`<img src="https://www.artic.edu/iiif/2/${d.image_id}/full/843,/0/default.jpg" alt="${(d.title||"").replace(/"/g,"&quot;")}">`:""}
+        <p class="muted">Origin: ${d.place_of_origin||"-"}</p>
+        <p class="muted">Medium: ${d.medium_display||"-"}</p>
+        <p class="muted">Dimensions: ${d.dimensions||"-"}</p>
+      `;
+      modal.classList.add("active");
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  // İlk load
+  search(true);
+  </script>
+</body>
+</html>

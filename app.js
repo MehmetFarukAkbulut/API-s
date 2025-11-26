@@ -1,6 +1,34 @@
 ﻿// app.js
 const state = { lang: "tr" };
 let currencyNamesLoaded = false;
+const translationCache = new Map();
+async function translateBatch(texts, targetLang) {
+  if (!Array.isArray(texts) || !texts.length) return [];
+  if (!["tr", "en"].includes(targetLang)) return texts;
+  const results = [];
+  for (const txt of texts) {
+    const key = `${targetLang}::${txt}`;
+    if (translationCache.has(key)) {
+      results.push(translationCache.get(key));
+      continue;
+    }
+    try {
+      const body = new URLSearchParams({ q: txt, source: "auto", target: targetLang, format: "text" });
+      const res = await fetch("https://libretranslate.de/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body
+      });
+      const json = await res.json();
+      const tr = json?.translatedText || txt;
+      translationCache.set(key, tr);
+      results.push(tr);
+    } catch (e) {
+      results.push(txt);
+    }
+  }
+  return results;
+}
 let currencyNames = {
   USD: "US Dollar",
   EUR: "Euro",
@@ -195,85 +223,8 @@ const copy = {
 };
 
 const apps = [
-  {
-    id: "weather",
-    title: { tr: "Hava Durumu", en: "Weather" },
-    subtitle: { tr: "Populer: Istanbul", en: "Popular: Istanbul" },
-    image: "https://static.independent.co.uk/2023/04/24/06/WEATHER%20Spring%20%2014550538.jpg",
-    popularQuery: "Istanbul",
-    fetcher: async (query, lang) => {
-      const q = query || "Istanbul";
-      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=${lang}`;
-      const fallback = {
-        location: q,
-        current: { temp: 18.4, wind: 12.1, rainChance: "30%" },
-        today: { date: "Today", tmax: 20, tmin: 12 },
-        tomorrow: { date: "Tomorrow", tmax: 21, tmin: 13 }
-      };
-      try {
-        const geoRes = await fetch(geoUrl);
-        const geo = await geoRes.json();
-        const loc = geo?.results?.[0];
-        const latitude = loc?.latitude ?? 41.01;
-        const longitude = loc?.longitude ?? 28.97;
-        const locName = loc?.name || q;
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=precipitation_probability&daily=temperature_2m_max,temperature_2m_min&timezone=auto&language=${lang}`;
-        const res = await fetch(url);
-        const json = await res.json();
-        return {
-          location: locName,
-          current: {
-            temp: json?.current?.temperature_2m ?? fallback.current.temp,
-            wind: json?.current?.wind_speed_10m ?? fallback.current.wind,
-            rainChance: (json?.hourly?.precipitation_probability?.[0] ?? 30) + "%"
-          },
-          today: {
-            date: json?.daily?.time?.[0] || fallback.today.date,
-            tmax: json?.daily?.temperature_2m_max?.[0] ?? fallback.today.tmax,
-            tmin: json?.daily?.temperature_2m_min?.[0] ?? fallback.today.tmin
-          },
-          tomorrow: {
-            date: json?.daily?.time?.[1] || fallback.tomorrow.date,
-            tmax: json?.daily?.temperature_2m_max?.[1] ?? fallback.tomorrow.tmax,
-            tmin: json?.daily?.temperature_2m_min?.[1] ?? fallback.tomorrow.tmin
-          }
-        };
-      } catch (e) { return fallback; }
-    }
-  },
-  {
-    id: "currency",
-    title: { tr: "Kur / Doviz", en: "FX Rates" },
-    subtitle: { tr: "Populer: USD baz", en: "Popular: USD base" },
-    image: "https://stratejikortak.com/wp-content/uploads/2020/05/doviz-kurlari-nasil-belirlenir.jpg",
-    popularQuery: "USD",
-    fetcher: async (query) => {
-          const base = (query || "USD").toUpperCase();
-          const date = (typeof apps !== "undefined" && apps.find(a => a.id === "currency")?._date) || "";
-          const useHistorical = isValidPastDate(date);
-          const endpoint = useHistorical ? `https://api.frankfurter.app/${date}` : "https://api.frankfurter.app/latest";
-          const url = endpoint;
-          const fallback = { base, rates: { USD: 1 }, date: useHistorical ? date : "latest" };
-          try {
-            const res = await fetch(url);
-            const json = await res.json();
-            const eurRates = json?.rates || {};
-            const baseRate = base === "EUR" ? 1 : eurRates[base];
-            if (!baseRate) return fallback;
-            const converted = Object.entries(eurRates).reduce((acc, [k, v]) => {
-              acc[k] = (v / baseRate);
-              return acc;
-            }, {});
-            converted["EUR"] = 1 / baseRate;
-            converted[base] = 1;
-            return {
-              base,
-              rates: converted,
-              date: json?.date || (useHistorical ? date : "latest")
-            };
-          } catch (e) { return fallback; }
-        }
-      },
+  
+  
       {
         id: "tcmb",
         title: { tr: "TCMB Kurlari", en: "TCMB Rates" },
@@ -400,6 +351,62 @@ const apps = [
 
   },
   {
+    id: "airquality",
+    title: { tr: "Hava Kalitesi", en: "Air Quality" },
+    subtitle: { tr: "Populer: Istanbul", en: "Popular: Istanbul" },
+    image: "https://meersens.com/wp-content/uploads/2022/03/VISUEL-BLOG-Meteo.jpg",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
+    id: "mealspin",
+    title: { tr: "Rastgele Tarif", en: "Random Meal" },
+    subtitle: { tr: "TheMealDB", en: "TheMealDB" },
+    image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
+    id: "art",
+    title: { tr: "Sanat Galerisi", en: "Art Gallery" },
+    subtitle: { tr: "Harvard", en: "Harvard" },
+    image: "https://artistsgallery.co.za/wp-content/uploads/2025/02/mobile.jpg",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
+    id: "anichart",
+    title: { tr: "Anime Takvimi", en: "Anime Schedule" },
+    subtitle: { tr: "AniList sezon listesi", en: "AniList seasonal list" },
+    image: "https://www.asialogy.com/wp-content/uploads/anime-nedir-nasil-yapilir.webp",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
+    id: "wizard",
+    title: { tr: "Wizard World", en: "Wizard World" },
+    subtitle: { tr: "Büyüler, iksirler", en: "Spells, elixirs" },
+    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQMYGdfDFEcGJ4-wSz6wMbDc7WwCWhmRXHAeyZ08wt6MXN9IwS7Z1f0GUw9wLnn9O00RISujsuoNOZUNQR5JkVLrkwbclridmWc-7rXAXFRDp0AJEbwgJvUIz-E6sjA2.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=cobeVLePq8yR_UlyrsYKYQ&_nc_cat=111&_nc_oc=Adk3ccG9kHkLJotR8y_lDu6j0Db_sHCQ0XGVvif19n85HhuT4NyNeaO4ibs-NE0BaCU&ccb=9-4&oh=00_Afi1DvZ2Do5q1pwPavredbDTTlgQLuRuuy0qtleWE1RTzg&oe=692820F8&_nc_sid=5b3566",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
+    id: "rps",
+    title: { tr: "RPS-25 Lokal", en: "RPS-25 Local" },
+    subtitle: { tr: "API yok, 25 hamle", en: "Offline 25-move game" },
+    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQPj_OsU7YpE9XPdzkuMeMyNq3eumEJEi6MYqyhE5RbvoDcfB2bylAG83e7wPw2ysCi0225SQmTy-466gOdVO1dQUbZ5MxF5NQNQmwD0fcKXj8JBnViFywND9mRq4_g.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=zNTbqmt1efSCYWjODJqnkw&_nc_cat=100&_nc_oc=AdlZKHGTd0nxW4tR8xjkcN9xq-2n3K9hBJThPjKMeLST55La9zYcbJrygr9YCc2PR7U&ccb=9-4&oh=00_AfiLOFPbrSTg1QgK0f6h1JeooIlHdyxXaIdeASy9cILdXw&oe=692807F6&_nc_sid=5b3566",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
+    id: "music",
+    title: { tr: "Müzik Çalar", en: "Music" },
+    subtitle: { tr: "iTunes preview", en: "iTunes preview" },
+    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m340/AQNLbfs0fX0z2dYctKUGtxppTB1nue39GomWmtOGBQbeLL4gmSV8Rz28e8shfzH-yJ0ncxiO3uw6G5wQkJv0NB2eLuBDr8KbllQttbqwImY2mm_JUl8e-_qjd6dUL1WRFyP9FcCIKKQTmj77sG-Qs8Je7wAYrg.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=tRMeSii4SslqdAoFTbM23Q&_nc_cat=111&_nc_oc=AdkaH_s_rq4x1UKkXET9Q2HsCjtAIXq8fuNTpgBXFPgKaJ8uwR_4Od9HUOQJG-RbAqw&ccb=9-4&oh=00_AfiXKPF79_7ir0nYF3IbUjJzxvPevDtKImKoBdWQuEmOIw&oe=6928111A&_nc_sid=5b3566",
+    popularQuery: "",
+    fetcher: async () => ({})
+  },
+  {
     id: "news",
     title: { tr: "Haber + Trend", en: "News + Trends" },
     subtitle: { tr: "Populer: bitcoin", en: "Popular: bitcoin" },
@@ -421,7 +428,12 @@ const apps = [
           site: a.news_site,
           url: a.url
         }));
-        return items ?? fallback;
+        if (!items) return fallback;
+        if (state.lang === "tr") {
+          const translated = await translateBatch(items.map(i => i.title), "tr");
+          translated.forEach((t, idx) => items[idx].title = t);
+        }
+        return items;
       } catch (e) { return fallback; }
     }
   },
@@ -448,6 +460,10 @@ const apps = [
           link: m.strSource || m.strYoutube || "#",
           thumb: m.strMealThumb
         }));
+        if (meals && state.lang === "tr") {
+          const translated = await translateBatch(meals.map(m => m.name), "tr");
+          translated.forEach((t, idx) => meals[idx].name = t);
+        }
         return meals ?? fallback;
       } catch (e) { return fallback; }
     },
@@ -484,7 +500,7 @@ const apps = [
         const json = await res.json();
         const shows = (q ? json.map(s => s.show) : json.slice(0, 80)) || [];
         if (!shows.length) return fallback;
-        return shows.map(show => ({
+        const mapped = shows.map(show => ({
           id: `tv-${show.id}`,
           name: show.name,
           rating: show.rating?.average || 0,
@@ -493,6 +509,13 @@ const apps = [
           url: show.url || show.officialSite || "#",
           type: "show"
         })).sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 24);
+        if (state.lang === "tr") {
+          const names = await translateBatch(mapped.map(m => m.name), "tr");
+          names.forEach((t, i) => mapped[i].name = t);
+          const sums = await translateBatch(mapped.map(m => (m.summary || "").replace(/<[^>]+>/g, "")), "tr");
+          sums.forEach((t, i) => mapped[i].summary = t);
+        }
+        return mapped;
       } catch (e) { return fallback; }
     }
   },
@@ -523,41 +546,30 @@ const apps = [
           url: it.volumeInfo?.infoLink || ""
         })) || [];
         const rated = mapped.filter(b => (b.rating ?? -1) >= 4);
-        if (rated.length) return rated.sort((a, b) => (b.rating || -1) - (a.rating || -1)).slice(0, 12);
-        if (mapped.length) return mapped.slice(0, 10);
+        let finalList = rated.length ? rated.sort((a, b) => (b.rating || -1) - (a.rating || -1)).slice(0, 12)
+          : mapped.length ? mapped.slice(0, 10) : [];
+        if (state.lang === "tr" && finalList.length) {
+          const titles = await translateBatch(finalList.map(b => b.title || ""), "tr");
+          titles.forEach((t, i) => finalList[i].title = t);
+        }
+        return finalList;
       } catch (e) { /* ignore */ }
       return curated;
     }
   },
   {
     id: "space",
-    title: { tr: "Uzay Panosu", en: "Space Desk" },
-    subtitle: { tr: "Populer: galaxy", en: "Popular: galaxy" },
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
-    popularQuery: "galaxy",
-    fetcher: async (query) => {
-      const q = query || "galaxy";
-      const url = `https://images-api.nasa.gov/search?q=${encodeURIComponent(q)}&media_type=image`;
-      const fallback = { title: "Galaksi Tozu", desc: "Uzay gorseli", img: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=80" };
-      try {
-        const res = await fetch(url);
-        const json = await res.json();
-        const item = json?.collection?.items?.[0];
-        const data = item?.data?.[0];
-        const link = item?.links?.[0]?.href;
-        return {
-          title: data?.title ?? fallback.title,
-          desc: data?.description ?? fallback.desc,
-          img: link || fallback.img
-        };
-      } catch (e) { return fallback; }
-    }
+    title: { tr: "NASA APOD", en: "NASA APOD" },
+    subtitle: { tr: "Gunluk astronomi gorseli", en: "Astronomy Picture of the Day" },
+    image: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1000&q=80",
+    popularQuery: "",
+    fetcher: async () => ({})
   },
   {
     id: "travel",
     title: { tr: "Seyahat Planlayici", en: "Travel Planner" },
     subtitle: { tr: "Populer: Europe", en: "Popular: Europe" },
-    image: "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=800&q=80",
+    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m248/AQPSSz2_zOB2b1itaTIIXoUVdXY0nHaD19_XD9N7OQKrTuOSwRCmBNnB7injObsP7FXTLWhTTNGPXXChY4UmkXKf2QhLTZ5HccGManq7A2UHi1hVcF344tLytVAaEzUs.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=vwklIYYiASZr8aig15BGGA&_nc_cat=111&_nc_oc=AdlxjNOLMDBARLtEAQZYhGbN0QHKR7Jwz8RKMPjoqigqbH-THG8XP9xiOMjqQEnh1Qg&ccb=9-4&oh=00_Afhlnezk4-Vk5eRjbrxPxWRTAcKIW7P4uU8cLlMDu2AvjA&oe=69283418&_nc_sid=5b3566",
     popularQuery: "Istanbul -> Berlin",
     fetcher: async (query, lang) => {
       const labels = copy[state.lang].labels;
@@ -600,10 +612,56 @@ const apps = [
     }
   },
   {
+    id: "weather",
+    title: { tr: "Hava Durumu", en: "Weather" },
+    subtitle: { tr: "Populer: Istanbul", en: "Popular: Istanbul" },
+    image: "https://static.independent.co.uk/2023/04/24/06/WEATHER%20Spring%20%2014550538.jpg",
+    popularQuery: "Istanbul",
+    fetcher: async (query, lang) => {
+      const q = query || "Istanbul";
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=${lang}`;
+      const fallback = {
+        location: q,
+        current: { temp: 18.4, wind: 12.1, rainChance: "30%" },
+        today: { date: "Today", tmax: 20, tmin: 12 },
+        tomorrow: { date: "Tomorrow", tmax: 21, tmin: 13 }
+      };
+      try {
+        const geoRes = await fetch(geoUrl);
+        const geo = await geoRes.json();
+        const loc = geo?.results?.[0];
+        const latitude = loc?.latitude ?? 41.01;
+        const longitude = loc?.longitude ?? 28.97;
+        const locName = loc?.name || q;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=precipitation_probability&daily=temperature_2m_max,temperature_2m_min&timezone=auto&language=${lang}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        return {
+          location: locName,
+          current: {
+            temp: json?.current?.temperature_2m ?? fallback.current.temp,
+            wind: json?.current?.wind_speed_10m ?? fallback.current.wind,
+            rainChance: (json?.hourly?.precipitation_probability?.[0] ?? 30) + "%"
+          },
+          today: {
+            date: json?.daily?.time?.[0] || fallback.today.date,
+            tmax: json?.daily?.temperature_2m_max?.[0] ?? fallback.today.tmax,
+            tmin: json?.daily?.temperature_2m_min?.[0] ?? fallback.today.tmin
+          },
+          tomorrow: {
+            date: json?.daily?.time?.[1] || fallback.tomorrow.date,
+            tmax: json?.daily?.temperature_2m_max?.[1] ?? fallback.tomorrow.tmax,
+            tmin: json?.daily?.temperature_2m_min?.[1] ?? fallback.tomorrow.tmin
+          }
+        };
+      } catch (e) { return fallback; }
+    }
+  },
+  {
     id: "maps",
     title: { tr: "Harita / Yer Servisi", en: "Map / Places" },
     subtitle: { tr: "Populer: Berlin", en: "Popular: Berlin" },
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
+    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQOL7V3D_MctQyyM1MJhYrb9t78jJBCFpF-_D7E87VssFJ_X7QAJufD93VhulN9E066mTHQNz_rcpSNY5L3SydSb0jVbvRiuRScIrTQSIt5-y6n97H1a3IyIFKAIkVbB.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=lfWTpmNdFXqNv1j-OADRzg&_nc_cat=106&_nc_oc=AdnYOJPI7HJ67Y7kUKOBsogm9NLHIin1c6nTl1Crw-txypZEsBFZu0sjlpbVvTdoAhs&ccb=9-4&oh=00_AfgO1TOHMtYuQhc7Dt2wIYuuPmL8jq2V4q18Z9UkqO0QMQ&oe=69282D1F&_nc_sid=5b3566",
     popularQuery: "Berlin",
     fetcher: async (query, lang) => {
       const q = query || "Berlin";
@@ -697,6 +755,39 @@ const apps = [
     return entryCached?.detail || null;
   }
 },
+{
+    id: "currency",
+    title: { tr: "Kur / Doviz", en: "FX Rates" },
+    subtitle: { tr: "Populer: USD baz", en: "Popular: USD base" },
+    image: "https://stratejikortak.com/wp-content/uploads/2020/05/doviz-kurlari-nasil-belirlenir.jpg",
+    popularQuery: "USD",
+    fetcher: async (query) => {
+          const base = (query || "USD").toUpperCase();
+          const date = (typeof apps !== "undefined" && apps.find(a => a.id === "currency")?._date) || "";
+          const useHistorical = isValidPastDate(date);
+          const endpoint = useHistorical ? `https://api.frankfurter.app/${date}` : "https://api.frankfurter.app/latest";
+          const url = endpoint;
+          const fallback = { base, rates: { USD: 1 }, date: useHistorical ? date : "latest" };
+          try {
+            const res = await fetch(url);
+            const json = await res.json();
+            const eurRates = json?.rates || {};
+            const baseRate = base === "EUR" ? 1 : eurRates[base];
+            if (!baseRate) return fallback;
+            const converted = Object.entries(eurRates).reduce((acc, [k, v]) => {
+              acc[k] = (v / baseRate);
+              return acc;
+            }, {});
+            converted["EUR"] = 1 / baseRate;
+            converted[base] = 1;
+            return {
+              base,
+              rates: converted,
+              date: json?.date || (useHistorical ? date : "latest")
+            };
+          } catch (e) { return fallback; }
+        }
+      },
   {
     id: "calc",
     title: { tr: "Hesaplamalar", en: "Calculators" },
@@ -704,6 +795,15 @@ const apps = [
     image: "https://www.freshbooks.com/wp-content/uploads/2022/04/calculate-depreciation.jpg",
     popularQuery: "",
     fetcher: async () => ({ date: new Date().toISOString().split("T")[0] })
+  },
+  
+  {
+    id: "quakes",
+    title: { tr: "Depremler", en: "Earthquakes" },
+    subtitle: { tr: "USGS son depremler", en: "USGS latest" },
+    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQNX5UXJMHcy-tPClwKVDMMm4YkShEYchwIb_hWt8D1mCErxf1IzORrHnoi4sPViPTPBSK7z3IUNfK_Vs57qyNQ6fFbs5QY1RwphweZxfgj78KzpIBoWQiQyJZg9_Pu0.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=ojXcK9xRDM6_1VvQDtNnCw&_nc_cat=103&_nc_oc=AdlPoe9gWPqeyqEpTdhNJfJUb5z0893rHZ6rIRjiJMQF6ivL-pzdIzfGo8WKsBFowHo&ccb=9-4&oh=00_AfigrqRcFvBNaqRgcZnCXDoOfbUGC5R8j1CWPUuzJnI11A&oe=6928322C&_nc_sid=5b3566",
+    popularQuery: "",
+    fetcher: async () => ({})
   }
 ];
 
@@ -761,19 +861,34 @@ function buildGrid() {
     card.addEventListener("click", () => {
       const pageMap = {
         sports: "pages/sports.html",
-        tcmb: "pages/index.html",
+        tcmb: "pages/tcmb.html",
         weather: "pages/weather.html",
         currency: "pages/currency.html",
         news: "pages/news.html",
         recipes: "pages/recipes.html",
         books: "pages/books.html",
-        movies: "pages/movies.html",
+        movies: "pages/shows.html",
         space: "pages/space.html",
+        mars: "pages/mars.html",
+        neows: "pages/neows.html",
+        donki: "pages/donki.html",
+        eonet: "pages/eonet.html",
         travel: "pages/travel.html",
         maps: "pages/maps.html",
         calc: "pages/calc.html",
         travelPlan: "pages/travel.html",
-        about: "pages/about.html"
+        about: "pages/about.html",
+        airquality: "pages/airquality.html",
+        earth: "pages/earth.html",
+        mealspin: "pages/mealspin.html",
+        art: "pages/art.html",
+        jokes: "pages/jokes.html",
+        anichart: "pages/anichart.html",
+        wizard: "pages/wizard.html",
+        rps: "pages/rps.html",
+        music: "pages/music.html",
+        quakes: "pages/quakes.html",
+        comicvine: "pages/comicvine.html"
       };
       const target = pageMap[app.id];
       if (target) {

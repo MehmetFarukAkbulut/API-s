@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wizard World</title>
+  <style>
+    :root {
+      --bg:#050817;
+      --panel:#0b1021;
+      --accent:#22d3ee;
+      --accent-soft: rgba(34,211,238,0.18);
+      --accent-2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border-soft:rgba(148,163,184,0.28);
+      --shadow-soft:0 18px 60px rgba(15,23,42,0.85);
+      --storm-primary:#22d3ee;
+      --storm-secondary:#a855f7;
+      --storm-tertiary:rgba(34,197,94,0.6);
+      --storm-panel:rgba(11,16,33,0.9);
+      --storm-glow:rgba(34,211,238,0.35);
+    }
+
+    *{box-sizing:border-box; margin:0; padding:0;}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 10% 0%,rgba(56,189,248,0.15),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.23),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#020617 60%,#020617);
+      overflow-x:hidden;
+      position:relative;
+    }
+
+    /* Hafif grain overlay */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:0.25;
+      mix-blend-mode:soft-light;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+      z-index:-1;
+    }
+
+    /* Glow blob */
+    .bg-orb{
+      position:fixed;
+      width:520px;
+      height:520px;
+      border-radius:999px;
+      background:radial-gradient(circle at 30% 20%,rgba(56,189,248,0.65),transparent 60%);
+      filter:blur(4px);
+      opacity:0.16;
+      top:-160px;
+      right:-120px;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      animation:orbFloat 26s ease-in-out infinite alternate;
+      z-index:-1;
+    }
+    .bg-orb2{
+      position:fixed;
+      width:460px;
+      height:460px;
+      border-radius:999px;
+      background:radial-gradient(circle at 40% 80%,rgba(168,85,247,0.7),transparent 60%);
+      filter:blur(6px);
+      opacity:0.22;
+      bottom:-140px;
+      left:-80px;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      animation:orbFloat2 30s ease-in-out infinite alternate;
+      z-index:-1;
+    }
+
+    @keyframes orbFloat{
+      0%{transform:translate3d(0,0,0) rotate(0deg);}
+      100%{transform:translate3d(-40px,50px,0) rotate(12deg);}
+    }
+    @keyframes orbFloat2{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      100%{transform:translate3d(60px,-20px,0) scale(1.1);}
+    }
+
+    /* Spellstorm overlay (kart tıklandığında tüm sayfa teması) */
+    .spellstorm{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .45s ease;
+      z-index:30;
+    }
+
+    .spellstorm.is-active{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .spellstorm .storm-backdrop{
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--storm-primary) 55%, transparent), transparent 55%),
+        radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--storm-secondary) 65%, transparent), transparent 50%),
+        radial-gradient(circle at 40% 50%, color-mix(in srgb, var(--storm-tertiary) 50%, transparent), transparent 60%),
+        linear-gradient(135deg, rgba(5,8,23,0.9), rgba(5,8,23,0.96));
+      filter:blur(2px);
+      opacity:0.9;
+    }
+
+    .spellstorm .storm-lines,
+    .spellstorm .storm-lines::after{
+      position:absolute;
+      inset:-20% -20%;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(255,255,255,0.06), transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(255,255,255,0.06), transparent 45%),
+        repeating-linear-gradient(120deg,
+          rgba(255,255,255,0.05) 0,
+          rgba(255,255,255,0.05) 1px,
+          transparent 1px,
+          transparent 18px);
+      mix-blend-mode:screen;
+      animation:stormSpin 28s linear infinite;
+      opacity:0.32;
+      pointer-events:none;
+      content:"";
+    }
+
+    .spellstorm .storm-lines::after{
+      animation-direction:reverse;
+      animation-duration:32s;
+      opacity:0.18;
+    }
+
+    @keyframes stormSpin{
+      0%{transform:rotate(0deg);}
+      100%{transform:rotate(360deg);}
+    }
+
+    .storm-content{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px 16px;
+    }
+
+    .storm-panel{
+      width:min(1040px, 92vw);
+      background:linear-gradient(140deg, rgba(11,16,33,0.92), rgba(11,16,33,0.82));
+      border:1px solid rgba(226,232,240,0.12);
+      box-shadow:0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.16);
+      border-radius:20px;
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(16px);
+      display:grid;
+      grid-template-columns:1.1fr 0.9fr;
+      gap:0;
+      isolation:isolate;
+    }
+
+    .storm-panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 10% 10%, color-mix(in srgb, var(--storm-primary) 50%, transparent), transparent 60%),
+        radial-gradient(circle at 90% 90%, color-mix(in srgb, var(--storm-secondary) 45%, transparent), transparent 60%);
+      opacity:0.38;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .storm-panel::after{
+      content:"";
+      position:absolute;
+      inset:-60% -60%;
+      background:conic-gradient(from 120deg,
+        color-mix(in srgb, var(--storm-primary) 35%, transparent),
+        color-mix(in srgb, var(--storm-secondary) 35%, transparent),
+        color-mix(in srgb, var(--storm-tertiary) 35%, transparent),
+        transparent 55%);
+      filter:blur(90px);
+      opacity:0.22;
+      animation:stormSpin 24s linear infinite;
+      z-index:0;
+    }
+
+    .storm-body{
+      padding:24px 22px 22px;
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .storm-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(34,211,238,0.12);
+      border:1px solid rgba(34,211,238,0.45);
+      font-size:12px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:#e0f2fe;
+      width:max-content;
+      box-shadow:0 10px 30px rgba(15,23,42,0.85);
+    }
+
+    .storm-badge .pulse{
+      width:8px;height:8px;border-radius:50%;
+      background:radial-gradient(circle,var(--storm-primary),var(--storm-secondary));
+      box-shadow:0 0 14px var(--storm-primary);
+      animation:pulseDot 1.7s ease-in-out infinite;
+    }
+
+    .storm-title{
+      font-size:26px;
+      letter-spacing:0.4px;
+      margin:2px 0 2px;
+    }
+
+    .storm-desc{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .storm-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .storm-chip{
+      padding:7px 12px;
+      border-radius:12px;
+      background:rgba(148,163,184,0.12);
+      border:1px solid rgba(148,163,184,0.28);
+      color:#e2e8f0;
+      font-size:12px;
+    }
+
+    .storm-image{
+      position:relative;
+      overflow:hidden;
+      border-left:1px solid rgba(226,232,240,0.08);
+      min-height:260px;
+      background:radial-gradient(circle at 40% 40%, rgba(255,255,255,0.08), transparent 55%),
+                 linear-gradient(135deg, rgba(34,211,238,0.18), rgba(168,85,247,0.12));
+    }
+
+    .storm-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      filter:saturate(1.05);
+      opacity:0.96;
+    }
+
+    .storm-image .overlay{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, transparent, rgba(5,8,23,0.65));
+    }
+
+    .storm-image .caption{
+      position:absolute;
+      left:14px;
+      bottom:12px;
+      right:14px;
+      font-size:12px;
+      color:#e2e8f0;
+      text-shadow:0 6px 28px rgba(0,0,0,0.8);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:10px;
+    }
+
+    .storm-particles{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      z-index:2;
+      pointer-events:none;
+    }
+
+    .storm-particles span{
+      position:absolute;
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:var(--storm-primary);
+      filter:blur(0.3px);
+      opacity:0.8;
+      animation:particleFloat 18s linear infinite;
+    }
+
+    @keyframes particleFloat{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(-14px,-22px,0) scale(1.25);}
+      100%{transform:translate3d(0,0,0) scale(1);}
+    }
+
+    .storm-close{
+      position:absolute;
+      top:10px;
+      right:10px;
+      border:1px solid rgba(226,232,240,0.2);
+      background:rgba(5,8,23,0.65);
+      color:#f8fafc;
+      border-radius:10px;
+      padding:8px 10px;
+      cursor:pointer;
+      z-index:4;
+      box-shadow:0 10px 30px rgba(0,0,0,0.4);
+      transition:transform .18s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .storm-close:hover{
+      transform:translateY(-1px);
+      border-color:rgba(34,211,238,0.45);
+      box-shadow:0 14px 40px rgba(0,0,0,0.6);
+    }
+
+    .storm-mini{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .storm-mini .chip{
+      padding:8px 10px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(226,232,240,0.08);
+      font-size:12px;
+      color:#e2e8f0;
+    }
+
+    body.storm-open{
+      overflow:hidden;
+    }
+
+    @media(max-width:820px){
+      .storm-panel{
+        grid-template-columns:1fr;
+      }
+      .storm-image{
+        min-height:220px;
+      }
+    }
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 4px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:2;
+    }
+
+    header::after{
+      content:"";
+      position:absolute;
+      inset:-40px 0 auto;
+      height:1px;
+      opacity:0.4;
+      background:radial-gradient(circle at 0 0,rgba(148,163,184,0.35),transparent 60%);
+      pointer-events:none;
+    }
+
+    .brand-pill{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.36);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.95),rgba(15,23,42,0.75));
+      box-shadow:0 0 0 1px rgba(30,64,175,0.3),0 10px 30px rgba(15,23,42,0.85);
+      overflow:hidden;
+    }
+
+    .brand-pill::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:conic-gradient(from 180deg at 50% 50%,rgba(56,189,248,0.0),rgba(56,189,248,0.26),rgba(168,85,247,0.0));
+      opacity:0;
+      transition:opacity .35s ease-out;
+      mix-blend-mode:screen;
+      pointer-events:none;
+    }
+
+    .brand-pill:hover::before{
+      opacity:1;
+    }
+
+    .brand-dot{
+      width:9px;height:9px;
+      border-radius:999px;
+      background:radial-gradient(circle,#22d3ee,#0ea5e9);
+      box-shadow:0 0 12px rgba(56,189,248,0.9);
+      animation:pulseDot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot{
+      0%,100%{transform:scale(1);box-shadow:0 0 10px rgba(56,189,248,0.8);}
+      50%{transform:scale(1.35);box-shadow:0 0 20px rgba(56,189,248,1);}
+    }
+
+    .btn{
+      position:relative;
+      padding:9px 14px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.95),rgba(15,23,42,0.8));
+      color:#e0f2fe;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:0.02em;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:
+        background .28s ease,
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .28s ease,
+        color .22s ease;
+      box-shadow:0 10px 30px rgba(15,23,42,0.85);
+      overflow:hidden;
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg,rgba(34,211,238,0.3),rgba(14,165,233,0.1),rgba(56,189,248,0.4));
+      opacity:0;
+      mix-blend-mode:screen;
+      transition:opacity .28s ease-out;
+      pointer-events:none;
+    }
+
+    .btn span.dot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:radial-gradient(circle,#38bdf8,#22c55e);
+      box-shadow:0 0 10px rgba(34,197,94,0.9);
+    }
+
+    .btn:hover{
+      transform:translateY(-1px) scale(1.02);
+      border-color:rgba(125,211,252,0.7);
+      box-shadow:0 18px 55px rgba(15,23,42,0.95),0 0 35px rgba(56,189,248,0.26);
+      color:#f9fafb;
+    }
+
+    .btn:hover::before{
+      opacity:0.9;
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(0.99);
+      box-shadow:0 8px 20px rgba(15,23,42,0.75);
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(26px,3vw,32px);
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      font-weight:700;
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    h1 span.accent{
+      background:linear-gradient(120deg,#22d3ee,#a855f7);
+      -webkit-background-clip:text;  /* vendor */
+      background-clip:text;          /* standart */
+      color:transparent;
+    }
+
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      max-width:420px;
+    }
+
+    .header-copy{
+      position:relative;
+      padding-left:4px;
+      animation:fadeUp 0.9s ease-out forwards;
+      opacity:0;
+      transform:translateY(8px);
+    }
+
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(12px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:6px auto 24px;
+      padding:16px 14px 18px;
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.98),rgba(15,23,42,0.88));
+      border-radius:18px;
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(148,163,184,0.45);
+      box-shadow:var(--shadow-soft);
+      backdrop-filter:blur(24px);
+      transform-origin:50% 0;
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.36),transparent 50%),
+        radial-gradient(circle at 100% 0,rgba(168,85,247,0.36),transparent 55%),
+        linear-gradient(135deg,rgba(15,23,42,0.9),rgba(15,23,42,0.96));
+      opacity:0.35;
+      mix-blend-mode:screen;
+      z-index:-1;
+    }
+
+    .panel::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.82),rgba(15,23,42,0.96));
+      z-index:-1;
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    .bar-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.18em;
+      color:rgba(148,163,184,0.85);
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .bar-label::before{
+      content:"";
+      width:18px;
+      height:1px;
+      background:linear-gradient(90deg,rgba(148,163,184,0.0),rgba(148,163,184,0.65));
+    }
+
+    .btn-filter{
+      font-size:12px;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.55);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.98),rgba(15,23,42,0.88));
+      color:rgba(226,232,240,0.92);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:
+        background .22s ease,
+        border-color .22s ease,
+        color .22s ease,
+        transform .18s ease,
+        box-shadow .22s ease;
+      box-shadow:0 10px 28px rgba(15,23,42,0.8);
+    }
+
+    .btn-filter span.bullet{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:radial-gradient(circle,#22d3ee,#0ea5e9);
+    }
+
+    .btn-filter::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg,rgba(34,211,238,0.3),rgba(14,165,233,0.0),rgba(168,85,247,0.4));
+      opacity:0;
+      mix-blend-mode:screen;
+      transition:opacity .26s ease-out;
+      pointer-events:none;
+    }
+
+    .btn-filter:hover{
+      transform:translateY(-1px);
+      border-color:rgba(96,165,250,0.85);
+      box-shadow:0 18px 45px rgba(15,23,42,0.95),0 0 28px rgba(56,189,248,0.28);
+      color:#f9fafb;
+    }
+
+    .btn-filter:hover::before{
+      opacity:0.9;
+    }
+
+    .btn-filter.active{
+      border-color:rgba(56,189,248,0.95);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.95));
+      color:#f9fafb;
+      box-shadow:0 18px 50px rgba(15,23,42,0.95),0 0 32px rgba(56,189,248,0.4);
+    }
+
+    .status-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.98),rgba(15,23,42,0.85));
+      font-size:11px;
+      color:rgba(203,213,225,0.9);
+    }
+
+    .status-dot{
+      width:7px;height:7px;border-radius:999px;
+      background:radial-gradient(circle,#22c55e,#16a34a);
+      box-shadow:0 0 12px rgba(34,197,94,0.9);
+    }
+
+    .status-pill.loading .status-dot{
+      background:radial-gradient(circle,#eab308,#f97316);
+      box-shadow:0 0 12px rgba(234,179,8,0.95);
+      animation:statusPulse 1.2s ease-in-out infinite;
+    }
+
+    .status-pill.error .status-dot{
+      background:radial-gradient(circle,#ef4444,#b91c1c);
+      box-shadow:0 0 12px rgba(239,68,68,0.95);
+      animation:statusPulse 0.9s ease-in-out infinite;
+    }
+
+    @keyframes statusPulse{
+      0%,100%{transform:scale(1);}
+      50%{transform:scale(1.3);}
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:14px;
+      position:relative;
+      z-index:1;
+    }
+
+    .card{
+      padding:12px 12px 13px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,0.5);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.98),rgba(15,23,42,0.95));
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 14px 40px rgba(15,23,42,0.9);
+      transform:translate3d(0,6px,0);
+      opacity:0;
+      transition:
+        transform .28s cubic-bezier(.16,.84,.44,1),
+        box-shadow .28s ease,
+        border-color .28s ease,
+        background .28s ease,
+        opacity .28s ease;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.25),transparent 55%);
+      opacity:0;
+      mix-blend-mode:screen;
+      transition:opacity .28s ease-out;
+      pointer-events:none;
+    }
+
+    .card h3{
+      margin:0 0 4px;
+      font-size:15px;
+      letter-spacing:0.03em;
+    }
+
+    .card p{
+      margin:2px 0;
+      font-size:12px;
+    }
+
+    .card small.tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.16em;
+      color:rgba(148,163,184,0.95);
+      margin-bottom:4px;
+    }
+
+    .card small.tag::before{
+      content:"";
+      width:14px;
+      height:1px;
+      background:linear-gradient(90deg,rgba(148,163,184,0.0),rgba(148,163,184,0.75));
+    }
+
+    .card.is-visible{
+      opacity:1;
+      transform:translate3d(0,0,0);
+    }
+
+    .card:hover{
+      transform:translate3d(0,-4px,0) scale(1.01);
+      border-color:rgba(56,189,248,0.95);
+      box-shadow:0 22px 60px rgba(15,23,42,1),0 0 38px rgba(56,189,248,0.4);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.98));
+    }
+
+    .card:hover::before{
+      opacity:1;
+    }
+
+    /* Loading skeleton */
+    .skeleton{
+      position:relative;
+      overflow:hidden;
+    }
+    .skeleton-line{
+      height:11px;
+      border-radius:999px;
+      background:linear-gradient(90deg,rgba(30,64,175,0.55),rgba(15,23,42,0.5),rgba(30,64,175,0.55));
+      opacity:0.5;
+      margin-bottom:6px;
+      transform-origin:0 50%;
+      animation:skeletonGlow 1.2s ease-in-out infinite;
+    }
+    .skeleton-line:nth-child(2){width:80%;}
+    .skeleton-line:nth-child(3){width:60%;}
+    .skeleton-line:nth-child(4){width:40%;}
+    .skeleton-line:nth-child(5){width:70%;}
+    .skeleton-line:nth-child(6){width:55%;}
+
+    @keyframes skeletonGlow{
+      0%,100%{opacity:0.3;transform:scaleX(1);}
+      50%{opacity:0.7;transform:scaleX(1.05);}
+    }
+
+    /* Panel hover parallax */
+    .panel-parallax{
+      transition:transform 0.4s cubic-bezier(.16,.84,.44,1);
+    }
+
+    /* Load more row */
+    .load-more-row{
+      display:none;
+      justify-content:center;
+      margin-top:16px;
+    }
+
+    /* Giriş animasyonu */
+    body:not(.loaded) .panel,
+    body:not(.loaded) header{
+      opacity:0;
+      transform:translateY(12px);
+    }
+
+    body.loaded .panel,
+    body.loaded header{
+      opacity:1;
+      transform:translateY(0);
+      transition:opacity 0.7s ease-out,transform 0.7s ease-out;
+    }
+
+    /* Küçük ekran */
+    @media (max-width:640px){
+      header{
+        padding-top:20px;
+      }
+      .panel{
+        margin:12px auto 18px;
+        padding:14px 10px 16px;
+      }
+      .grid{
+        gap:10px;
+      }
+      .card{
+        padding:10px 10px 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb"></div>
+  <div class="bg-orb2"></div>
+
+  <div class="spellstorm" id="spellstorm">
+    <div class="storm-backdrop"></div>
+    <div class="storm-lines"></div>
+    <div class="storm-lines"></div>
+    <div class="storm-particles" id="stormParticles"></div>
+    <div class="storm-content">
+      <div class="storm-panel">
+        <button class="storm-close" id="stormClose" aria-label="Kapat">&#10005;</button>
+        <div class="storm-body">
+          <span class="storm-badge" id="stormType"><span class="pulse"></span> Wizard World</span>
+          <h2 class="storm-title" id="stormTitle">Seçim bekleniyor</h2>
+          <p class="storm-desc" id="stormDesc">Bir kartı tıkladığınızda sayfanın tamamı seçilen büyü, iksir veya evin tonlarına bürünür.</p>
+          <div class="storm-meta" id="stormMeta"></div>
+          <div class="storm-mini" id="stormMini"></div>
+        </div>
+        <div class="storm-image">
+          <img id="stormImage" alt="Wizard görseli">
+          <div class="overlay"></div>
+          <div class="caption">
+            <span id="stormCaption">Wizard World API</span>
+            <span style="color:#cbd5f5;font-size:11px;">Işık ve animasyonlar aktif</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <a class="btn" href="../index.html">
+      <span class="dot"></span>
+      Ana sayfa
+    </a>
+    <div class="header-copy">
+      <div class="brand-pill">
+        <div class="brand-dot"></div>
+        <span style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(226,232,240,0.86);">
+          Wizard Data Link
+        </span>
+      </div>
+      <h1>
+        Wizard <span class="accent">World</span>
+      </h1>
+      <p class="lead">Büyüler, iksirler ve Hogwarts evleri için canlı API verisi. Işıkta parlayan bir sihir arşivi.</p>
+    </div>
+  </header>
+
+  <div class="panel panel-parallax">
+    <div class="bar">
+      <span class="bar-label">Veri türü</span>
+      <div id="wizardBtns"></div>
+    </div>
+
+    <div class="status-row">
+      <span class="status-pill" id="status-pill">
+        <span class="status-dot"></span>
+        <span id="status">Hazır</span>
+      </span>
+      <span class="muted" id="metaInfo"></span>
+    </div>
+
+    <div class="grid" id="grid">
+      <div class="card is-visible">
+        <small class="tag">Wizard World</small>
+        <p class="muted">Başlamak için yukarıdan bir kategori seçin: büyüler, iksirler veya evler.</p>
+      </div>
+    </div>
+
+    <!-- Daha fazla göster butonu -->
+    <div class="load-more-row" id="loadMoreRow">
+      <button class="btn-filter" id="loadMoreBtn">
+        <span class="bullet"></span>
+        Daha fazla göster
+      </button>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // Body load state
+      window.addEventListener("load", function(){
+        document.body.classList.add("loaded");
+      });
+
+      const grid   = document.getElementById("grid");
+      const status = document.getElementById("status");
+      const statusPill = document.getElementById("status-pill");
+      const metaInfo = document.getElementById("metaInfo");
+      const panel = document.querySelector(".panel-parallax");
+      const loadMoreRow = document.getElementById("loadMoreRow");
+      const loadMoreBtn = document.getElementById("loadMoreBtn");
+      const storm = document.getElementById("spellstorm");
+      const stormClose = document.getElementById("stormClose");
+      const stormType = document.getElementById("stormType");
+      const stormTitle = document.getElementById("stormTitle");
+      const stormDesc = document.getElementById("stormDesc");
+      const stormMeta = document.getElementById("stormMeta");
+      const stormMini = document.getElementById("stormMini");
+      const stormImage = document.getElementById("stormImage");
+      const stormCaption = document.getElementById("stormCaption");
+      const stormParticles = document.getElementById("stormParticles");
+
+      const PAGE_SIZE = 30;
+      let allData = [];
+      let currentType = "spells";
+      let shownCount = 0;
+
+      const esc = (val="") => String(val ?? "").replace(/"/g,"&quot;");
+
+      const LIGHT_COLORS = {
+        Blue:"#38bdf8",
+        IcyBlue:"#7dd3fc",
+        Red:"#ef4444",
+        Gold:"#fbbf24",
+        Purple:"#c084fc",
+        Transparent:"#a5f3fc",
+        White:"#f8fafc",
+        BlackSmoke:"#0f172a",
+        Green:"#22c55e",
+        Yellow:"#fcd34d",
+        Orange:"#fb923c",
+        Pink:"#f472b6",
+        Grey:"#cbd5e1",
+        BrightBlue:"#0ea5e9",
+        None:"#94a3b8"
+      };
+
+      const DIFFICULTY_COLORS = {
+        Beginner:"#22c55e",
+        Moderate:"#eab308",
+        Advanced:"#a855f7",
+        Unknown:"#38bdf8"
+      };
+
+      const TYPE_ACCENTS = {
+        spells:"#22d3ee",
+        elixirs:"#eab308",
+        houses:"#10b981"
+      };
+
+      const HOUSE_IMAGES = {
+        Gryffindor:"https://static.wikia.nocookie.net/harrypotter/images/b/b1/Gryffindor_ClearBG.png/revision/latest?cb=20190222162949",
+        Ravenclaw:"https://static.wikia.nocookie.net/harrypotter/images/7/71/Ravenclaw_ClearBG.png/revision/latest?cb=20161020182442",
+        Hufflepuff:"https://static.wikia.nocookie.net/harrypotter/images/0/06/Hufflepuff_ClearBG.png/revision/latest?cb=20161020182518",
+        Slytherin:"https://static.wikia.nocookie.net/harrypotter/images/0/00/Slytherin_ClearBG.png/revision/latest?cb=20161020182557"
+      };
+
+      const GENERIC_IMAGES = {
+        spells:"https://static.wikia.nocookie.net/harrypotter/images/7/75/Albus_Dumbledore_%28HBPF_promo%29.jpg/revision/latest/scale-to-width-down/1000?cb=20150822232849",
+        elixirs:"https://static.wikia.nocookie.net/harrypotter/images/2/20/ElixirofLife.jpg/revision/latest?cb=20160114113615",
+        houses:"https://static.wikia.nocookie.net/harrypotter/images/a/ae/Hogwartscrest.png/revision/latest?cb=20110806202805"
+      };
+
+      // Hidden input for type
+      const hiddenType = document.createElement("input");
+      hiddenType.type = "hidden";
+      hiddenType.id = "typeVal";
+      hiddenType.value = "spells";
+      document.body.appendChild(hiddenType);
+
+      // Filter buttons render
+      const TYPES = [
+        { id:"spells",  label:"Büyüler"  },
+        { id:"elixirs", label:"İksirler" },
+        { id:"houses",  label:"Evler"    }
+      ];
+
+      const wizardBtns = document.getElementById("wizardBtns");
+      wizardBtns.innerHTML = TYPES.map(t => (
+        `<button class="btn-filter" data-t="${t.id}">
+           <span class="bullet"></span>
+           ${t.label}
+         </button>`
+      )).join("");
+
+      const filterButtons = Array.from(document.querySelectorAll(".btn-filter"));
+      function setActiveButton(type){
+        filterButtons.forEach(btn=>{
+          if(btn.dataset.t === type){ btn.classList.add("active"); }
+          else{ btn.classList.remove("active"); }
+        });
+      }
+
+      wizardBtns.addEventListener("click", (e)=>{
+        const t = e.target.closest("button")?.dataset.t;
+        if(!t) return;
+        hiddenType.value = t;
+        currentType = t;
+        setActiveButton(t);
+        loadData();
+      });
+
+      // Status helper
+      function setStatus(mode, text){
+        status.textContent = text;
+        statusPill.classList.remove("loading","error");
+        if(mode === "loading") statusPill.classList.add("loading");
+        if(mode === "error")   statusPill.classList.add("error");
+      }
+
+      // Skeleton loading
+      function showSkeleton(count){
+        const skeletonCard = () => `
+          <div class="card skeleton is-visible">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+          </div>
+        `;
+        grid.innerHTML = new Array(count).fill(0).map(skeletonCard).join("");
+      }
+
+      const POTTER_BASE = "https://api.potterdb.com";
+
+      async function fetchAllPotter(path, mapFn){
+        let url = `${POTTER_BASE}${path}?page[size]=100`;
+        const collected = [];
+        let guard = 0;
+        while(url && guard < 8){
+          const res = await fetch(url);
+          const json = await res.json();
+          const items = Array.isArray(json.data) ? json.data : [];
+          collected.push(...items.map(mapFn));
+          const next = json.links?.next;
+          url = next ? (next.startsWith("http") ? next : `${POTTER_BASE}${next}`) : "";
+          guard++;
+        }
+        return collected;
+      }
+
+      function mapSpell(item={}){
+        const a = item.attributes || {};
+        return {
+          name: a.name,
+          type: a.category,
+          effect: a.effect,
+          incantation: a.incantation,
+          light: a.light,
+          creator: a.creator,
+          image: a.image,
+          hand: a.hand,
+          wiki: a.wiki
+        };
+      }
+
+      function mapPotion(item={}){
+        const a = item.attributes || {};
+        const ingredients = (a.ingredients || "").split(",").map(s=>s.trim()).filter(Boolean).map(name=>({name}));
+        return {
+          name: a.name,
+          effect: a.effect,
+          difficulty: a.difficulty || "Unknown",
+          ingredients,
+          sideEffects: a.side_effects,
+          characteristics: a.characteristics,
+          image: a.image,
+          wiki: a.wiki
+        };
+      }
+
+      // Tema paleti Ǫretimi
+      const COLOR_FALLBACK = "#22d3ee";
+      function colorFromHouse(colorName=""){
+        const normalized = (colorName || "").trim().split(" ")[0];
+        const key = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+        const map = {
+          Scarlet:"#ef233c",
+          Gold:"#fbbf24",
+          Blue:"#3b82f6",
+          Bronze:"#b45309",
+          Yellow:"#facc15",
+          Black:"#0f172a",
+          Green:"#22c55e",
+          Silver:"#cbd5e1"
+        };
+        return map[key] || COLOR_FALLBACK;
+      }
+
+      function paletteFromItem(it={}, type){
+        if(type === "houses"){
+          const parts = (it.houseColours || "").split("and").map(s=>s.trim());
+          const primary = colorFromHouse(parts[0]);
+          const secondary = colorFromHouse(parts[1]);
+          return {
+            primary: primary || "#22c55e",
+            secondary: secondary || "#22d3ee",
+            tertiary: "#a855f7",
+            caption: it.element ? `${it.element} elementi` : "Hogwarts evi",
+            desc: `Kurucu: ${it.founder || "bilinmiyor"} · Hayalet: ${it.ghost || "bilinmiyor"}`
+          };
+        }
+        if(type === "elixirs"){
+          const diff = it.difficulty && DIFFICULTY_COLORS[it.difficulty] ? DIFFICULTY_COLORS[it.difficulty] : "#e879f9";
+          const ingred = (it.ingredients || []).slice(0,2).map(i=>i.name).join(", ");
+          return {
+            primary: diff,
+            secondary: "#22d3ee",
+            tertiary: "#9333ea",
+            caption: ingred || "İçerik bilgisi sınırlı",
+            desc: it.effect || "Bilinmeyen etki"
+          };
+        }
+        // spells
+        const light = it.light && LIGHT_COLORS[it.light] ? LIGHT_COLORS[it.light] : "#38bdf8";
+        const inc = it.incantation ? `Dile getir: ${it.incantation}` : "Sessiz büyü";
+        return {
+          primary: light,
+          secondary: "#a855f7",
+          tertiary: "#22c55e",
+          caption: inc,
+          desc: it.effect || "Etki bilgisi yok"
+        };
+      }
+
+      function pickImage(it={}, type){
+        if(it.image) return it.image;
+        if(type === "houses" && HOUSE_IMAGES[it.name]){
+          return HOUSE_IMAGES[it.name];
+        }
+        return GENERIC_IMAGES[type] || GENERIC_IMAGES.spells;
+      }
+
+      function renderParticles(palette){
+        if(!stormParticles) return;
+        stormParticles.innerHTML = "";
+        const count = 22;
+        for(let i=0;i<count;i++){
+          const span = document.createElement("span");
+          const size = 5 + Math.random()*12;
+          span.style.width = `${size}px`;
+          span.style.height = `${size}px`;
+          span.style.left = `${Math.random()*100}%`;
+          span.style.top = `${Math.random()*100}%`;
+          span.style.background = i % 2 ? palette.primary : palette.secondary;
+          span.style.animationDuration = `${12 + Math.random()*8}s`;
+          span.style.opacity = 0.35 + Math.random()*0.5;
+          stormParticles.appendChild(span);
+        }
+      }
+
+      function applyPalette(palette){
+        const root = document.documentElement.style;
+        root.setProperty("--storm-primary", palette.primary);
+        root.setProperty("--storm-secondary", palette.secondary);
+        root.setProperty("--storm-tertiary", palette.tertiary);
+        root.setProperty("--storm-glow", palette.primary);
+      }
+
+      function chipHtml(label){
+        return `<span class="storm-chip">${label}</span>`;
+      }
+
+      function openStorm(it, type){
+        const palette = paletteFromItem(it, type);
+        applyPalette(palette);
+        renderParticles(palette);
+
+        const typeLabel = type === "spells" ? "Büyü" : type === "elixirs" ? "İksir" : "Hogwarts evi";
+        stormType.innerHTML = `<span class="pulse"></span> ${typeLabel}`;
+        stormTitle.textContent = it.name || "Bilinmiyor";
+        stormDesc.textContent = palette.desc;
+
+        const chips = [];
+        if(type === "spells"){
+          if(it.incantation) chips.push(`Ezber: ${it.incantation}`);
+          if(it.type) chips.push(`Tür: ${it.type}`);
+          if(it.light) chips.push(`Işık: ${it.light}`);
+          if(it.creator) chips.push(`Yaratıcı: ${it.creator}`);
+        }else if(type === "elixirs"){
+          if(it.difficulty) chips.push(`Zorluk: ${it.difficulty}`);
+          if(it.sideEffects) chips.push(`Yan etki: ${it.sideEffects}`);
+          if(it.effect) chips.push(`Etki: ${it.effect}`);
+        }else if(type === "houses"){
+          if(it.founder) chips.push(`Kurucu: ${it.founder}`);
+          if(it.ghost) chips.push(`Hayalet: ${it.ghost}`);
+          if(it.commonRoom) chips.push(`Ortak salon: ${it.commonRoom}`);
+        }
+        stormMeta.innerHTML = chips.map(chipHtml).join("") || chipHtml("Detay bulunamadı");
+
+        if(type === "elixirs"){
+          const ingred = (it.ingredients || []).map(i=>i.name);
+          stormMini.innerHTML = ingred.length ? ingred.slice(0,8).map(n=>`<div class="chip">${esc(n)}</div>`).join("") : `<div class="chip">İçerik bilgisi yok</div>`;
+        }else if(type === "houses"){
+          const traits = (it.traits || []).map(t=>t.name||t);
+          stormMini.innerHTML = traits.length ? traits.slice(0,8).map(n=>`<div class="chip">${esc(n)}</div>`).join("") : `<div class="chip">Özellik bilgisi yok</div>`;
+        }else{
+          const extras = [it.effect, it.incantation, it.type].filter(Boolean);
+          stormMini.innerHTML = extras.length ? extras.slice(0,4).map(n=>`<div class="chip">${esc(n)}</div>`).join("") : `<div class="chip">Ek veri yok</div>`;
+        }
+
+        const imgUrl = pickImage(it, type);
+        stormImage.src = imgUrl;
+        stormImage.onerror = () => {
+          stormImage.onerror = null;
+          stormImage.src = GENERIC_IMAGES[type] || GENERIC_IMAGES.spells;
+        };
+        stormCaption.textContent = palette.caption || "Wizard World API";
+
+        storm.classList.add("is-active");
+        document.body.classList.add("storm-open");
+      }
+
+      function closeStorm(){
+        storm.classList.remove("is-active");
+        document.body.classList.remove("storm-open");
+      }
+
+      // Kart HTML üretimi
+      function buildCard(it, type, idx){
+        if(type === "houses"){
+          const traits = (it.traits || []).map(t=>t.name||t).join(", ");
+          return `
+            <div class="card" data-idx="${idx}" data-type="${type}">
+              <small class="tag">Hogwarts evi</small>
+              <h3>${it.name}</h3>
+              <p class="muted">Kurucu: ${it.founder || "-"}</p>
+              <p class="muted">${traits || "&nbsp;"}</p>
+            </div>
+          `;
+        }
+        if(type === "elixirs"){
+          const ingred = (it.ingredients || []).map(i=>i.name).join(", ");
+          return `
+            <div class="card" data-idx="${idx}" data-type="${type}">
+              <small class="tag">İksir</small>
+              <h3>${it.name}</h3>
+              <p class="muted">${it.effect || ""}</p>
+              <p class="muted">Zorluk: ${it.difficulty || "?"}</p>
+              <p class="muted">${ingred || "&nbsp;"}</p>
+            </div>
+          `;
+        }
+        // spells
+        return `
+          <div class="card" data-idx="${idx}" data-type="${type}">
+            <small class="tag">Büyü</small>
+            <h3>${it.name}</h3>
+            <p class="muted">${it.type || ""}</p>
+            <p class="muted">${it.effect || it.incantation || ""}</p>
+          </div>
+        `;
+      }
+
+      async function loadData(){
+        const type = hiddenType.value || "spells";
+        currentType = type;
+        setStatus("loading","Yükleniyor...");
+        metaInfo.textContent = type === "houses" ? "Wizard World API - canlı veri çekiliyor" : "Potter DB API - canlı veri çekiliyor";
+        loadMoreRow.style.display = "none";
+        showSkeleton(6);
+
+        try{
+          let list = [];
+          if(type === "spells"){
+            list = await fetchAllPotter("/v1/spells", mapSpell);
+          }else if(type === "elixirs"){
+            list = await fetchAllPotter("/v1/potions", mapPotion);
+          }else{
+            const r = await fetch("https://wizard-world-api.herokuapp.com/Houses");
+            const j = await r.json();
+            list = Array.isArray(j) ? j : (j.houses || []);
+          }
+
+          allData = list || [];
+          shownCount = 0;
+
+          if(!allData.length){
+            setStatus("","Hazır");
+            metaInfo.textContent = "Sonuç bulunamad?.";
+            grid.innerHTML = `<div class="card is-visible"><small class="tag">Bilgi</small><p class="muted">Bu kategori için sonu? bulunamad?.</p></div>`;
+            loadMoreRow.style.display = "none";
+            return;
+          }
+
+          renderPage(true);
+          setStatus("","Hazır");
+          statusPill.classList.remove("error","loading");
+        }catch(e){
+          console.error(e);
+          setStatus("error","Hata");
+          metaInfo.textContent = "Veri alınırken bir hata oluştu.";
+          grid.innerHTML = `
+            <div class="card is-visible">
+              <small class="tag">Hata</small>
+              <p class="muted">Veri alınamadı. Daha sonra tekrar deneyin.</p>
+            </div>
+          `;
+          loadMoreRow.style.display = "none";
+        }
+      }
+
+      // IntersectionObserver ile kart fade/slide-in
+      let observer;
+      function initObserver(){
+        if(observer) observer.disconnect();
+        observer = new IntersectionObserver(entries=>{
+          entries.forEach(entry=>{
+            if(entry.isIntersecting){
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },{ threshold:0.15 });
+      }
+
+      function revealCards(){
+        initObserver();
+        document.querySelectorAll(".card").forEach(card=>{
+          card.classList.remove("is-visible");
+          observer.observe(card);
+        });
+      }
+
+      // Sayfalama & Daha fazla göster
+      function renderPage(reset){
+        if(!allData.length) return;
+
+        if(reset){
+          shownCount = 0;
+          grid.innerHTML = "";
+        }
+
+        const nextSlice = allData.slice(shownCount, shownCount + PAGE_SIZE);
+        const html = nextSlice.map((it, i) => buildCard(it, currentType, shownCount + i)).join("");
+        grid.insertAdjacentHTML("beforeend", html);
+        shownCount += nextSlice.length;
+
+        metaInfo.textContent = `Gösterilen kayıt: ${shownCount} / ${allData.length}`;
+
+        if(shownCount < allData.length){
+          loadMoreRow.style.display = "flex";
+        }else{
+          loadMoreRow.style.display = "none";
+        }
+
+        revealCards();
+      }
+
+      loadMoreBtn.addEventListener("click", function(){
+        renderPage(false);
+      });
+
+      // Kart tıklandığında tam ekran tema/animasyon
+      grid.addEventListener("click", function(e){
+        const card = e.target.closest(".card");
+        if(!card || card.classList.contains("skeleton")) return;
+        const idx = Number(card.dataset.idx);
+        if(Number.isNaN(idx)) return;
+        const item = allData[idx];
+        if(!item) return;
+        openStorm(item, currentType);
+      });
+
+      stormClose?.addEventListener("click", closeStorm);
+      storm?.addEventListener("click", (e)=>{
+        if(e.target === storm) closeStorm();
+      });
+      document.addEventListener("keydown", e=>{
+        if(e.key === "Escape") closeStorm();
+      });
+
+      // Panel parallax
+      if(panel){
+        window.addEventListener("mousemove", e=>{
+          const rect = panel.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width - 0.5;
+          const y = (e.clientY - rect.top) / rect.height - 0.5;
+          const maxTilt = 2.4;
+          const rx = y * maxTilt * -1;
+          const ry = x * maxTilt;
+          panel.style.transform = `perspective(1100px) rotateX(${rx}deg) rotateY(${ry}deg) translate3d(0,0,0)`;
+        });
+        window.addEventListener("mouseleave", ()=>{
+          panel.style.transform = "perspective(1100px) rotateX(0deg) rotateY(0deg)";
+        });
+      }
+
+      // Başlangıç - spells aktif
+      setActiveButton("spells");
+      loadData();
+    })();
+  </script>
+</body>
+</html>

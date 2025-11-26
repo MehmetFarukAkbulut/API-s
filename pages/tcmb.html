@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MFA TCMB Widget</title>
+  <style>
+    :root {
+      --bg:#0b1221;
+      --bg2:#0f172a;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.18);
+      --accent2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border-soft:rgba(148,163,184,0.25);
+      --red:#f97373;
+      --green:#22c55e;
+    }
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(34,211,238,0.14),transparent 55%),
+        radial-gradient(circle at 80% 100%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(135deg,#020617 0%,#020617 40%,#0b1221 100%);
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* Ambient orbs - CriticalDanger tarzı */
+    .orb{
+      position:fixed;
+      width:280px;
+      height:280px;
+      border-radius:999px;
+      filter:blur(40px);
+      opacity:0.45;
+      pointer-events:none;
+      mix-blend-mode:screen;
+      z-index:0;
+    }
+    .orb-1{
+      top:-80px;left:-60px;
+      background:radial-gradient(circle,#22d3ee,#0f172a);
+      animation:orbFloat1 22s ease-in-out infinite alternate;
+    }
+    .orb-2{
+      bottom:-120px;right:-80px;
+      background:radial-gradient(circle,#a855f7,#020617);
+      animation:orbFloat2 26s ease-in-out infinite alternate;
+    }
+    @keyframes orbFloat1{
+      0%{transform:translate3d(0,0,0);}
+      50%{transform:translate3d(40px,30px,0);}
+      100%{transform:translate3d(10px,80px,0);}
+    }
+    @keyframes orbFloat2{
+      0%{transform:translate3d(0,0,0);}
+      50%{transform:translate3d(-40px,-30px,0);}
+      100%{transform:translate3d(-10px,-90px,0);}
+    }
+
+    header{
+      max-width:1080px;
+      margin:0 auto;
+      padding:28px 16px 8px;
+      position:relative;
+      z-index:1;
+    }
+    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+
+    .home-link{
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:linear-gradient(135deg,rgba(15,23,42,0.9),rgba(15,23,42,0.4));
+      text-decoration:none;
+      color:var(--text);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      position:relative;
+      overflow:hidden;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .home-link::before{
+      content:"";
+      position:absolute;
+      inset:-80%;
+      background:conic-gradient(from 0deg,transparent 40%,rgba(34,211,238,0.45),transparent 60%);
+      opacity:0;
+      animation:spinBorder 10s linear infinite;
+    }
+    .home-link::after{
+      content:"";
+      position:absolute;
+      inset:1px;
+      border-radius:inherit;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.18),transparent 45%),
+                  radial-gradient(circle at 100% 100%,rgba(168,85,247,0.14),transparent 40%),
+                  rgba(15,23,42,0.96);
+      z-index:-1;
+    }
+    .home-link span{
+      position:relative;
+      z-index:1;
+    }
+    .home-link:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 45px rgba(15,23,42,0.9);
+      border-color:rgba(34,211,238,0.8);
+    }
+    .home-link:hover::before{opacity:1;}
+    @keyframes spinBorder{
+      to{transform:rotate(360deg);}
+    }
+
+    .panel{
+      max-width:1080px;
+      margin:0 auto 40px;
+      padding:18px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.16),transparent 55%),
+                 radial-gradient(circle at 100% 100%,rgba(168,85,247,0.16),transparent 55%),
+                 linear-gradient(145deg,#050816,#020617);
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,0.4);
+      box-shadow:
+        0 24px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.8) inset;
+      position:relative;
+      overflow:hidden;
+      z-index:1;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 20% 0,rgba(34,211,238,0.25),transparent 55%);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .4s ease;
+    }
+    .panel:hover::before{opacity:1;}
+
+    .panel-inner{
+      position:relative;
+      z-index:1;
+    }
+
+    .bar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+      align-items:center;
+    }
+
+    .input-shell{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+    }
+    .input-shell::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:12px;
+      border:1px solid rgba(15,23,42,0.8);
+      background:linear-gradient(145deg,rgba(15,23,42,0.8),rgba(15,23,42,0.4));
+      z-index:-1;
+    }
+
+    .bar input[type="date"],
+    .bar input[type="number"]{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(148,163,184,0.4);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.18),transparent 45%),
+                 rgba(15,23,42,0.95);
+      color:#e5e7eb;
+      min-width:160px;
+      font-size:13px;
+      outline:none;
+      box-shadow:0 12px 35px rgba(15,23,42,0.9);
+      transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+    .bar input[type="number"]{min-width:130px;}
+    .bar input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.6),0 18px 40px rgba(15,23,42,1);
+      transform:translateY(-1px);
+    }
+
+    .btn{
+      border:none;
+      padding:10px 14px;
+      border-radius:999px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.3),transparent 55%),
+                 rgba(15,23,42,0.95);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      border:1px solid rgba(148,163,184,0.5);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease, color .16s ease;
+    }
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-120%;
+      background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,0.19) 50%,transparent 100%);
+      opacity:0;
+      transform:translateX(-40%);
+      transition:opacity .3s ease, transform .3s ease;
+    }
+    .btn span{
+      position:relative;
+      z-index:1;
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 38px rgba(15,23,42,1);
+      border-color:rgba(34,211,238,0.9);
+      background:radial-gradient(circle at 100% 0,rgba(168,85,247,0.35),transparent 55%),
+                 rgba(15,23,42,0.98);
+    }
+    .btn:hover::before{
+      opacity:1;
+      transform:translateX(40%);
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,#22d3ee,#0ea5e9);
+      color:#020617;
+      border-color:rgba(34,211,238,0.9);
+      box-shadow:0 16px 38px rgba(34,211,238,0.35);
+    }
+    .btn-primary:hover{
+      background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+      box-shadow:0 20px 50px rgba(34,211,238,0.5);
+      color:#020617;
+    }
+
+    .btn-compare{
+      font-size:11px;
+      padding:7px 11px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.95);
+      border:1px solid rgba(148,163,184,0.5);
+      color:var(--muted);
+      text-transform:none;
+      letter-spacing:0.04em;
+    }
+    .btn-compare.active{
+      background:radial-gradient(circle at 0 0,rgba(248,113,113,0.4),transparent 60%),
+                 rgba(15,23,42,0.98);
+      border-color:rgba(248,113,113,0.9);
+      color:#fee2e2;
+      box-shadow:0 12px 35px rgba(15,23,42,0.95);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.95);
+      color:#7dd3fc;
+      font-size:11px;
+      border:1px solid rgba(56,189,248,0.5);
+      box-shadow:0 12px 32px rgba(15,23,42,0.9);
+    }
+    .badge-muted{
+      background:rgba(15,23,42,0.92);
+      color:var(--muted);
+      border-color:rgba(148,163,184,0.45);
+    }
+
+    .status-dot{
+      width:6px;height:6px;border-radius:999px;background:#22c55e;
+      box-shadow:0 0 0 4px rgba(34,197,94,0.28);
+    }
+    .status-loading{background:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,0.3);}
+    .status-error{background:#f97373;box-shadow:0 0 0 4px rgba(248,113,113,0.3);}
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:14px;
+      margin-top:8px;
+    }
+
+    .card{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+                 rgba(15,23,42,0.97);
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.5);
+      padding:12px 12px 11px;
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+      transform-origin:center top;
+      transform:translateY(0) translateZ(0);
+      box-shadow:0 14px 40px rgba(15,23,42,0.95);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.27),transparent 60%);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .22s ease;
+    }
+    .card:hover{
+      transform:translateY(-4px) scale(1.01);
+      box-shadow:0 20px 52px rgba(15,23,42,1);
+      border-color:rgba(34,211,238,0.85);
+      background:radial-gradient(circle at 100% 0,rgba(168,85,247,0.22),transparent 60%),
+                 rgba(15,23,42,0.99);
+    }
+    .card:hover::before{opacity:1;}
+
+    .card-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+      margin-bottom:6px;
+    }
+    .card-title{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .pair{
+      font-weight:600;
+      font-size:14px;
+      letter-spacing:0.05em;
+    }
+    .name{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+    }
+    .card-chip{
+      font-size:10px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.88);
+      border:1px solid rgba(148,163,184,0.6);
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    .card-chip-dot{
+      width:7px;height:7px;border-radius:999px;
+      background:radial-gradient(circle,#22d3ee,#0ea5e9);
+      box-shadow:0 0 10px rgba(34,211,238,0.8);
+    }
+
+    .rates{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      margin-bottom:4px;
+    }
+    .rates span.label{color:var(--muted);font-size:11px;display:block;}
+
+    .conversion{
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      margin-top:4px;
+    }
+    .conversion-amount{
+      font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace;
+      font-size:11px;
+      color:#e5e7eb;
+    }
+
+    .change{
+      margin-top:5px;
+      font-size:11px;
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.96);
+      border:1px solid rgba(148,163,184,0.5);
+      box-shadow:0 10px 24px rgba(15,23,42,0.9);
+    }
+    .change-label{
+      text-transform:uppercase;
+      letter-spacing:0.07em;
+      color:var(--muted);
+      font-size:10px;
+    }
+    .change-up{
+      color:var(--red);
+      border-color:rgba(248,113,113,0.65);
+      background:rgba(30,7,8,0.9);
+    }
+    .change-down{
+      color:var(--green);
+      border-color:rgba(34,197,94,0.6);
+      background:rgba(5,30,15,0.9);
+    }
+    .change-flat{
+      color:var(--muted);
+    }
+    .arrow{
+      font-size:12px;
+    }
+
+    .badge-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+      margin-top:3px;
+    }
+
+    #resultDate{
+      margin-bottom:10px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    /* Chart overlay */
+    .chart-panel{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:radial-gradient(circle at 20% 0,rgba(15,23,42,0.95),rgba(15,23,42,0.96));
+      backdrop-filter:blur(16px);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease;
+      z-index:20;
+    }
+    .chart-panel.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .chart-inner{
+      width:min(640px,90vw);
+      max-height:80vh;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.2),transparent 55%),
+                 radial-gradient(circle at 100% 100%,rgba(168,85,247,0.2),transparent 55%),
+                 #020617;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,0.5);
+      box-shadow:0 30px 90px rgba(0,0,0,0.9);
+      padding:14px 14px 10px;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .chart-close{
+      position:absolute;
+      top:9px;
+      right:9px;
+      width:26px;
+      height:26px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:rgba(15,23,42,0.95);
+      color:var(--muted);
+      cursor:pointer;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:background .16s ease, transform .16s ease, border-color .16s ease;
+    }
+    .chart-close:hover{
+      background:rgba(248,113,113,0.95);
+      border-color:rgba(248,113,113,0.95);
+      color:#020617;
+      transform:translateY(-1px);
+    }
+
+    .chart-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:4px;
+      padding-right:26px;
+    }
+    .chart-title-main{
+      font-size:14px;
+      font-weight:600;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+    }
+    .chart-title-sub{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .chart-meta{
+      text-align:right;
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .chart-svg-wrap{
+      margin-top:4px;
+      border-radius:12px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.16),transparent 60%),
+                 rgba(15,23,42,0.96);
+      border:1px solid rgba(148,163,184,0.45);
+      padding:8px 10px 10px;
+    }
+    .chart-svg-wrap svg{
+      width:100%;
+      height:180px;
+      display:block;
+    }
+
+    .chart-axis-line{
+      stroke:rgba(148,163,184,0.35);
+      stroke-width:0.4;
+    }
+    .chart-line{
+      fill:none;
+      stroke:rgba(34,211,238,0.95);
+      stroke-width:0.9;
+    }
+    .chart-circle{
+      fill:#020617;
+      stroke:rgba(34,211,238,0.9);
+      stroke-width:0.7;
+    }
+
+    .chart-list{
+      margin-top:6px;
+      padding:6px 3px 2px;
+      border-radius:10px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(51,65,85,0.9);
+      max-height:180px;
+      overflow:auto;
+      font-size:11px;
+    }
+    .chart-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:3px 6px;
+      border-radius:7px;
+      transition:background .12s ease;
+    }
+    .chart-row:nth-child(odd){
+      background:rgba(15,23,42,0.8);
+    }
+    .chart-row:nth-child(even){
+      background:rgba(15,23,42,0.6);
+    }
+    .chart-row span.date{color:var(--muted);}
+    .chart-row span.value{
+      font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace;
+      color:#e5e7eb;
+      margin:0 6px;
+    }
+    .chart-row span.diff-up{color:var(--red);}
+    .chart-row span.diff-down{color:var(--green);}
+    .chart-row span.diff-flat{color:var(--muted);}
+
+    @keyframes cardIn{
+      from{opacity:0;transform:translateY(6px) scale(0.98);}
+      to{opacity:1;transform:translateY(0) scale(1);}
+    }
+    .card{
+      opacity:0;
+      animation:cardIn .28s ease forwards;
+    }
+
+    @media (max-width:720px){
+      .bar{align-items:flex-start;}
+      .chart-inner{padding:12px 10px 8px;}
+      .chart-svg-wrap svg{height:150px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <header style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;position:relative;z-index:2;">
+    <a class="home-link" href="../index.html">
+      <span>◀</span><span>Ana sayfa</span>
+    </a>
+    <div>
+      <h1>TCMB Kurları</h1>
+      <p class="lead">Güncel ve tarih bazlı kur verileri, TL miktarı ile birlikte; 1G / 7G / 1A değişim karşılaştırmaları.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="panel-inner">
+      <div class="bar">
+        <div class="input-shell">
+          <input type="date" id="dateInput">
+        </div>
+        <div class="input-shell">
+          <input type="number" id="amountInput" value="1000" min="1" step="1" placeholder="TL miktarı">
+        </div>
+        <button class="btn btn-primary" id="btnLatest"><span>Güncel</span></button>
+        <button class="btn" id="btnFetch"><span>Ara</span></button>
+
+        <div style="flex:1 1 auto"></div>
+
+        <button class="btn btn-compare" data-days="1" id="btn1g"><span>1G Değişim</span></button>
+        <button class="btn btn-compare" data-days="7" id="btn7g"><span>7G Değişim</span></button>
+        <button class="btn btn-compare" data-days="30" id="btn30g"><span>1A Değişim</span></button>
+
+        <span class="badge badge-muted" id="status">
+          <span class="status-dot"></span>
+          <span>Hazır</span>
+        </span>
+      </div>
+
+      <div id="resultDate" class="badge badge-muted"></div>
+
+      <div class="cards" id="cards"></div>
+    </div>
+  </div>
+
+  <!-- Chart overlay -->
+  <div class="chart-panel" id="chartPanel">
+    <div class="chart-inner">
+      <button class="chart-close" id="chartClose">×</button>
+      <div class="chart-header">
+        <div>
+          <div class="chart-title-main" id="chartTitle"></div>
+          <div class="chart-title-sub" id="chartSubtitle"></div>
+        </div>
+        <div class="chart-meta" id="chartMeta"></div>
+      </div>
+      <div class="chart-svg-wrap" id="chartSvgWrap"></div>
+      <div class="chart-list" id="chartList"></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const obf = "aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9NZWhtZXRGYXJ1a0FrYnVsdXQvNWViNGY4MjhlMGJiMTczZWNjNTljZTE1OWVhYTE5ZDMvcmF3L3RjbWIuanNvbg==";
+    const TCMB_URL = (typeof window !== "undefined" && window.__TCMB_JSON_URL__) || atob(obf);
+
+    const dateInput = document.getElementById("dateInput");
+    const amountInput = document.getElementById("amountInput");
+    const cards = document.getElementById("cards");
+    const status = document.getElementById("status");
+    const resultDate = document.getElementById("resultDate");
+    const btnLatest = document.getElementById("btnLatest");
+    const btnFetch = document.getElementById("btnFetch");
+    const btn1g = document.getElementById("btn1g");
+    const btn7g = document.getElementById("btn7g");
+    const btn30g = document.getElementById("btn30g");
+
+    const chartPanel = document.getElementById("chartPanel");
+    const chartClose = document.getElementById("chartClose");
+    const chartTitle = document.getElementById("chartTitle");
+    const chartSubtitle = document.getElementById("chartSubtitle");
+    const chartMeta = document.getElementById("chartMeta");
+    const chartSvgWrap = document.getElementById("chartSvgWrap");
+    const chartList = document.getElementById("chartList");
+
+    const CODES = ["USD","EUR","GBP","CHF","CAD","AUD","DKK","SEK","NOK","SAR","JPY","BGN","RON","RUB","CNY","PKR","QAR"];
+    const NAMES = {
+      USD:"ABD DOLARI", EUR:"EURO", GBP:"İNGİLİZ STERLİNİ", CHF:"İSVİÇRE FRANGI",
+      CAD:"KANADA DOLARI", AUD:"AVUSTRALYA DOLARI", DKK:"DANİMARKA KRONU", SEK:"İSVEÇ KRONU",
+      NOK:"NORVEÇ KRONU", SAR:"SUUDİ RİYALİ", JPY:"JAPON YENİ", BGN:"BULGAR LEVASI",
+      RON:"RUMEN LEYİ", RUB:"RUS RUBLESİ", CNY:"ÇİN YUANI", PKR:"PAKİSTAN RUPİSİ", QAR:"KATAR RİYALİ"
+    };
+
+    let allRows = [];
+    let loaded = false;
+    let currentRecord = null;
+    let compareWindow = null; // 1,7,30
+
+    function setStatus(text, mode){
+      const dot = status.querySelector(".status-dot");
+      status.lastChild.textContent = " " + text;
+      dot.classList.remove("status-loading","status-error");
+      if(mode==="loading") dot.classList.add("status-loading");
+      else if(mode==="error") dot.classList.add("status-error");
+    }
+
+    function parseDate(str){
+      if(!str) return null;
+      const d=new Date(str);
+      return isNaN(d.getTime())?null:d;
+    }
+
+    function formatYMD(d){
+      const y=d.getFullYear();
+      const m=String(d.getMonth()+1).padStart(2,"0");
+      const day=String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function parseTarih(t){
+      // TARIH: "dd-mm-yyyy" veya "yyyy-mm-dd"
+      const parts = t.split("-").map(Number);
+      if(parts[0]>1900){
+        return new Date(parts[0],parts[1]-1,parts[2]);
+      }
+      return new Date(parts[2],parts[1]-1,parts[0]);
+    }
+
+    function formatTarih(d){
+      const dd = String(d.getDate()).padStart(2,"0");
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const yy = d.getFullYear();
+      return `${dd}-${mm}-${yy}`;
+    }
+
+    function sortRowsOnce(rows){
+      rows.sort((a,b)=>parseTarih(a.TARIH)-parseTarih(b.TARIH));
+    }
+
+    function findRecordForTargetDate(targetTarih){
+      // targetTarih: "dd-mm-yyyy" veya null -> son kayıt
+      if(!allRows.length) return null;
+      if(!targetTarih) return allRows[allRows.length-1];
+
+      const tDate = parseTarih(targetTarih);
+      const firstD = parseTarih(allRows[0].TARIH);
+      const lastD = parseTarih(allRows[allRows.length-1].TARIH);
+
+      if(tDate.getTime()<=firstD.getTime()) return allRows[0];
+      if(tDate.getTime()>=lastD.getTime()) return allRows[allRows.length-1];
+
+      let candidate = allRows[0];
+      for(let i=0;i<allRows.length;i++){
+        const d = parseTarih(allRows[i].TARIH);
+        if(d.getTime()===tDate.getTime()) return allRows[i];
+        if(d.getTime()<=tDate.getTime()) candidate = allRows[i];
+        else break;
+      }
+      return candidate;
+    }
+
+    function findRecordOffsetDays(baseTarih, daysBack){
+      if(!allRows.length || !baseTarih) return null;
+      const baseDate = parseTarih(baseTarih);
+      const targetDate = new Date(baseDate.getTime() - daysBack*24*60*60*1000);
+
+      let candidate = null;
+      for(let i=0;i<allRows.length;i++){
+        const d = parseTarih(allRows[i].TARIH);
+        if(d.getTime()<=targetDate.getTime()) candidate = allRows[i];
+        else break;
+      }
+      if(!candidate) candidate = allRows[0];
+      return candidate;
+    }
+
+    async function ensureData(){
+      if(loaded) return;
+      try{
+        setStatus("Yükleniyor...", "loading");
+        const res = await fetch(TCMB_URL);
+        const rows = await res.json();
+        sortRowsOnce(rows);
+        allRows = rows;
+        loaded = true;
+        setStatus("Hazır", null);
+      }catch(e){
+        console.error(e);
+        setStatus("Hata", "error");
+        cards.innerHTML = "<div class='card'><div>Veri alınamadı.</div></div>";
+      }
+    }
+
+    function getCompareLabel(days){
+      if(days===1) return "1G";
+      if(days===7) return "7G";
+      if(days===30) return "1A";
+      return "";
+    }
+
+    function setCompareWindow(days){
+      compareWindow = days;
+      [btn1g,btn7g,btn30g].forEach(btn=>{
+        btn.classList.toggle("active", Number(btn.dataset.days)===days);
+      });
+      if(currentRecord){
+        render(currentRecord);
+      }
+    }
+
+    function render(rec){
+      if(!rec){
+        cards.innerHTML="<div class='card'><div>Veri yok</div></div>";
+        return;
+      }
+
+      const amount = parseFloat(amountInput.value)||1000;
+      resultDate.innerHTML = `
+        <span class="status-dot"></span>
+        <span>${rec.TARIH || "-"}</span>
+      `;
+
+      const label = compareWindow ? getCompareLabel(compareWindow) : null;
+
+      let html = "";
+      CODES.forEach(code=>{
+        const buy = parseFloat(rec[code+"_ALIS"]||"0");
+        const sell = parseFloat(rec[code+"_SATIS"]||"0");
+        if(!buy && !sell) return;
+
+        const conv = sell ? (amount/sell).toFixed(2) : "";
+        let changeHtml = "";
+        if(compareWindow){
+          const baseTarih = rec.TARIH;
+          const cmpRec = findRecordOffsetDays(baseTarih, compareWindow);
+          if(cmpRec){
+            const prevSell = parseFloat(cmpRec[code+"_SATIS"]||"0");
+            if(prevSell){
+              const diff = sell - prevSell;
+              if(diff>0){
+                changeHtml = `
+                  <div class="change change-up">
+                    <span class="change-label">${label} DEĞİŞİM</span>
+                    <span class="arrow">↑</span>
+                    <span>${diff.toFixed(4)}</span>
+                  </div>`;
+              }else if(diff<0){
+                changeHtml = `
+                  <div class="change change-down">
+                    <span class="change-label">${label} DEĞİŞİM</span>
+                    <span class="arrow">↓</span>
+                    <span>${diff.toFixed(4)}</span>
+                  </div>`;
+              }else{
+                changeHtml = `
+                  <div class="change change-flat">
+                    <span class="change-label">${label} DEĞİŞİM</span>
+                    <span>- 0.0000</span>
+                  </div>`;
+              }
+            }
+          }
+        }
+
+        html += `
+          <div class="card" data-code="${code}">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="pair">${code}/TRY</div>
+                <div class="name">${NAMES[code]||code}</div>
+              </div>
+              <div class="card-chip">
+                <span class="card-chip-dot"></span>
+                <span>Son 30G Grafik</span>
+              </div>
+            </div>
+            <div class="rates">
+              <div>
+                <span class="label">Alış</span>
+                <div>${buy.toFixed(4)}</div>
+              </div>
+              <div>
+                <span class="label">Satış</span>
+                <div>${sell.toFixed(4)}</div>
+              </div>
+            </div>
+            <div class="conversion">
+              <span>${amount.toLocaleString("tr-TR")} TL karşılığı</span>
+              <span class="conversion-amount">≈ ${conv} ${code}</span>
+            </div>
+            ${changeHtml}
+          </div>
+        `;
+      });
+      cards.innerHTML = html;
+    }
+
+    async function loadForCurrentDate(){
+      await ensureData();
+      if(!allRows.length) return;
+
+      const raw = dateInput.value; // yyyy-mm-dd
+      const targetTarih = raw ? raw.split("-").reverse().join("-") : null; // dd-mm-yyyy
+      const rec = findRecordForTargetDate(targetTarih);
+      currentRecord = rec;
+      render(rec);
+    }
+
+    async function showChartForCode(code){
+      await ensureData();
+      if(!allRows.length || !currentRecord) return;
+
+      const baseDate = parseTarih(currentRecord.TARIH);
+      const maxBackDays = 60; // 30+ buffer; sadece mevcut veri bağlanacak
+      const startDate = new Date(baseDate.getTime() - maxBackDays*24*60*60*1000);
+
+      const series = [];
+      for(let i=0;i<allRows.length;i++){
+        const r = allRows[i];
+        const d = parseTarih(r.TARIH);
+        if(d < startDate || d > baseDate) continue;
+        const sell = parseFloat(r[code+"_SATIS"]||"0");
+        if(!sell) continue;
+        series.push({date:d, tarih:r.TARIH, value:sell});
+      }
+      if(!series.length){
+        chartSvgWrap.innerHTML = "<div style='font-size:12px;color:var(--muted);'>Grafik için yeterli veri bulunamadı.</div>";
+        chartList.innerHTML = "";
+        chartTitle.textContent = code + "/TRY";
+        chartSubtitle.textContent = NAMES[code] || code;
+        chartMeta.textContent = "Veri bulunamadı";
+        chartPanel.classList.add("show");
+        return;
+      }
+      // tarihe göre sırala
+      series.sort((a,b)=>a.date-b.date);
+
+      chartTitle.textContent = code + "/TRY";
+      chartSubtitle.textContent = (NAMES[code]||code) + " · Son 30 Günlük Hareket";
+      const first = series[0];
+      const last = series[series.length-1];
+      chartMeta.textContent = `${first.tarih} → ${last.tarih} · Nokta sayısı: ${series.length}`;
+
+      // SVG için min/max
+      let min = series[0].value;
+      let max = series[0].value;
+      for(const p of series){
+        if(p.value<min) min=p.value;
+        if(p.value>max) max=p.value;
+      }
+      const range = (max-min) || 1;
+
+      const points = series.map((p,idx)=>{
+        const t = series.length===1 ? 0 : idx/(series.length-1);
+        const x = 5 + t*90;
+        const norm = (p.value-min)/range;
+        const y = 90 - norm*70; // 10-80 arası
+        return {x,y};
+      });
+
+      const poly = points.map(p=>`${p.x},${p.y}`).join(" ");
+
+      let circles = "";
+      points.forEach(p=>{
+        circles += `<circle class="chart-circle" cx="${p.x}" cy="${p.y}" r="1.4"></circle>`;
+      });
+
+      const svg = `
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line class="chart-axis-line" x1="5" y1="90" x2="95" y2="90"></line>
+          <line class="chart-axis-line" x1="5" y1="20" x2="5" y2="90"></line>
+          <polyline class="chart-line" points="${poly}" />
+          ${circles}
+        </svg>
+      `;
+      chartSvgWrap.innerHTML = svg;
+
+      // Liste – günlük değişimler, alçalış yeşil, çıkış kırmızı
+      let listHtml = "";
+      for(let i=0;i<series.length;i++){
+        const p = series[i];
+        const prev = i>0 ? series[i-1] : null;
+        let diffSpan = `<span class="diff-flat">-</span>`;
+        if(prev){
+          const diff = p.value - prev.value;
+          if(diff>0){
+            diffSpan = `<span class="diff-up">↑ ${diff.toFixed(4)}</span>`;
+          }else if(diff<0){
+            diffSpan = `<span class="diff-down">↓ ${diff.toFixed(4)}</span>`;
+          }else{
+            diffSpan = `<span class="diff-flat">0.0000</span>`;
+          }
+        }
+        listHtml += `
+          <div class="chart-row">
+            <span class="date">${p.tarih}</span>
+            <span class="value">${p.value.toFixed(4)}</span>
+            ${diffSpan}
+          </div>
+        `;
+      }
+      chartList.innerHTML = listHtml;
+      chartPanel.classList.add("show");
+    }
+
+    // Events
+    btnFetch.addEventListener("click", ()=>{ loadForCurrentDate(); });
+    btnLatest.addEventListener("click", ()=>{
+      dateInput.value = "";
+      loadForCurrentDate();
+    });
+
+    [btn1g,btn7g,btn30g].forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const days = Number(btn.dataset.days);
+        if(compareWindow===days){
+          compareWindow = null;
+          [btn1g,btn7g,btn30g].forEach(b=>b.classList.remove("active"));
+          if(currentRecord) render(currentRecord);
+        }else{
+          setCompareWindow(days);
+        }
+      });
+    });
+
+    cards.addEventListener("click", (e)=>{
+      const card = e.target.closest(".card");
+      if(!card) return;
+      const code = card.getAttribute("data-code");
+      if(!code) return;
+      showChartForCode(code);
+    });
+
+    chartClose.addEventListener("click", ()=>{
+      chartPanel.classList.remove("show");
+    });
+    chartPanel.addEventListener("click", (e)=>{
+      if(e.target===chartPanel){
+        chartPanel.classList.remove("show");
+      }
+    });
+
+    const today = new Date();
+    dateInput.value = formatYMD(today);
+    dateInput.max = formatYMD(today);
+    dateInput.addEventListener("change", ()=>{
+      const picked = parseDate(dateInput.value);
+      const now = new Date();
+      if(picked && picked.getTime() > now.getTime()){
+        dateInput.value = formatYMD(now);
+      }
+    });
+
+    // İlk yükleme
+    loadForCurrentDate();
+  })();
+  </script>
+</body>
+</html>

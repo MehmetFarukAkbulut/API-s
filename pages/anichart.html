@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AniList Anime Takvimi</title>
+  <style>
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.18);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --parallaxX:0px;
+      --parallaxY:0px;
+    }
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),
+        linear-gradient(135deg,#020617,#0f172a);
+      color:var(--text);
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* Glow / hareketli arka plan */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-30%;
+      background:
+        radial-gradient(circle at 0% 0%,rgba(56,189,248,0.22),transparent 55%),
+        radial-gradient(circle at 80% 10%,rgba(244,114,182,0.16),transparent 60%),
+        radial-gradient(circle at 20% 90%,rgba(129,140,248,0.18),transparent 55%);
+      opacity:0;
+      pointer-events:none;
+      z-index:-1;
+      transform:translate3d(0,0,0) scale(1.08);
+      filter:blur(0.5px);
+      transition:opacity 1.2s ease;
+      animation:drift 22s ease-in-out infinite alternate;
+    }
+    body.loaded::before{opacity:1;}
+
+    @keyframes drift{
+      0%{transform:translate3d(-10px,0,0) scale(1.03);}
+      50%{transform:translate3d(8px,-6px,0) scale(1.08);}
+      100%{transform:translate3d(4px,10px,0) scale(1.05);}
+    }
+
+    header{
+      max-width:1200px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      position:relative;
+      transform:translate3d(calc(var(--parallaxX)*0.4),calc(var(--parallaxY)*0.2),0);
+      transition:transform .6s cubic-bezier(.22,.61,.36,1);
+    }
+
+    .btn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.5);
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.35),var(--accent-soft));
+      color:#e0f2fe;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:0.01em;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      position:relative;
+      overflow:hidden;
+      transition:
+        background .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease,
+        transform .18s ease;
+    }
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg,rgba(248,250,252,0.4),transparent 40%,transparent 60%,rgba(248,250,252,0.3));
+      transform:translateX(-120%);
+      opacity:0;
+      pointer-events:none;
+    }
+    .btn:hover{
+      background:radial-gradient(circle at 100% 0,rgba(56,189,248,0.5),var(--accent-soft));
+      border-color:rgba(56,189,248,0.8);
+      box-shadow:0 0 18px rgba(34,211,238,0.4);
+      transform:translateY(-1px);
+    }
+    .btn:hover::before{
+      opacity:1;
+      animation:btn-shine 0.7s ease-out;
+    }
+    @keyframes btn-shine{
+      from{transform:translateX(-120%);}
+      to{transform:translateX(120%);}
+    }
+
+    h1{margin:0;font-size:30px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+
+    .panel{
+      max-width:1200px;
+      margin:0 auto 24px;
+      padding:16px;
+      background:linear-gradient(135deg,rgba(15,23,42,0.98),rgba(15,23,42,0.93));
+      border:1px solid rgba(148,163,184,0.26);
+      border-radius:18px;
+      box-shadow:
+        0 24px 80px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.8) inset;
+      position:relative;
+      overflow:hidden;
+      transform:translate3d(calc(var(--parallaxX)*0.25),calc(var(--parallaxY)*0.1),0);
+      transition:transform .7s cubic-bezier(.22,.61,.36,1), box-shadow .4s ease;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0 0,rgba(56,189,248,0.18),transparent 55%),
+        radial-gradient(circle at 100% 0,rgba(14,165,233,0.12),transparent 55%);
+      opacity:0.6;
+      mix-blend-mode:screen;
+      pointer-events:none;
+    }
+    .panel::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      border:1px solid rgba(148,163,184,0.28);
+      opacity:0.55;
+      pointer-events:none;
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    select{
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:13px;
+      outline:none;
+      min-width:110px;
+      box-shadow:0 0 0 1px rgba(15,23,42,1) inset;
+      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    select:focus{
+      border-color:rgba(56,189,248,0.9);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,1) inset,
+        0 0 0 1px rgba(56,189,248,0.6);
+      background:#020617;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:12px;
+    }
+
+    /* Kart animasyonları */
+    .card{
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.25);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,0.95),#020617);
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:10px;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+
+      --card-index:0;
+      --tx:0px;
+      --ty:16px;
+      --ts:.98;
+
+      opacity:0;
+      transform:translate3d(var(--tx),var(--ty),0) scale(var(--ts));
+      transition:
+        transform .45s cubic-bezier(.22,.61,.36,1),
+        box-shadow .35s ease,
+        opacity .35s ease;
+      transition-delay:calc(var(--card-index,0) * 40ms);
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:conic-gradient(
+        from 140deg,
+        rgba(56,189,248,0.4),
+        rgba(56,189,248,0.05),
+        rgba(96,165,250,0.05),
+        rgba(244,114,182,0.25),
+        rgba(56,189,248,0.4)
+      );
+      opacity:0;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      transition:opacity .3s ease;
+    }
+    .card.visible{
+      opacity:1;
+      --ty:0px;
+      --ts:1;
+    }
+    .card:hover{
+      --tx:-6px;
+      box-shadow:0 18px 50px rgba(15,23,42,0.85);
+    }
+    .card:hover::before{opacity:0.7;}
+
+    img.cover{
+      width:120px;
+      height:170px;
+      border-radius:10px;
+      object-fit:cover;
+      box-shadow:0 12px 25px rgba(15,23,42,0.9);
+    }
+
+    .muted{color:var(--muted);font-size:13px;}
+
+    .pill{
+      display:inline-block;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.95);
+      border:1px solid rgba(56,189,248,0.45);
+      color:#7dd3fc;
+      font-size:11px;
+      margin-right:6px;
+      margin-top:4px;
+      letter-spacing:0.02em;
+      text-transform:uppercase;
+      opacity:0.9;
+      transition:background .25s ease, transform .18s ease, border-color .25s ease, opacity .2s ease;
+    }
+    .pill:hover{
+      background:rgba(56,189,248,0.15);
+      border-color:rgba(56,189,248,0.9);
+      opacity:1;
+      transform:translateY(-1px);
+    }
+
+    /* Durum & sezon etiketleri */
+    #status{
+      font-size:12px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.3);
+    }
+    #status.loading{
+      color:var(--accent);
+      border-color:rgba(56,189,248,0.7);
+      box-shadow:0 0 14px rgba(56,189,248,0.5);
+    }
+    #labels{
+      font-size:11px;
+      opacity:0.8;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      background:radial-gradient(circle at top,rgba(15,23,42,0.95),rgba(15,23,42,0.98));
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:40;
+    }
+    .modal.active{display:flex;}
+    .modal-card{
+      background:#020617;
+      border:1px solid rgba(148,163,184,0.45);
+      border-radius:18px;
+      max-width:900px;
+      width:95%;
+      max-height:90vh;
+      overflow-y:auto;
+      padding:16px;
+      box-shadow:
+        0 26px 80px rgba(15,23,42,1),
+        0 0 0 1px rgba(15,23,42,0.9) inset;
+      position:relative;
+    }
+    .modal-card img{
+      box-shadow:0 18px 48px rgba(15,23,42,0.9);
+    }
+
+    .links a{
+      display:inline-block;
+      margin:4px 6px 0 0;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid rgba(34,211,238,0.35);
+      color:#7dd3fc;
+      text-decoration:none;
+      font-size:12px;
+      background:rgba(15,23,42,0.9);
+      transition:background .2s ease, border-color .2s ease, transform .18s ease;
+    }
+    .links a:hover{
+      background:rgba(56,189,248,0.18);
+      border-color:rgba(56,189,248,0.9);
+      transform:translateY(-1px);
+    }
+
+    @media (max-width:640px){
+      .card{
+        grid-template-columns:1fr;
+      }
+      img.cover{
+        width:100%;
+        height:220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>AniList Anime Takvimi</h1>
+      <p class="lead">Sezon & yıl seçip en popüler 20 animeyi listele.</p>
+    </div>
+  </header>
+  <div class="panel">
+    <div class="bar">
+      <select id="season">
+        <option value="WINTER">Winter</option>
+        <option value="SPRING">Spring</option>
+        <option value="SUMMER">Summer</option>
+        <option value="FALL" selected>Fall</option>
+      </select>
+      <select id="year"></select>
+      <button class="btn" id="prev2">◀◀</button>
+      <button class="btn" id="prev">◀</button>
+      <button class="btn" id="nowBtn">●</button>
+      <button class="btn" id="next">▶</button>
+      <button class="btn" id="next2">▶▶</button>
+      <button class="btn" id="go">Listele</button>
+      <span class="muted" id="status">Hazır</span>
+      <span class="muted" id="labels"></span>
+    </div>
+    <div class="grid" id="grid">
+      <div class="card" style="grid-template-columns:1fr;">Arama yapın.</div>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn" id="more">Daha fazla</button>
+    </div>
+  </div>
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <button class="btn" id="close" style="float:right;">Kapat</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+  <script>
+  const seasons=["WINTER","SPRING","SUMMER","FALL"];
+  const yearSel=document.getElementById("year");
+  const now=new Date();
+  const currentSeason=getSeasonForDate(now);
+
+  yearSel.innerHTML=Array.from({length:6},(_,i)=>currentSeason.year-1+i)
+    .map(y=>`<option value="${y}" ${y===currentSeason.year?'selected':''}>${y}</option>`)
+    .join("");
+
+  document.getElementById("season").value=currentSeason.season;
+
+  const grid=document.getElementById("grid");
+  const modal=document.getElementById("modal");
+  const modalBody=document.getElementById("modal-body");
+  const labels=document.getElementById("labels");
+  const status=document.getElementById("status");
+  let page=1;
+  let cardObserver=null;
+
+  document.getElementById("prev").onclick=()=>shiftSeason(-1);
+  document.getElementById("next").onclick=()=>shiftSeason(1);
+  document.getElementById("prev2").onclick=()=>shiftSeason(-2);
+  document.getElementById("next2").onclick=()=>shiftSeason(2);
+  document.getElementById("nowBtn").onclick=()=>{
+    const cs=getSeasonForDate();
+    document.getElementById("season").value=cs.season;
+    yearSel.value=cs.year;
+    page=1;
+    updateLabels();
+    load(true);
+  };
+  document.getElementById("close").onclick=()=>modal.classList.remove("active");
+  modal.addEventListener("click",(e)=>{if(e.target===modal) modal.classList.remove("active");});
+  document.getElementById("go").addEventListener("click",()=>{page=1;load(true);});
+  document.getElementById("more").addEventListener("click",()=>{page++;load(false,true);});
+  document.getElementById("season").addEventListener("change",()=>{page=1;updateLabels();});
+  yearSel.addEventListener("change",()=>{page=1;updateLabels();});
+
+  function getSeasonForDate(d=new Date()){
+    const m=d.getMonth()+1; const y=d.getFullYear();
+    if(m<=2) return {season:"WINTER",year:y-1};
+    if(m<=5) return {season:"SPRING",year:y};
+    if(m<=8) return {season:"SUMMER",year:y};
+    return {season:"FALL",year:y};
+  }
+
+  function shiftSeason(step){
+    let s=document.getElementById("season").value;
+    let y=parseInt(yearSel.value,10);
+    let idx=seasons.indexOf(s);
+    idx+=step;
+    while(idx<0){idx+=4;y--;}
+    while(idx>3){idx-=4;y++;}
+    document.getElementById("season").value=seasons[idx];
+    yearSel.value=y;
+    page=1;
+    updateLabels();
+    load(true);
+  }
+
+  function updateLabels(){
+    const s=document.getElementById("season").value;
+    const y=parseInt(yearSel.value,10);
+    const idx=seasons.indexOf(s);
+    const rel=[-2,-1,0,1,2].map(step=>{
+      let i=idx+step; let yy=y;
+      while(i<0){i+=4;yy--;} while(i>3){i-=4;yy++;}
+      return `${seasons[i]} ${yy}`;
+    });
+    labels.textContent=rel.join(" · ");
+  }
+
+  async function load(reset=true,append=false){
+    const season=document.getElementById("season").value;
+    const year=parseInt(yearSel.value,10);
+    try{
+      status.textContent="Yükleniyor";
+      status.classList.add("loading");
+
+      const query=`query ($season:MediaSeason,$year:Int,$page:Int){
+        Page(page:$page,perPage:20){
+          media(
+            season:$season,
+            seasonYear:$year,
+            type:ANIME,
+            sort:POPULARITY_DESC
+          ){
+            id
+            title{romaji english}
+            description
+            coverImage{large}
+            averageScore
+            nextAiringEpisode{timeUntilAiring episode}
+            genres
+            externalLinks{site url language type}
+          }
+        }
+      }`;
+
+      const res=await fetch("https://graphql.anilist.co",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Accept":"application/json"
+        },
+        body:JSON.stringify({query,variables:{season,year,page}})
+      });
+
+      const j=await res.json();
+      const list=j?.data?.Page?.media||[];
+
+      if(!list.length){
+        if(reset){
+          grid.innerHTML="<div class='card' style='grid-template-columns:1fr;'>Sonuç yok</div>";
+        }
+        status.textContent="Hazır";
+        status.classList.remove("loading");
+        return;
+      }
+
+      const toHours=(s)=> (s/3600).toFixed(1)+" saat";
+      const html=list.map(m=>{
+        const desc=(m.description||"")
+          .replace(/<[^>]+>/g,"")
+          .slice(0,160)+"...";
+        const next = m.nextAiringEpisode
+          ? `Ep ${m.nextAiringEpisode.episode} · ${toHours(m.nextAiringEpisode.timeUntilAiring)} sonra`
+          : "Yayın info yok";
+        return `<div class="card" data-id="${m.id}">
+          <img class="cover" src="${m.coverImage?.large||""}" alt="${m.title?.romaji||""}">
+          <div>
+            <h3>${m.title?.english||m.title?.romaji||"Anime"}</h3>
+            <div class="muted">${next}</div>
+            <p class="muted">${desc}</p>
+            <div>${(m.genres||[]).slice(0,3).map(g=>`<span class="pill">${g}</span>`).join("")}</div>
+            <div class="muted">Puan: ${m.averageScore??"?"}</div>
+          </div>
+        </div>`;
+      }).join("");
+
+      if(reset && !append){
+        grid.innerHTML=html;
+      } else {
+        grid.insertAdjacentHTML("beforeend",html);
+      }
+
+      attachCardInteractions();
+
+      status.textContent="Hazır";
+      status.classList.remove("loading");
+    }catch(e){
+      console.error(e);
+      status.textContent="Hata";
+      status.classList.remove("loading");
+      if(reset){
+        grid.innerHTML="<div class='card' style='grid-template-columns:1fr;'>Veri alınamadı.</div>";
+      }
+    }
+  }
+
+  async function showDetail(id){
+    try{
+      const query=`query($id:Int){
+        Media(id:$id,type:ANIME){
+          title{romaji english}
+          description
+          coverImage{large}
+          bannerImage
+          averageScore
+          episodes
+          duration
+          externalLinks{site url language type icon}
+          genres
+          tags{name rank}
+          studios{nodes{name}}
+        }
+      }`;
+      const res=await fetch("https://graphql.anilist.co",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Accept":"application/json"
+        },
+        body:JSON.stringify({query,variables:{id:parseInt(id,10)}})
+      });
+      const j=await res.json();
+      const m=j?.data?.Media;
+      if(!m){return;}
+      const desc=(m.description||"").replace(/<[^>]+>/g,"");
+
+      modalBody.innerHTML=`
+        ${m.bannerImage
+          ? `<img src="${m.bannerImage}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-bottom:10px;">`
+          : ``}
+        <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+          <img src="${m.coverImage?.large||""}" style="width:140px;border-radius:10px;object-fit:cover;">
+          <div style="flex:1;min-width:0;">
+            <h2>${m.title?.english||m.title?.romaji||"Anime"}</h2>
+            <p class="muted">${desc}</p>
+            <div>${(m.genres||[]).map(g=>`<span class="pill">${g}</span>`).join("")}</div>
+            <div class="muted" style="margin-top:6px;">
+              Puan: ${m.averageScore??"?"} · Bölüm: ${m.episodes??"?"} · Süre: ${m.duration??"?"} dk
+            </div>
+            <div class="muted">Stüdyo: ${(m.studios?.nodes||[]).map(s=>s.name).join(", ")}</div>
+            <div class="links">${(m.externalLinks||[]).map(l=>`<a href="${l.url}" target="_blank">${l.site}</a>`).join("")}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          ${(m.tags||[]).slice(0,10).map(t=>`<span class="pill">${t.name} ${t.rank?Math.round(t.rank)+"%":""}</span>`).join("")}
+        </div>
+      `;
+      modal.classList.add("active");
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  /* Kartlara scroll reveal + click bağlama */
+  function attachCardInteractions(){
+    const cards = grid.querySelectorAll(".card[data-id]");
+    cards.forEach((card,index)=>{
+      card.onclick = () => showDetail(card.dataset.id);
+      card.style.setProperty("--card-index", index);
+      if(cardObserver){
+        cardObserver.observe(card);
+      }
+    });
+  }
+
+  function setupScrollReveal(){
+    cardObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add("visible");
+          cardObserver.unobserve(entry.target);
+        }
+      });
+    },{threshold:0.12});
+
+    const cards = grid.querySelectorAll(".card[data-id]");
+    cards.forEach((card,index)=>{
+      card.style.setProperty("--card-index", index);
+      cardObserver.observe(card);
+    });
+  }
+
+  function setupParallax(){
+    window.addEventListener("mousemove",(e)=>{
+      const x=(e.clientX/window.innerWidth - 0.5) * 2;
+      const y=(e.clientY/window.innerHeight - 0.5) * 2;
+      document.documentElement.style.setProperty("--parallaxX",(x*10).toFixed(2)+"px");
+      document.documentElement.style.setProperty("--parallaxY",(y*8).toFixed(2)+"px");
+    });
+  }
+
+  updateLabels();
+  load(true);
+  document.body.classList.add("loaded");
+  setupScrollReveal();
+  setupParallax();
+  </script>
+</body>
+</html>

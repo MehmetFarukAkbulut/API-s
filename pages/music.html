@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Müzik Çalar</title>
+  <style>
+    :root{
+      --bg:#050816;
+      --panel:#0b1120;
+      --accent:#22d3ee;
+      --accent2:#16a34a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%,rgba(34,211,238,0.18),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(56,189,248,0.12),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#020617);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+
+    header{
+      width:100%;
+      max-width:900px;
+      padding:24px 16px 8px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    header h1{margin:0;font-size:26px;}
+    header p{margin:2px 0 0;font-size:13px;color:var(--muted);}
+
+    .btn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:rgba(15,23,42,0.9);
+      color:#e5e7eb;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:14px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:background .18s ease,transform .12s ease,box-shadow .18s ease;
+    }
+    .btn:hover{
+      background:rgba(31,41,55,0.95);
+      transform:translateY(-1px);
+      box-shadow:0 14px 35px rgba(15,23,42,0.65);
+    }
+
+    .panel{
+      width:100%;
+      max-width:900px;
+      margin:0 auto 24px;
+      padding:18px 18px 26px;
+      border-radius:24px;
+      background:#020617;
+      border:1px solid rgba(148,163,184,0.35);
+      box-shadow:0 24px 70px rgba(15,23,42,0.85);
+    }
+
+    /* Şarkıcı Butonları */
+    .artists-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .artist-btn{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:rgba(15,23,42,0.9);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-size:12px;
+      transition:background .18s ease,transform .12s ease,box-shadow .18s ease;
+    }
+    .artist-btn:hover{
+      background:rgba(31,41,55,0.95);
+      transform:translateY(-1px);
+      box-shadow:0 10px 25px rgba(15,23,42,0.7);
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    input[type="text"]{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:#020617;
+      color:#e5e7eb;
+      outline:none;
+      min-width:220px;
+      flex:1 1 220px;
+      font-size:14px;
+    }
+    input[type="text"]::placeholder{color:rgba(148,163,184,0.8);}
+    .muted{color:var(--muted);font-size:13px;}
+
+    /* PLAYER */
+    .player-shell{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+      padding-top:8px;
+    }
+
+    .cover-wrap{
+      width:100%;
+      max-width:480px;
+      aspect-ratio:1/1;
+      border-radius:18px;
+      overflow:hidden;
+      background:#020617;
+      box-shadow:0 32px 60px rgba(0,0,0,0.85);
+    }
+    .cover-wrap img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .track-meta{
+      width:100%;
+      max-width:480px;
+    }
+    .track-title{
+      font-size:22px;
+      font-weight:600;
+      margin:0 0 2px;
+    }
+    .track-artist{
+      font-size:14px;
+      color:var(--muted);
+      margin:0;
+    }
+
+    .progress-row{
+      width:100%;
+      max-width:480px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .progress-row span{min-width:40px;text-align:center;}
+
+    .progress-row input[type="range"]{
+      flex:1;
+      -webkit-appearance:none;
+      appearance:none;
+      height:4px;
+      background:linear-gradient(90deg,rgba(34,211,238,0.9),rgba(56,189,248,0.4));
+      border-radius:999px;
+      outline:none;
+    }
+
+    .controls{
+      width:100%;
+      max-width:480px;
+      display:flex;
+      justify-content:space-between;
+    }
+    .icon-btn{
+      width:38px;
+      height:38px;
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      font-size:18px;
+    }
+    .icon-btn.active{color:#22d3ee;}
+
+    .play-main{
+      width:60px;
+      height:60px;
+      border-radius:999px;
+      border:none;
+      background:#f9fafb;
+      cursor:pointer;
+      font-size:26px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="btn" href="../index.html">Ana sayfa</a>
+  <div>
+    <h1>Müzik Çalar</h1>
+    <p>30 saniyelik Apple Music önizleme oynatıcı</p>
+  </div>
+</header>
+
+<div class="panel">
+
+  <!-- POPÜLER ŞARKICILAR -->
+  <div class="artists-row" id="artistsRow">
+    <button class="artist-btn" data-artist="The Weeknd">The Weeknd</button>
+      <button class="artist-btn" data-artist="Bruno Mars">Bruno Mars</button>
+      <button class="artist-btn" data-artist="Taylor Swift">Taylor Swift</button>
+      <button class="artist-btn" data-artist="Justin Bieber">Justin Bieber</button>
+      <button class="artist-btn" data-artist="Rihanna">Rihanna</button>
+      <button class="artist-btn" data-artist="Lady Gaga">Lady Gaga</button>
+      <button class="artist-btn" data-artist="Ed Sheeran">Ed Sheeran</button>
+      <button class="artist-btn" data-artist="Ariana Grande">Ariana Grande</button>
+      <button class="artist-btn" data-artist="Billie Eilish">Billie Eilish</button>
+      <button class="artist-btn" data-artist="Coldplay">Coldplay</button>
+      <button class="artist-btn" data-artist="Drake">Drake</button>
+      <button class="artist-btn" data-artist="Bad Bunny">Bad Bunny</button>
+      <button class="artist-btn" data-artist="David Guetta">David Guetta</button>
+      <button class="artist-btn" data-artist="Sabrina Carpenter">Sabrina Carpenter</button>
+      <button class="artist-btn" data-artist="Maroon 5">Maroon 5</button>
+      <button class="artist-btn" data-artist="Eminem">Eminem</button>
+      <button class="artist-btn" data-artist="Sia">Sia</button>
+      <button class="artist-btn" data-artist="Kendrick Lamar">Kendrick Lamar</button>
+      <button class="artist-btn" data-artist="Shakira">Shakira</button>
+      <button class="artist-btn" data-artist="SZA">SZA</button>
+      <button class="artist-btn" data-artist="Michael Jackson">Michael Jackson</button>
+      <button class="artist-btn" data-artist="Müslüm Gürses">Müslüm Gürses</button>
+      <button class="artist-btn" data-artist="Sezen Aksu">Sezen Aksu</button>
+      <button class="artist-btn" data-artist="Tarkan">Tarkan</button>
+      <button class="artist-btn" data-artist="Barış Manço">Barış Manço</button>
+      <button class="artist-btn" data-artist="Sertap Erener">Sertap Erener</button>
+      <button class="artist-btn" data-artist="Dedublüman">Dedublüman</button>
+      <button class="artist-btn" data-artist="Adamlar">Adamlar</button>
+  </div>
+
+  <!-- ARAMA -->
+  <div class="bar">
+    <input id="q" type="text" placeholder="Şarkı / artist (boş: top hits)">
+    <button class="btn" id="go">Ara</button>
+    <span class="muted" id="status">Hazır</span>
+  </div>
+
+  <!-- PLAYER -->
+  <div class="player-shell">
+    <div class="cover-wrap"><img id="cover"></div>
+    <div class="track-meta">
+      <p class="track-title" id="title">Şarkı seçin</p>
+      <p class="track-artist" id="artist"></p>
+    </div>
+    <div class="progress-row">
+      <span id="currentTime">0:00</span>
+      <input type="range" id="seek" min="0" max="30" step="0.1" value="0">
+      <span>0:30</span>
+    </div>
+    <div class="controls">
+      <button class="icon-btn" id="shuffle">🔀</button>
+      <button class="icon-btn" id="prev">⏮</button>
+      <button class="play-main" id="playMain">▶</button>
+      <button class="icon-btn" id="next">⏭</button>
+      <button class="icon-btn" id="repeat">🔁</button>
+    </div>
+  </div>
+</div>
+
+<audio id="player"></audio>
+
+<script>
+/* ELEMENTLER */
+const player=document.getElementById("player");
+const coverEl=document.getElementById("cover");
+const titleEl=document.getElementById("title");
+const artistEl=document.getElementById("artist");
+const seekEl=document.getElementById("seek");
+const currentEl=document.getElementById("currentTime");
+const playBtn=document.getElementById("playMain");
+const repeatBtn=document.getElementById("repeat");
+const statusEl=document.getElementById("status");
+
+/* BAŞLANGIÇ KAPAK FOTOĞRAFI */
+const defaultCover =
+"https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m340/AQNLbfs0fX0z2dYctKUGtxppTB1nue39GomWmtOGBQbeLL4gmSV8Rz28e8shfzH-yJ0ncxiO3uw6G5wQkJv0NB2eLuBDr8KbllQttbqwImY2mm_JUl8e-_qjd6dUL1WRFyP9FcCIKKQTmj77sG-Qs8Je7wAYrg.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=tRMeSii4SslqdAoFTbM23Q&_nc_cat=111&_nc_oc=AdkaH_s_rq4x1UKkXET9Q2HsCjtAIXq8fuNTpgBXFPgKaJ8uwR_4Od9HUOQJG-RbAqw&ccb=9-4&oh=00_AfiXKPF79_7ir0nYF3IbUjJzxvPevDtKImKoBdWQuEmOIw&oe=6928111A&_nc_sid=5b3566";
+
+coverEl.src = defaultCover;
+
+/* DEĞİŞKENLER */
+let list=[];
+let idx=0;
+let repeatMode=false;
+let isPlaying=false;
+
+/* POPÜLER ARTİST BUTONLARI */
+document.querySelectorAll(".artist-btn").forEach(btn=>{
+  btn.onclick = () => {
+    const name = btn.dataset.artist;
+    document.getElementById("q").value = name;
+    search(name);
+  };
+});
+
+/* BUTONLAR */
+document.getElementById("go").onclick=()=>search(document.getElementById("q").value.trim()||"top hits");
+document.getElementById("next").onclick=()=>{idx=(idx+1)%list.length;render();}
+document.getElementById("prev").onclick=()=>{idx=(idx-1+list.length)%list.length;render();}
+document.getElementById("shuffle").onclick=()=>{idx=Math.floor(Math.random()*list.length);render();}
+repeatBtn.onclick = ()=>{
+  repeatMode=!repeatMode;
+  repeatBtn.classList.toggle("active",repeatMode);
+};
+
+playBtn.onclick=()=>{
+  if(player.paused) player.play();
+  else player.pause();
+};
+
+/* SEEK */
+seekEl.oninput=()=>{
+  player.currentTime=parseFloat(seekEl.value);
+};
+
+/* OYNATMA ZAMANI */
+player.ontimeupdate=()=>{
+  const t=Math.min(player.currentTime,30);
+  seekEl.value=t;
+  currentEl.textContent = "0:" + String(Math.floor(t)).padStart(2,"0");
+
+  if(player.currentTime>=30){
+    if(repeatMode){
+      player.currentTime=0;
+      player.play();
+    } else {
+      idx=(idx+1)%list.length;
+      render();
+    }
+  }
+};
+
+/* OYNATMA DURUMU */
+player.onplay=()=>{isPlaying=true;playBtn.textContent="⏸";};
+player.onpause=()=>{isPlaying=false;playBtn.textContent="▶";};
+
+/* ARAMA */
+async function search(q){
+  try{
+    statusEl.textContent="Yükleniyor...";
+    const r=await fetch(`https://itunes.apple.com/search?media=music&limit=20&term=${encodeURIComponent(q)}`);
+    const j=await r.json();
+    list=j.results||[];
+    if(!list.length){
+      titleEl.textContent="Sonuç yok";
+      artistEl.textContent="";
+      coverEl.src=defaultCover;
+      return;
+    }
+    idx=0;
+    render();
+    statusEl.textContent="Hazır";
+  }catch(e){
+    statusEl.textContent="Hata";
+  }
+}
+
+/* ŞARKIYI YÜKLEME */
+function render(){
+  const t=list[idx];
+  if(!t){
+    coverEl.src=defaultCover;
+    titleEl.textContent="Şarkı seçin";
+    artistEl.textContent="";
+    return;
+  }
+
+  coverEl.src = t.artworkUrl100 ? t.artworkUrl100.replace("100x100","512x512") : defaultCover;
+  titleEl.textContent=t.trackName||"-";
+  artistEl.textContent=t.artistName||"";
+
+  player.src=t.previewUrl;
+  player.currentTime=0;
+  seekEl.value=0;
+  currentEl.textContent="0:00";
+
+  player.play().catch(()=>{});
+}
+</script>
+
+</body>
+</html>

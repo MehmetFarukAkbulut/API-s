@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Espri + Fun Facts</title>
+  <style>
+    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
+    header{max-width:900px;margin:0 auto;padding:26px 16px 10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;cursor:pointer;}
+    h1{margin:0;font-size:30px;}
+    p.lead{margin:6px 0 0;color:var(--muted);}
+    .panel{max-width:900px;margin:0 auto 24px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;min-height:120px;}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+    select{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>Espri + Fun Facts</h1>
+      <p class="lead">Çok kaynaklı şaka ve ilginç bilgiler.</p>
+    </div>
+  </header>
+  <div class="panel">
+    <div class="bar" id="srcBtns"></div>
+    <span class="muted" id="status">Hazır</span>
+    <div class="card" id="card">Kaynak seçip getir.</div>
+  </div>
+  <script>
+  const sources=[
+    {key:"dad", label:"Dad Joke"},
+    {key:"chuck", label:"Chuck Norris"},
+    {key:"geek", label:"Geek Joke"},
+    {key:"jokeapi", label:"JokeAPI"},
+    {key:"jokesone", label:"Jokes.one"},
+    {key:"funfact", label:"Fun Fact (asli)"},
+    {key:"ffa", label:"Fun Fact (public-apis)"},
+    {key:"buzz", label:"Buzz Words"},
+    {key:"excuse", label:"Excuse"}
+  ];
+  document.getElementById("srcBtns").innerHTML=sources.map(s=>`<button class="btn" data-src="${s.key}">${s.label}</button>`).join("");
+  document.getElementById("srcBtns").addEventListener("click",e=>{const k=e.target.dataset.src;if(k){run(k);}});
+  const card=document.getElementById("card"); const status=document.getElementById("status");
+  async function run(src){
+    status.textContent="Yükleniyor...";
+    card.textContent="...";
+    try{
+      let text="";
+      const prox = (url)=>`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      if(src==="dad"){
+        const r=await fetch("https://icanhazdadjoke.com/",{headers:{Accept:"application/json"}});
+        text=(await r.json()).joke;
+      }else if(src==="chuck"){
+        const r=await fetch("https://api.chucknorris.io/jokes/random");
+        text=(await r.json()).value;
+      }else if(src==="geek"){
+      const r=await fetch("https://geek-jokes.sameerkumar.website/api?format=json");
+        text=(await r.json()).joke;
+      }else if(src==="jokeapi"){
+        const r=await fetch("https://v2.jokeapi.dev/joke/Any");
+        const j=await r.json();
+        text=j.type==="single"?j.joke:`${j.setup} - ${j.delivery}`;
+      }else if(src==="jokesone"){
+        const r=await fetch("https://api.jokes.one/jod?category=animal",{headers:{"Accept":"application/json"}});
+        const j=await r.json(); text=j?.contents?.jokes?.[0]?.joke?.text || "Bulunamadı";
+      }else if(src==="funfact"){
+        const r=await fetch("https://asli-fun-fact-api.herokuapp.com/");
+        const j=await r.json(); text=j?.data || j?.fact || "Bulunamadı";
+      }else if(src==="ffa"){
+        const r=await fetch("https://api.aakhilv.me/fun/facts");
+        const j=await r.json(); text=Array.isArray(j)?j[0]:j;
+      }else if(src==="buzz"){
+        const r=await fetch(prox("https://corporatebs-generator.sameerkumar.website/"));
+        const j=await r.json(); text=j?.phrase||"Bulunamadı";
+      }else if(src==="excuse"){
+        const r=await fetch(prox("https://excuser.herokuapp.com/v1/excuse"));
+        const j=await r.json(); text=Array.isArray(j)?j[0]?.excuse:j.excuse||"Bulunamadı";
+      }
+      card.textContent=text||"Bulunamadı";
+      status.textContent="Hazır";
+    }catch(e){
+      card.textContent="Veri alınamadı.";
+      status.textContent="Hata";
+    }
+  }
+  </script>
+</body>
+</html>

@@ -4,258 +4,615 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Maç Skorları</title>
+
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
-    *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
-    header{max-width:1200px;margin:0 auto;padding:20px 16px 10px;}
-    h1{margin:0 0 4px;font-size:28px;}
-    p.lead{margin:0;color:var(--muted);}
-    .panel{max-width:1200px;margin:0 auto;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-    button{border:1px solid rgba(255,255,255,0.15);background:#0f172a;color:#e5e7eb;border-radius:10px;padding:8px 12px;cursor:pointer;}
-    button.active{background:rgba(34,211,238,0.15);border-color:#22d3ee;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;}
-    .group{background:#0f182c;border:1px solid #1e293b;border-radius:12px;padding:12px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
-    .group h3{margin:0 0 8px;font-size:15px;color:#cbd5e1;display:flex;align-items:center;gap:8px;}
-    .flag{width:18px;height:12px;object-fit:cover;border:1px solid #1e293b;border-radius:3px;}
-    .league{margin:8px 0 4px;font-weight:600;color:#e2e8f0;}
-    ul{padding-left:16px;margin:0;}
-    li{margin:4px 0;cursor:pointer;}
-    .status-live{color:#22d3ee;}
-    .pill{display:inline-block;background:rgba(34,211,238,0.12);color:#7dd3fc;padding:4px 8px;border-radius:10px;font-size:11px;border:1px solid rgba(34,211,238,0.3);}
-    .detail{font-size:12px;color:var(--muted);margin-top:2px;display:none;}
-    #status{color:var(--muted);}
+    :root{
+      --bg:#020617;
+      --panel:#020818;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.4);
+      --accent-2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;}
+
+    body{
+      font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+      min-height:100vh;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 10% 0%,rgba(34,211,238,0.2),transparent 50%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.22),transparent 55%),
+        radial-gradient(circle at 0% 100%,rgba(56,189,248,0.16),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#020617 60%,#020617);
+      background-size:200% 200%;
+      animation:bg-shift 35s ease-in-out infinite alternate;
+      overflow-x:hidden;
+    }
+
+    @keyframes bg-shift{
+      0%{background-position:0% 0%,100% 0%,0% 100%,50% 50%;}
+      50%{background-position:40% 10%,60% 80%,10% 90%,60% 30%;}
+      100%{background-position:100% 100%,0% 100%,100% 0%,0% 60%;}
+    }
+
+    header{
+      max-width:1200px;
+      margin:0 auto;
+      padding:22px 16px 12px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:2;
+      will-change:transform;
+      transition:transform 0.6s ease-out;
+    }
+
+    h1{
+      font-size:32px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      margin:0 0 4px;
+      position:relative;
+    }
+    h1::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:-6px;
+      height:2px;
+      width:54%;
+      background:linear-gradient(90deg,var(--accent),transparent);
+      box-shadow:0 0 18px rgba(34,211,238,0.9);
+    }
+
+    p.lead{
+      margin:0;
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    .btn{
+      padding:8px 15px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.5);
+      background:rgba(34,211,238,0.12);
+      color:#e0f2fe;
+      text-decoration:none;
+      font-size:12px;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      transition:
+        background 0.4s ease-out,
+        border-color 0.4s ease-out,
+        transform 0.25s ease-out,
+        box-shadow 0.25s ease-out,
+        color 0.3s ease-out;
+    }
+
+    .panel{
+      max-width:1200px;
+      margin:0 auto 32px;
+      padding:16px;
+      background:var(--panel);
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,0.28);
+      box-shadow:
+        0 30px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.9);
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(14px);
+      z-index:1;
+      will-change:transform;
+      transition:
+        transform 0.7s cubic-bezier(.16,.84,.44,1),
+        box-shadow 0.6s ease-out,
+        border-color 0.5s ease-out,
+        background 0.6s ease-out;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    button{
+      border:1px solid rgba(148,163,184,0.5);
+      background:#020617;
+      color:#e5e7eb;
+      border-radius:999px;
+      padding:7px 13px;
+      font-size:11px;
+      text-transform:uppercase;
+      cursor:pointer;
+      transition:
+        background 0.4s ease-out,
+        border-color 0.4s ease-out,
+        transform 0.22s ease-out,
+        box-shadow 0.24s ease-out,
+        color 0.3s ease-out;
+    }
+    button.active{
+      border-color:var(--accent);
+      background:rgba(34,211,238,0.3);
+      color:#7dd3fc;
+    }
+
+    #dateLabel{
+      font-size:11px;
+      padding:5px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:#020617;
+    }
+
+    #status{
+      color:var(--muted);
+      margin-left:auto;
+      font-size:12px;
+    }
+
+    #filterBar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:16px;
+      margin-top:12px;
+    }
+
+    .group{
+      background:#020617;
+      border:1px solid #1f2937;
+      border-radius:16px;
+      padding:14px;
+      box-shadow:0 18px 40px rgba(0,0,0,0.8);
+      opacity:0;
+      transform:translateY(20px);
+      transition:opacity 0.6s ease-out,transform 0.6s ease-out;
+    }
+    .group.is-visible{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .group h3{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:12px;
+      font-size:13px;
+      text-transform:uppercase;
+    }
+
+    .flag{
+      width:18px;height:12px;
+      border-radius:3px;
+      border:1px solid #1e293b;
+      object-fit:cover;
+    }
+
+    .pill{
+      background:#0b1628;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(34,211,238,0.6);
+      font-size:11px;
+      color:#7dd3fc;
+    }
+
+    .league-row{
+      background:#07101f;
+      padding:8px 12px;
+      border-radius:12px;
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:8px;
+      cursor:pointer;
+      font-size:12px;
+      text-transform:uppercase;
+      border:1px solid transparent;
+      transition:all 0.25s ease-out;
+    }
+    .league-row:hover{
+      border-color:rgba(34,211,238,0.7);
+      background:#0b1a2e;
+    }
+
+    /* -------- MODAL -------- */
+
+    .league-modal{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:200;
+    }
+    .league-modal.hidden{
+      display:none;
+    }
+
+    .league-modal-backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(8px);
+    }
+    .league-modal-panel{
+      position:relative;
+      max-width:720px;
+      width:92%;
+      max-height:80vh;
+      background:#0c1525;
+      border:1px solid rgba(34,211,238,0.6);
+      border-radius:16px;
+      box-shadow:0 40px 120px rgba(0,0,0,0.8);
+      padding:16px;
+      overflow:hidden;
+      animation:modalIn 0.35s ease-out;
+    }
+
+    @keyframes modalIn{
+      from{opacity:0;transform:translateY(20px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+
+    .league-modal-header{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+
+    .league-modal-close{
+      width:28px;height:28px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      background:#07101f;
+      border:1px solid rgba(148,163,184,0.5);
+      transition:0.25s;
+    }
+    .league-modal-close:hover{
+      background:#3b0a0a;
+      border-color:#ef4444;
+      color:#fff;
+    }
+
+    .league-modal-body{
+      overflow-y:auto;
+      max-height:65vh;
+      padding-right:8px;
+    }
+
+    .modal-match{
+      padding:8px 12px;
+      background:#0f1d33;
+      border-radius:10px;
+      margin-bottom:8px;
+      border:1px solid rgba(148,163,184,0.2);
+      cursor:pointer;
+      transition:0.25s;
+    }
+    .modal-match:hover{
+      border-color:#22d3ee;
+      background:#10223d;
+    }
+
+    .status-live{
+      color:var(--accent);
+      text-shadow:0 0 8px rgba(34,211,238,0.9);
+      position:relative;
+      padding-left:18px;
+    }
+    .status-live::before{
+      content:"";
+      position:absolute;
+      width:8px;height:8px;
+      background:var(--accent);
+      border-radius:50%;
+      left:4px;top:50%;
+      transform:translateY(-50%);
+      animation:livePing 1.3s infinite;
+    }
+
+    @keyframes livePing{
+      0%{opacity:1;}
+      50%{opacity:.3;}
+      100%{opacity:1;}
+    }
+
+    .modal-detail{
+      display:none;
+      margin-top:6px;
+      padding-left:10px;
+      border-left:1px solid rgba(148,163,184,0.4);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .modal-detail-open{display:block;}
   </style>
 </head>
+
 <body>
-  <header style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <a class="btn" href="../index.html" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;">Ana sayfa</a>
+
+  <!-- HEADER -->
+  <header id="pageHeader">
+    <a class="btn" href="../index.html">Ana Sayfa</a>
     <div>
-      <h1>Mac Skorlari</h1>
-      <p class="lead">Guncel ve son 1 gun/yarin maclari, ulke filtreleriyle.</p>
+      <h1>Maç Skorları</h1>
+      <p class="lead">Güncel, dün ve yarın – canlı & ülke filtreleriyle</p>
     </div>
   </header>
-  <div class="panel">
+
+  <!-- PANEL -->
+  <div class="panel" id="mainPanel">
     <div class="topbar">
       <button id="prevDay">&lt;</button>
       <strong id="dateLabel"></strong>
       <button id="nextDay">&gt;</button>
       <span id="status">Hazır</span>
     </div>
+
     <div class="topbar" id="filterBar"></div>
+
     <div class="grid" id="groups"></div>
   </div>
 
+  <!-- MODAL -->
+  <div id="leagueModal" class="league-modal hidden">
+    <div class="league-modal-backdrop" id="modalBackdrop"></div>
+    <div class="league-modal-panel">
+      <div class="league-modal-header">
+        <div id="modalTitle" style="font-size:14px;text-transform:uppercase;"></div>
+        <button class="league-modal-close" id="modalClose">&times;</button>
+      </div>
+
+      <div id="modalInfo" style="font-size:12px;margin-bottom:6px;color:#94a3b8;"></div>
+
+      <div class="league-modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- JS -->
   <script>
   (function(){
-    const API_KEY = "4263454336cf9f35d8aef752fd4db60b"; // aynı anahtar
-    const metaCountries = [
-      { key: "world", label: "World", flag: null },
-      { key: "Turkey", label: "Türkiye", flag: "https://flagcdn.com/24x18/tr.png" },
-      { key: "England", label: "England", flag: "https://flagcdn.com/24x18/gb-eng.png" },
-      { key: "Spain", label: "Spain", flag: "https://flagcdn.com/24x18/es.png" },
-      { key: "Germany", label: "Germany", flag: "https://flagcdn.com/24x18/de.png" },
-      { key: "France", label: "France", flag: "https://flagcdn.com/24x18/fr.png" },
-      { key: "Italy", label: "Italy", flag: "https://flagcdn.com/24x18/it.png" },
-      { key: "Portugal", label: "Portugal", flag: "https://flagcdn.com/24x18/pt.png" },
-      { key: "Netherlands", label: "Netherlands", flag: "https://flagcdn.com/24x18/nl.png" },
-      { key: "Belgium", label: "Belgium", flag: "https://flagcdn.com/24x18/be.png" },
-      { key: "Scotland", label: "Scotland", flag: "https://flagcdn.com/24x18/gb-sct.png" },
-      { key: "Greece", label: "Greece", flag: "https://flagcdn.com/24x18/gr.png" },
-      { key: "Austria", label: "Austria", flag: "https://flagcdn.com/24x18/at.png" },
-      { key: "Switzerland", label: "Switzerland", flag: "https://flagcdn.com/24x18/ch.png" },
-      { key: "Denmark", label: "Denmark", flag: "https://flagcdn.com/24x18/dk.png" },
-      { key: "Sweden", label: "Sweden", flag: "https://flagcdn.com/24x18/se.png" },
-      { key: "Norway", label: "Norway", flag: "https://flagcdn.com/24x18/no.png" },
-      { key: "Poland", label: "Poland", flag: "https://flagcdn.com/24x18/pl.png" },
-      { key: "Czech Republic", label: "Czech Republic", flag: "https://flagcdn.com/24x18/cz.png" },
-      { key: "Others", label: "Others", flag: null },
+
+    const API_KEY = "4263454336cf9f35d8aef752fd4db60b";
+
+    const metaCountries=[
+      {key:"world",label:"World",flag:null},
+      {key:"Turkey",label:"Türkiye",flag:"https://flagcdn.com/24x18/tr.png"},
+      {key:"England",label:"England",flag:"https://flagcdn.com/24x18/gb-eng.png"},
+      {key:"Spain",label:"Spain",flag:"https://flagcdn.com/24x18/es.png"},
+      {key:"Germany",label:"Germany",flag:"https://flagcdn.com/24x18/de.png"},
+      {key:"France",label:"France",flag:"https://flagcdn.com/24x18/fr.png"},
+      {key:"Italy",label:"Italy",flag:"https://flagcdn.com/24x18/it.png"},
+      {key:"Portugal",label:"Portugal",flag:"https://flagcdn.com/24x18/pt.png"},
+      {key:"Netherlands",label:"Netherlands",flag:"https://flagcdn.com/24x18/nl.png"},
+      {key:"Belgium",label:"Belgium",flag:"https://flagcdn.com/24x18/be.png"},
+      {key:"Scotland",label:"Scotland",flag:"https://flagcdn.com/24x18/gb-sct.png"},
+      {key:"Greece",label:"Greece",flag:"https://flagcdn.com/24x18/gr.png"},
+      {key:"Austria",label:"Austria",flag:"https://flagcdn.com/24x18/at.png"},
+      {key:"Switzerland",label:"Switzerland",flag:"https://flagcdn.com/24x18/ch.png"},
+      {key:"Denmark",label:"Denmark",flag:"https://flagcdn.com/24x18/dk.png"},
+      {key:"Sweden",label:"Sweden",flag:"https://flagcdn.com/24x18/se.png"},
+      {key:"Norway",label:"Norway",flag:"https://flagcdn.com/24x18/no.png"},
+      {key:"Poland",label:"Poland",flag:"https://flagcdn.com/24x18/pl.png"},
+      {key:"Czech Republic",label:"Czech Republic",flag:"https://flagcdn.com/24x18/cz.png"},
+      {key:"Others",label:"Others",flag:null}
     ];
-    const allowed = new Set(metaCountries.map(c=>c.key));
 
-    const leagueOrder = {
-      Turkey: ["Süper Lig","Super Lig","1. Lig"],
-      England: ["Premier League","Championship","League One","League Two"],
-      Spain: ["La Liga","La Liga 2"],
-      Germany: ["Bundesliga","2. Bundesliga"],
-      France: ["Ligue 1","Ligue 2"],
-      Italy: ["Serie A","Serie B"],
-      Portugal: ["Primeira Liga","Segunda Liga"],
-      Netherlands: ["Eredivisie","Eerste Divisie"],
-      Belgium: ["First Division A","First Division B"],
-      Scotland: ["Premiership","Championship"],
-      Greece: ["Super League"],
-      Austria: ["Bundesliga","2. Liga"],
-      Switzerland: ["Super League","Challenge League"],
-      Denmark: ["Superliga","1st Division"],
-      Sweden: ["Allsvenskan","Superettan"],
-      Norway: ["Eliteserien","OBOS-ligaen"],
-      Poland: ["Ekstraklasa","I Liga"],
-      "Czech Republic": ["First League","National Football League"]
-    };
+    const allowed=new Set(metaCountries.map(c=>c.key));
+    const filterBar=document.getElementById("filterBar");
+    const groupsEl=document.getElementById("groups");
+    const dateLabel=document.getElementById("dateLabel");
+    const statusEl=document.getElementById("status");
 
-    const filterBar = document.getElementById("filterBar");
-    const groupsEl = document.getElementById("groups");
-    const dateLabel = document.getElementById("dateLabel");
-    const statusEl = document.getElementById("status");
-    const today = new Date();
-    let currentDate = today;
-    let currentFilter = "allowed";
-    let all = [];
+    const modal=document.getElementById("leagueModal");
+    const modalTitle=document.getElementById("modalTitle");
+    const modalInfo=document.getElementById("modalInfo");
+    const modalBody=document.getElementById("modalBody");
+    const modalClose=document.getElementById("modalClose");
+    const modalBackdrop=document.getElementById("modalBackdrop");
+
+    const today=new Date();
+    let currentDate=today;
+    let all=[];
+    let currentFilter="allowed";
 
     function formatDate(d){
-      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
-      return `${y}-${m}-${day}`;
+      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
     }
     function clampDate(d){
-      const min=new Date(today.getTime()); min.setDate(min.getDate()-1);
-      const max=new Date(today.getTime()); max.setDate(max.getDate()+1);
-      if (d.getTime()<min.getTime()) return min;
-      if (d.getTime()>max.getTime()) return max;
-      return d;
+      const min=new Date(today);min.setDate(min.getDate()-1);
+      const max=new Date(today);max.setDate(max.getDate()+1);
+      if(d<min)return min;if(d>max)return max;return d;
     }
-    function isWomen(str){ return (str||"").toLowerCase().includes("women"); }
-    function matchCountry(country, filter){
+    function isWomen(s){return(s||"").toLowerCase().includes("women");}
+    function isNon(s){return(s||"").toLowerCase().includes("non ");}
+    function matchCountry(country,f){
+      if(f==="live")return true;
       const c=(country||"").toLowerCase();
-      const isWorld = c.includes("world") || c.includes("international");
-      if (filter==="world") return isWorld;
-      if (filter==="others") return !allowed.has(country) && !isWorld;
-      if (filter==="allowed") return allowed.has(country);
-      return c === filter.toLowerCase();
+      const isWorld=c.includes("world")||c.includes("international");
+      if(f==="world")return isWorld;
+      if(f==="others")return!allowed.has(country)&&!isWorld;
+      if(f==="allowed")return allowed.has(country);
+      return c===f.toLowerCase();
     }
-    function group(data, filter){
-      const cleaned = data.filter(m => !isWomen(m.league) && !isWomen(m.name)).filter(m => matchCountry(m.country, filter));
-      const obj = {};
-      cleaned.forEach(m=>{
-        const country=m.country||"Other";
-        const league=m.league||"League";
-        obj[country]=obj[country]||{};
-        obj[country][league]=obj[country][league]||[];
-        obj[country][league].push(m);
+
+    function groupData(list,f){
+      const obj={};
+      list
+      .filter(m=>!isWomen(m.league)&&!isWomen(m.name))
+      .filter(m=>!isNon(m.league)&&!isNon(m.name))
+      .filter(m=>matchCountry(m.country,f))
+      .forEach(m=>{
+        const co=m.country||"Other";
+        const lg=m.league||"Lig";
+        (obj[co]??=(obj[co]||{}))[lg]??=[];
+        obj[co][lg].push(m);
       });
       return obj;
     }
-    function sortLeagues(country, leaguesObj){
-      const order = leagueOrder[country] || [];
-      const idx = (name) => { const i=order.findIndex(o=>o.toLowerCase()===name.toLowerCase()); return i===-1?999:i; };
-      return Object.entries(leaguesObj).sort((a,b)=>{ const ia=idx(a[0]), ib=idx(b[0]); if(ia!==ib) return ia-ib; return a[0].localeCompare(b[0]); });
+
+    function openModal(country,league,matches){
+      modalTitle.textContent=(country+" – "+league).toUpperCase();
+      modalInfo.textContent=matches.length+" maç · "+formatDate(currentDate);
+      modalBody.innerHTML="";
+      matches.forEach(m=>{
+        const div=document.createElement("div");
+        div.className="modal-match"+(m.live?" status-live":"");
+        div.innerHTML=`${m.name} - ${m.date} - ${m.time} - ${m.status}
+          <div class="modal-detail">Skor: ${m.detail.score}${m.venue?`<br>Stad: ${m.venue}`:""}</div>`;
+        div.onclick=()=>div.querySelector(".modal-detail").classList.toggle("modal-detail-open");
+        modalBody.appendChild(div);
+      });
+      modal.classList.remove("hidden");
+      document.body.style.overflow="hidden";
     }
-    function countryOrderKey(c){
-      const idx = metaCountries.findIndex(x=>x.key===c);
-      return idx === -1 ? 999 : idx;
+
+    function closeModal(){
+      modal.classList.add("hidden");
+      document.body.style.overflow="";
     }
+    modalClose.onclick=closeModal;
+    modalBackdrop.onclick=closeModal;
+    window.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
     function render(filter){
-      currentFilter = filter;
-      const grouped = group(all, filter);
+      currentFilter=filter;
+      let source=all;
+      if(filter==="live")source=all.filter(x=>x.live);
+
+      const grouped=groupData(source,filter);
       groupsEl.innerHTML="";
+
       if(!Object.keys(grouped).length){
-        statusEl.textContent="Bu tarihte veri yok";
+        statusEl.textContent=filter==="live"?"Şu anda canlı maç yok":"Bu tarihte veri yok";
         return;
       }
-      statusEl.textContent="";
-      Object.entries(grouped).sort((a,b)=>countryOrderKey(a[0])-countryOrderKey(b[0]) || a[0].localeCompare(b[0])).forEach(([country, leagues])=>{
-        const metaCountry = metaCountries.find(x=>x.key===country);
-        const flagSrc = (metaCountry && metaCountry.flag) || (country ? 'https://flagcdn.com/24x18/'+country.slice(0,2).toLowerCase()+'.png' : '');
-        const flagImg = flagSrc ? '<img class="flag" src="'+flagSrc+'" onerror="this.style.display=\'none\'">' : "";
-        const total = Object.values(leagues).reduce((s,a)=>s+a.length,0);
-        const htmlLeagues = sortLeagues(country, leagues).map(([lg,arr])=>{
-          const items = arr.map((m,idx)=>{
-            const detail = m.detail && m.detail.score
-              ? "<div class='detail'>"+m.detail.score+"<br>"+(m.detail.lineup || "")+"</div>"
-              : "<div class='detail'>"+(m.venue || "")+"</div>";
-            return '<li class="'+(m.live ? 'status-live' : '')+'" data-id="'+m.id+'-'+idx+'"><strong>'+m.name+'</strong> - '+m.date+' - '+m.time+' - '+m.status+detail+'</li>';
-          }).join("");
-          return '<div class="league">'+lg+' <span class="pill">'+arr.length+'</span></div><ul>'+items+'</ul>';
-        }).join("");
-        const card=document.createElement('div');
-        card.className='group';
-        card.dataset.country=country;
-        card.innerHTML='<h3>'+flagImg+'<span>'+((metaCountry&&metaCountry.label)||country)+'</span> <span class="pill">'+total+' maç</span></h3>'+htmlLeagues;
-        groupsEl.appendChild(card);
-      });
-      groupsEl.querySelectorAll('li').forEach(li=>{
-        li.addEventListener('click',()=>{
-          const d=li.querySelector('.detail');
-          if(d){ d.style.display = d.style.display==='block'?'none':'block'; }
+
+      let index=0;
+      Object.entries(grouped).forEach(([country,leagues])=>{
+        const card=document.createElement("div");
+        card.className="group";
+        card.style.transitionDelay=(index*50)+"ms";
+
+        const meta=metaCountries.find(x=>x.key===country);
+        const flag=meta?.flag?`<img src="${meta.flag}" class="flag">`:"";
+
+        const total=Object.values(leagues).reduce((a,b)=>a+b.length,0);
+        card.innerHTML=`<h3>${flag}${meta?.label||country}<span class="pill">${total} maç</span></h3>`;
+
+        const container=document.createElement("div");
+        Object.entries(leagues).forEach(([lg,arr])=>{
+          const row=document.createElement("div");
+          row.className="league-row";
+          row.innerHTML=`<span>${lg}</span><span class="pill">${arr.length} maç</span>`;
+          row.onclick=()=>openModal(meta?.label||country,lg,arr);
+          container.appendChild(row);
         });
+
+        card.appendChild(container);
+        groupsEl.appendChild(card);
+
+        requestAnimationFrame(()=>card.classList.add("is-visible"));
+        index++;
       });
     }
+
     async function fetchDate(d){
-      const clamp = clampDate(d);
-      dateLabel.textContent = formatDate(clamp);
+      d=clampDate(d);
+      currentDate=d;
+      dateLabel.textContent=formatDate(d);
       statusEl.textContent="Yükleniyor...";
+
       try{
-        const res = await fetch('https://v3.football.api-sports.io/fixtures?date='+formatDate(clamp), { headers:{'x-rapidapi-key':API_KEY,'x-rapidapi-host':'v3.football.api-sports.io'} });
-        const json = await res.json();
-        const items = (json?.response || []).map(fixt=>{
-          const name=(fixt.teams?.home?.name||"")+" vs "+(fixt.teams?.away?.name||"");
-          const rawDate=fixt.fixture?.date;
-          const date=rawDate ? rawDate.slice(0,10) : formatDate(clamp);
-          const statusCode=(fixt.fixture?.status?.short||"").toUpperCase();
-          const live=["1H","2H","ET","HT","P","LIVE"].includes(statusCode);
-          return {
-            id:'af-'+(fixt.fixture?.id||''),
-            name,
-            league:fixt.league?.name||'',
-            leagueId:fixt.league?.id,
-            country:fixt.league?.country||'',
-            time: rawDate ? new Date(rawDate).toISOString().split('T')[1]?.slice(0,5) || '' : '',
-            status: fixt.fixture?.status?.long || fixt.fixture?.status?.short || 'NS',
-            venue: fixt.fixture?.venue?.name || '',
-            live,
-            date,
-            detail:{
-              score: (fixt.goals?.home ?? '-')+' : '+(fixt.goals?.away ?? '-'),
-              home: fixt.teams?.home?.name,
-              away: fixt.teams?.away?.name,
-              venue: fixt.fixture?.venue?.name || '',
-              status: fixt.fixture?.status?.long || fixt.fixture?.status?.short || '',
-              time: rawDate ? new Date(rawDate).toISOString().split('T')[1]?.slice(0,5) || '' : ''
-            }
+        const res=await fetch("https://v3.football.api-sports.io/fixtures?date="+formatDate(d),{
+          headers:{
+            "x-rapidapi-key":API_KEY,
+            "x-rapidapi-host":"v3.football.api-sports.io"
+          }
+        });
+        const json=await res.json();
+
+        all=(json?.response||[]).map(f=>{
+          const raw=f.fixture?.date||"";
+          const short=(f.fixture?.status?.short||"").toUpperCase();
+          const live=["1H","2H","ET","HT","P","LIVE"].includes(short);
+          return{
+            id:f.fixture?.id,
+            name:(f.teams?.home?.name||"")+" vs "+(f.teams?.away?.name||""),
+            league:f.league?.name||"",
+            country:f.league?.country||"",
+            date:raw.slice(0,10),
+            time:raw?new Date(raw).toISOString().slice(11,16):"",
+            status:f.fixture?.status?.long||short,
+            live:live,
+            venue:f.fixture?.venue?.name||"",
+            detail:{score:`${f.goals?.home??"-"} : ${f.goals?.away??"-"}`}
           };
-        }).filter(Boolean);
-        all = items.filter(m => !isWomen(m.league) && !isWomen(m.name));
-        currentDate = clamp;
+        });
+
         statusEl.textContent="";
-        render(currentFilter);
+        render(filterBar.querySelector(".active")?.dataset.filter||"allowed");
       }catch(e){
         statusEl.textContent="Hata: "+e;
       }
     }
-    document.getElementById('prevDay').addEventListener('click',()=>{
-      const d=new Date(currentDate.getTime()); d.setDate(d.getDate()-1);
-      fetchDate(d);
-    });
-    document.getElementById('nextDay').addEventListener('click',()=>{
-      const d=new Date(currentDate.getTime()); d.setDate(d.getDate()+1);
-      fetchDate(d);
-    });
-    metaCountries.filter(c=>c.key!=="world").forEach(c=>{
-      const b=document.createElement('button');
-      b.className='country';
-      b.dataset.filter=c.key;
-      b.textContent=c.label||c.key;
+
+    document.getElementById("prevDay").onclick=()=>fetchDate(new Date(currentDate.getTime()-86400000));
+    document.getElementById("nextDay").onclick=()=>fetchDate(new Date(currentDate.getTime()+86400000));
+
+    ["allowed","world","others","live"].forEach(f=>{
+      const b=document.createElement("button");
+      b.dataset.filter=f;
+      b.textContent=f==="live"?"CANLI":f.toUpperCase();
       filterBar.appendChild(b);
     });
-    ["allowed","world","others"].forEach(f=>{
-      const b=document.createElement('button');
-      b.className='country';
-      b.dataset.filter=f;
-      b.textContent=f.charAt(0).toUpperCase()+f.slice(1);
-      filterBar.insertBefore(b, filterBar.firstChild);
+
+    metaCountries.forEach(c=>{
+      if(c.key!=="world"){
+        const b=document.createElement("button");
+        b.dataset.filter=c.key;
+        b.textContent=c.label;
+        filterBar.appendChild(b);
+      }
     });
-    filterBar.addEventListener('click',(e)=>{
-      if(e.target.tagName!=="BUTTON") return;
-      filterBar.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-      e.target.classList.add('active');
+
+    filterBar.addEventListener("click",e=>{
+      if(e.target.tagName!=="BUTTON")return;
+      filterBar.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+      e.target.classList.add("active");
       render(e.target.dataset.filter);
     });
-    // başlangıç
-    filterBar.querySelector('button[data-filter="allowed"]').classList.add('active');
+
+    filterBar.querySelector("button[data-filter='allowed']").classList.add("active");
     fetchDate(today);
+
   })();
   </script>
 </body>
 </html>
-

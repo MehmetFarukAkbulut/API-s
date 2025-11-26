@@ -5,82 +5,612 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Haber + Trend</title>
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    :root{
+      --bg:#050816;
+      --bg2:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
     *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
-    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
-    p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .bar{display:flex;gap:10px;flex-wrap:nowrap;align-items:center;margin-bottom:12px;overflow-x:auto;}
-    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:220px;}
-    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
-    .list{display:grid;gap:10px;}
-    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;}
-    a{color:#7dd3fc;text-decoration:none;}
-    a:hover{text-decoration:underline;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 8% 0%,rgba(34,211,238,0.12),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.16),transparent 55%),
+        radial-gradient(circle at 20% 80%,rgba(56,189,248,0.14),transparent 55%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+      overflow-x:hidden;
+      position:relative;
+    }
+
+    /* Arka planda yüzen glow'lar - CriticalDanger havası */
+    .bg-orb{
+      position:fixed;
+      border-radius:999px;
+      filter:blur(40px);
+      opacity:0.55;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:-1;
+    }
+    .bg-orb.orb-1{
+      width:340px;height:340px;
+      top:-80px;left:-40px;
+      background:radial-gradient(circle,rgba(34,211,238,0.9),transparent 60%);
+      animation:floatOrb1 26s ease-in-out infinite alternate;
+    }
+    .bg-orb.orb-2{
+      width:420px;height:420px;
+      bottom:-120px;right:-120px;
+      background:radial-gradient(circle,rgba(168,85,247,0.9),transparent 60%);
+      animation:floatOrb2 32s ease-in-out infinite alternate;
+    }
+    .bg-orb.orb-3{
+      width:260px;height:260px;
+      top:40%;right:10%;
+      background:radial-gradient(circle,rgba(56,189,248,0.8),transparent 60%);
+      animation:floatOrb3 34s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatOrb1{
+      0%{transform:translate3d(0,0,0);}
+      50%{transform:translate3d(40px,40px,0);}
+      100%{transform:translate3d(10px,-20px,0);}
+    }
+    @keyframes floatOrb2{
+      0%{transform:translate3d(0,0,0);}
+      50%{transform:translate3d(-30px,-40px,0);}
+      100%{transform:translate3d(20px,10px,0);}
+    }
+    @keyframes floatOrb3{
+      0%{transform:translate3d(0,0,0);}
+      50%{transform:translate3d(-20px,40px,0);}
+      100%{transform:translate3d(25px,10px,0);}
+    }
+
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      position:relative;
+    }
+    header::after{
+      content:"";
+      position:absolute;
+      left:16px;right:16px;bottom:4px;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(34,211,238,0.7),rgba(168,85,247,0.7),transparent);
+      opacity:0.45;
+      transform-origin:left;
+      animation:scanLine 9s ease-in-out infinite;
+    }
+    @keyframes scanLine{
+      0%,100%{transform:scaleX(0);}
+      40%,60%{transform:scaleX(1);}
+    }
+
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.3px;
+      line-height:1.1;
+      background:linear-gradient(120deg,#e5e7eb,#7dd3fc,#a855f7);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 0 22px rgba(56,189,248,0.25);
+    }
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:10px auto 26px;
+      padding:18px 16px 18px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.14),transparent 55%),
+                 radial-gradient(circle at 100% 0,rgba(168,85,247,0.16),transparent 55%),
+                 var(--panel);
+      border:1px solid rgba(148,163,184,0.35);
+      border-radius:16px;
+      box-shadow:0 24px 60px rgba(0,0,0,0.6);
+      position:relative;
+      overflow:hidden;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:linear-gradient(135deg,rgba(34,211,238,0.22),transparent 40%,rgba(168,85,247,0.18),transparent 70%);
+      mix-blend-mode:soft-light;
+      opacity:0.6;
+      pointer-events:none;
+    }
+    .panel::after{
+      content:"";
+      position:absolute;
+      top:-40%;left:-10%;
+      width:160%;
+      height:80px;
+      background:linear-gradient(90deg,transparent,rgba(248,250,252,0.10),transparent);
+      opacity:0;
+      transform:translateY(40px) rotate(-3deg);
+      animation:panelSweep 14s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes panelSweep{
+      0%,60%{opacity:0;transform:translateY(40px) rotate(-3deg);}
+      65%,75%{opacity:1;transform:translateY(0) rotate(-3deg);}
+      80%,100%{opacity:0;transform:translateY(-40px) rotate(-3deg);}
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    input{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.5);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.14),transparent 55%),#020617;
+      color:#fff;
+      min-width:220px;
+      font-size:14px;
+      outline:none;
+      box-shadow:0 0 0 0 rgba(34,211,238,0.4);
+      transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease,
+        transform .18s ease;
+    }
+    input::placeholder{
+      color:rgba(148,163,184,0.8);
+    }
+    input:focus{
+      border-color:rgba(34,211,238,0.85);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.7),0 0 24px rgba(34,211,238,0.35);
+      background:radial-gradient(circle at 100% 0,rgba(168,85,247,0.16),transparent 60%),#020617;
+      transform:translateY(-1px);
+    }
+
+    .btn{
+      position:relative;
+      border:none;
+      padding:10px 16px;
+      border-radius:999px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.25),transparent 55%),
+                 linear-gradient(120deg,rgba(34,211,238,0.9),rgba(168,85,247,0.9));
+      color:#f9fafb;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:0.02em;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      box-shadow:0 12px 35px rgba(0,0,0,0.65);
+      transition:
+        transform .2s cubic-bezier(0.22,0.61,0.36,1),
+        box-shadow .2s ease,
+        filter .2s ease,
+        background-position .35s ease;
+      background-size:180% 180%;
+      background-position:0% 50%;
+      overflow:hidden;
+    }
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      border:1px solid rgba(15,23,42,0.4);
+      pointer-events:none;
+      mix-blend-mode:soft-light;
+    }
+    .btn::after{
+      content:"";
+      position:absolute;
+      top:-100%;left:-60%;
+      width:80%;height:260%;
+      background:linear-gradient(120deg,rgba(248,250,252,0.30),transparent);
+      opacity:0;
+      transform:translate3d(0,0,0) rotate(12deg);
+      transition:opacity .25s ease,transform .25s ease;
+    }
+    .btn:hover{
+      transform:translateY(-2px) scale(1.01);
+      box-shadow:0 18px 42px rgba(34,211,238,0.35);
+      filter:brightness(1.03);
+      background-position:100% 50%;
+    }
+    .btn:hover::after{
+      opacity:1;
+      transform:translate3d(60%,0,0) rotate(12deg);
+    }
+    .btn:active{
+      transform:translateY(0) scale(0.99);
+      box-shadow:0 8px 24px rgba(15,23,42,0.9);
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+      position:relative;
+      z-index:1;
+    }
+
+    .card{
+      --tiltX:0deg;
+      --tiltY:0deg;
+      --lift:10px;
+      position:relative;
+      padding:16px 18px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.18),transparent 55%),
+        radial-gradient(circle at 100% 0,rgba(168,85,247,0.20),transparent 60%),
+        #0f182c;
+      box-shadow:0 20px 60px rgba(0,0,0,0.75);
+      overflow:hidden;
+      transform:
+        translateY(var(--lift))
+        rotateX(var(--tiltX))
+        rotateY(var(--tiltY));
+      transform-style:preserve-3d;
+      transform-origin:center center;
+      transition:
+        border-color .25s ease,
+        box-shadow .25s ease,
+        background .25s ease,
+        transform .55s cubic-bezier(0.16,1,0.3,1),
+        opacity .35s ease;
+      opacity:0;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:radial-gradient(circle at 10% 0,rgba(248,250,252,0.18),transparent 60%);
+      opacity:0;
+      mix-blend-mode:screen;
+      transition:opacity .35s ease;
+      pointer-events:none;
+    }
+    .card:hover{
+      border-color:rgba(34,211,238,0.85);
+      box-shadow:0 26px 70px rgba(34,211,238,0.40);
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.24),transparent 55%),
+        radial-gradient(circle at 100% 0,rgba(168,85,247,0.26),transparent 60%),
+        #020617;
+    }
+    .card:hover::before{
+      opacity:1;
+    }
+    .card.card-visible{
+      opacity:1;
+      --lift:0px;
+    }
+    .card h3{
+      margin:6px 0 6px;
+      font-size:16px;
+      letter-spacing:0.01em;
+    }
+    .card p{
+      margin:0 0 8px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    a{
+      color:#7dd3fc;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:500;
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    a::after{
+      content:"";
+      height:1px;
+      width:0;
+      background:linear-gradient(90deg,#7dd3fc,#a855f7);
+      position:absolute;
+      left:0;bottom:-2px;
+      transition:width .2s ease;
+    }
+    a:hover::after{
+      width:100%;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(34,211,238,0.35);
+      color:#7dd3fc;
+      font-size:11px;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      gap:4px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.55);
+      transition:
+        background .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease,
+        transform .25s ease;
+    }
+    .badge-loading{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.9),rgba(168,85,247,0.8));
+      border-color:rgba(248,250,252,0.85);
+      color:#0b1221;
+      box-shadow:
+        0 0 0 1px rgba(34,211,238,0.7),
+        0 0 25px rgba(34,211,238,0.8);
+      animation:pulseBadge 1.05s ease-in-out infinite;
+      transform:translateY(-1px);
+    }
+    @keyframes pulseBadge{
+      0%{transform:translateY(-1px) scale(1);box-shadow:0 0 0 0 rgba(34,211,238,0.7),0 0 24px rgba(34,211,238,0.65);}
+      50%{transform:translateY(-1px) scale(1.04);box-shadow:0 0 0 4px rgba(34,211,238,0.0),0 0 40px rgba(168,85,247,0.85);}
+      100%{transform:translateY(-1px) scale(1);box-shadow:0 0 0 0 rgba(34,211,238,0.7),0 0 24px rgba(34,211,238,0.65);}
+    }
+
+    /* Preset butonları için küçük variant */
+    #filters .btn{
+      padding:8px 12px;
+      font-size:12px;
+      box-shadow:0 10px 26px rgba(0,0,0,0.6);
+    }
+    #filters .btn.active-filter{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.28),transparent 55%),
+                 linear-gradient(120deg,rgba(34,211,238,1),rgba(168,85,247,1));
+      box-shadow:0 18px 42px rgba(34,211,238,0.45);
+    }
+
+    /* "Daha fazla" satırını sağa yaslı tut */
+    .bar.more-row{
+      justify-content:flex-end;
+      margin-top:10px;
+    }
+
+    @media (max-width:600px){
+      header{
+        align-items:flex-start;
+      }
+      h1{
+        font-size:24px;
+      }
+      .panel{
+        margin-top:2px;
+        padding:14px 12px 16px;
+      }
+      .card{
+        padding:14px 14px;
+      }
+    }
   </style>
 </head>
 <body>
-  <header style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+  <!-- Arka plan glow elementleri -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <header>
     <a class="btn" href="../index.html">Ana sayfa</a>
     <div>
       <h1>Haber + Trend</h1>
       <p class="lead">Spaceflight News API ile kategori/preset filtreli haber listesi.</p>
     </div>
   </header>
+
   <div class="panel">
-    <div class="bar" id="filters" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;"></div>
+    <div class="bar" id="filters"></div>
+
     <div class="bar">
       <input id="q" placeholder="Konu (örn: finance)">
       <button class="btn" id="go">Ara</button>
       <span class="badge" id="status">Hazır</span>
     </div>
+
     <div class="list" id="list">
-      <div class="card">Filtre veya arama girin.</div>
+      <div class="card card-visible">Filtre veya arama girin.</div>
+    </div>
+
+    <div class="bar more-row">
+      <button class="btn" id="more">Daha fazla</button>
     </div>
   </div>
+
   <script>
   (function(){
-    const qEl=document.getElementById("q");
-    const list=document.getElementById("list");
-    const status=document.getElementById("status");
-    const filters=document.getElementById("filters");
-    const presets=["finance","politics","space","nature","science","technology"];
-    filters.innerHTML = presets.map(p=>`<button class="btn" data-q="${p}" style="padding:8px 12px;font-size:13px">${p}</button>`).join("");
-    async function run(){
-      try{
-        status.textContent="Yükleniyor...";
-        const q=qEl.value.trim()||"";
-        if(!q){ list.innerHTML="<div class='card'>Filtre veya arama girin.</div>"; status.textContent="Hazır"; return; }
-        const url=`https://api.spaceflightnewsapi.net/v4/articles/?limit=12&search=${encodeURIComponent(q)}`;
-        const r=await fetch(url); const j=await r.json();
-        const items=j.results||[];
-        if(!items.length){ list.innerHTML="<div class='card'>Sonuç yok</div>"; status.textContent="Hazır"; return; }
-        list.innerHTML = items.map(it=>`
-          <div class="card">
-            <div class="badge">${it.site || "Haber"}</div>
-            <h3>${it.title}</h3>
-            <p>${(it.summary||"").slice(0,180)}...</p>
-            <a href="${it.url}" target="_blank" rel="noreferrer">Oku</a>
-          </div>
-        `).join("");
-        status.textContent="Hazır";
-      }catch(e){
-        status.textContent="Hata";
-        list.innerHTML="<div class='card'>Veri alınamadı</div>";
+    const qEl = document.getElementById("q");
+    const list = document.getElementById("list");
+    const status = document.getElementById("status");
+    const filters = document.getElementById("filters");
+    const moreBtn = document.getElementById("more");
+    const presets = ["technology","space","science","nature","politics","finance"];
+
+    filters.innerHTML = presets
+      .map(p => `<button class="btn" data-q="${p}" style="font-size:12px">${p}</button>`)
+      .join("");
+
+    let page = 0;
+    const limit = 12;
+
+    let observer;
+    function ensureObserver(){
+      if(observer) return;
+      observer = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            entry.target.classList.add("card-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },{
+        threshold:0.25
+      });
+    }
+
+    function enhanceCards(){
+      ensureObserver();
+      const cards = list.querySelectorAll(".card");
+      cards.forEach(card=>{
+        if(card.dataset.fxBound) return;
+        card.dataset.fxBound = "1";
+
+        observer.observe(card);
+
+        card.addEventListener("mousemove", (e)=>{
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const midX = rect.width / 2;
+          const midY = rect.height / 2;
+
+          const rotateX = ((y - midY) / midY) * -4; // yukarı-aşağı eğim
+          const rotateY = ((x - midX) / midX) * 4;  // sağ-sol eğim
+
+          card.style.setProperty("--tiltX", rotateX.toFixed(2) + "deg");
+          card.style.setProperty("--tiltY", rotateY.toFixed(2) + "deg");
+          card.style.setProperty("--lift", "-4px");
+        });
+
+        card.addEventListener("mouseleave", ()=>{
+          card.style.setProperty("--tiltX","0deg");
+          card.style.setProperty("--tiltY","0deg");
+          card.style.setProperty("--lift","0px");
+        });
+      });
+    }
+
+    function setStatus(text, loading){
+      status.textContent = text;
+      if(loading){
+        status.classList.add("badge-loading");
+      }else{
+        status.classList.remove("badge-loading");
       }
     }
-    document.getElementById("go").addEventListener("click", run);
-    qEl.addEventListener("keydown",e=>{if(e.key==="Enter") run();});
+
+    function highlightPreset(value){
+      const btns = filters.querySelectorAll("[data-q]");
+      btns.forEach(b=>{
+        if(b.dataset.q === value){
+          b.classList.add("active-filter");
+        }else{
+          b.classList.remove("active-filter");
+        }
+      });
+    }
+
+    function renderItems(items, append=false){
+      const html = items.map(it => `
+        <div class="card">
+          <div class="badge">${it.site || "Haber"}</div>
+          <h3>${it.title}</h3>
+          <p>${(it.summary || "").slice(0,180)}...</p>
+          <a href="${it.url}" target="_blank" rel="noreferrer">Oku</a>
+        </div>
+      `).join("");
+
+      if(append){
+        list.innerHTML = list.innerHTML + html;
+      }else{
+        list.innerHTML = html;
+      }
+      enhanceCards();
+    }
+
+    async function run(append=false){
+      try{
+        setStatus("Yükleniyor...", true);
+
+        const q = qEl.value.trim() || "";
+        if(!q){
+          list.innerHTML = "<div class='card card-visible'>Filtre veya arama girin.</div>";
+          setStatus("Hazır", false);
+          highlightPreset("");
+          return;
+        }
+
+        const offset = append ? page * limit : 0;
+        if(!append){ page = 0; }
+
+        const url = `https://api.spaceflightnewsapi.net/v4/articles/?limit=${limit}&offset=${offset}&search=${encodeURIComponent(q)}`;
+        const r = await fetch(url);
+        const j = await r.json();
+        const items = j.results || [];
+
+        if(!items.length){
+          list.innerHTML = "<div class='card card-visible'>Sonuç yok</div>";
+          setStatus("Hazır", false);
+          return;
+        }
+
+        renderItems(items, append);
+        setStatus("Hazır", false);
+        highlightPreset(q);
+      }catch(e){
+        console.error(e);
+        setStatus("Hata", false);
+        list.innerHTML = "<div class='card card-visible'>Veri alınamadı</div>";
+      }
+    }
+
+    document.getElementById("go").addEventListener("click", ()=>run(false));
+    qEl.addEventListener("keydown", e=>{
+      if(e.key === "Enter"){ run(false); }
+    });
+
     filters.addEventListener("click",(e)=>{
-      if(e.target.dataset.q){
-        qEl.value=e.target.dataset.q;
-        run();
+      const btn = e.target.closest("[data-q]");
+      if(btn){
+        qEl.value = btn.dataset.q;
+        page = 0;
+        run(false);
       }
     });
+
+    moreBtn.addEventListener("click", ()=>{
+      page++;
+      run(true);
+    });
+
+    // ilk açılışta trend veri
+    qEl.value = presets[0];
+    highlightPreset(presets[0]);
+    run(false);
   })();
   </script>
 </body>

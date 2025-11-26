@@ -5,116 +5,640 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kur / Döviz</title>
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --danger:#ef4444;
+      --success:#22c55e;
+    }
     *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);min-height:100vh;}
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
-    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
-    p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
-    input, select{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:140px;}
-    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
-    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;margin-bottom:10px;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
-    .muted{color:var(--muted);}
-    .rates{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;}
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%,rgba(34,211,238,0.10),transparent 45%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.10),transparent 45%),
+        linear-gradient(135deg,#020617,#020617 20%,#020617 40%,#020617 60%,#020617);
+      color:var(--text);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    /* Arka planda yüzen glowlar */
+    .orb {
+      position:fixed;
+      width:340px;
+      height:340px;
+      border-radius:999px;
+      filter:blur(80px);
+      opacity:0.35;
+      z-index:-1;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      animation: float-orb 16s ease-in-out infinite alternate;
+    }
+    .orb.orb-a{
+      top:-120px;left:-80px;
+      background:radial-gradient(circle,var(--accent),transparent 70%);
+      animation-delay:0s;
+    }
+    .orb.orb-b{
+      bottom:-160px;right:-100px;
+      background:radial-gradient(circle,var(--accent2),transparent 70%);
+      animation-delay:2.5s;
+    }
+    @keyframes float-orb{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(40px,30px,0) scale(1.05);}
+      100%{transform:translate3d(-40px,-20px,0) scale(0.98);}
+    }
+
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      position:relative;
+    }
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.3px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    h1 span.spark{
+      width:18px;
+      height:18px;
+      border-radius:999px;
+      background:radial-gradient(circle,var(--accent),transparent 70%);
+      box-shadow:0 0 15px rgba(34,211,238,0.7);
+      animation:pulse-spark 2.6s ease-in-out infinite;
+    }
+    @keyframes pulse-spark{
+      0%,100%{transform:scale(0.9);opacity:0.8;}
+      50%{transform:scale(1.15);opacity:1;}
+    }
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    /* Header altı ince animasyon çizgi */
+    .header-bar {
+      position:relative;
+      margin-top:10px;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(148,163,184,0.45),transparent);
+      overflow:hidden;
+    }
+    .header-bar::after{
+      content:"";
+      position:absolute;
+      top:0;bottom:0;
+      width:110px;
+      background:linear-gradient(90deg,transparent,rgba(34,211,238,1),transparent);
+      animation: sweep 3.5s linear infinite;
+    }
+    @keyframes sweep{
+      0%{transform:translateX(-30%);}
+      100%{transform:translateX(260%);}
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:14px auto 26px;
+      padding:16px;
+      background:var(--panel);
+      border-radius:18px;
+      position:relative;
+      border:1px solid rgba(148,163,184,0.35);
+      box-shadow:
+        0 26px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.9) inset;
+      overflow:hidden;
+      backdrop-filter:blur(16px);
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.25),transparent 60%),
+        radial-gradient(circle at 100% 100%,rgba(168,85,247,0.25),transparent 60%);
+      opacity:0.0;
+      pointer-events:none;
+      z-index:-1;
+      animation: panel-glow 12s ease-in-out infinite alternate;
+    }
+    @keyframes panel-glow{
+      0%{opacity:0.08;transform:translate3d(0,0,0);}
+      50%{opacity:0.18;transform:translate3d(0,-4px,0);}
+      100%{opacity:0.08;transform:translate3d(0,3px,0);}
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+    }
+
+    input, select{
+      padding:9px 11px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      background:rgba(15,23,42,0.95);
+      color:#e5e7eb;
+      min-width:140px;
+      font-size:13px;
+      outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease;
+    }
+    input::placeholder{color:var(--muted);}
+    input:focus, select:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.7),0 0 32px rgba(34,211,238,0.2);
+      background:#020617;
+      transform:translateY(-1px);
+    }
+
+    .btn{
+      border:none;
+      padding:10px 16px;
+      border-radius:999px;
+      background:linear-gradient(120deg,rgba(34,211,238,0.7),rgba(168,85,247,0.7));
+      color:#fff;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:500;
+      letter-spacing:0.02em;
+      position:relative;
+      overflow:hidden;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      box-shadow:0 12px 30px rgba(15,23,42,0.9);
+      transform:translateY(0) scale(1);
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        filter .18s ease,
+        background-position .35s ease;
+      background-size:220% 220%;
+      background-position:0% 50%;
+    }
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle,rgba(255,255,255,0.28),transparent 55%);
+      opacity:0;
+      transform:translate3d(-40%,0,0);
+      transition:opacity .35s ease,transform .35s ease;
+      pointer-events:none;
+    }
+    .btn:hover{
+      transform:translateY(-1px) scale(1.02);
+      box-shadow:0 18px 40px rgba(15,23,42,0.95);
+      filter:brightness(1.05);
+      background-position:100% 50%;
+    }
+    .btn:active{
+      transform:translateY(0) scale(0.98);
+      box-shadow:0 8px 22px rgba(15,23,42,0.9);
+    }
+    .btn:hover::after{
+      opacity:1;
+      transform:translate3d(35%,0,0);
+    }
+    .btn.btn-range{
+      padding:6px 12px;
+      font-size:12px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.5);
+      box-shadow:none;
+      background-size:100% 100%;
+    }
+    .btn.btn-range:hover{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.3),rgba(15,23,42,1));
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.4);
+    }
+    .btn.btn-range.active{
+      background:linear-gradient(120deg,rgba(34,211,238,0.8),rgba(168,85,247,0.8));
+      border-color:transparent;
+      box-shadow:0 12px 32px rgba(34,211,238,0.4);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(34,211,238,0.08);
+      border:1px solid rgba(34,211,238,0.6);
+      color:#7dd3fc;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      white-space:nowrap;
+    }
+    .badge-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 10px rgba(34,197,94,0.9);
+    }
+    #status{
+      margin-left:auto;
+      font-size:11px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.65);
+      background:rgba(15,23,42,0.9);
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    #status::before{
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 12px rgba(34,197,94,0.9);
+      flex-shrink:0;
+    }
+    #status.is-loading{
+      border-color:rgba(34,211,238,0.8);
+      color:#e5e7eb;
+      animation: status-pulse 1.1s ease-in-out infinite;
+    }
+    #status.is-loading::before{
+      background:var(--accent);
+      box-shadow:0 0 16px rgba(34,211,238,1);
+      animation: dot-pulse 0.9s ease-in-out infinite;
+    }
+    #status.is-error{
+      border-color:var(--danger);
+      color:#fecaca;
+    }
+    #status.is-error::before{
+      background:var(--danger);
+      box-shadow:0 0 14px rgba(248,113,113,1);
+    }
+    @keyframes status-pulse{
+      0%,100%{transform:translateY(0);box-shadow:0 0 0 0 rgba(34,211,238,0.0);}
+      50%{transform:translateY(-1px);box-shadow:0 0 0 4px rgba(34,211,238,0.35);}
+    }
+    @keyframes dot-pulse{
+      0%,100%{transform:scale(0.92);}
+      50%{transform:scale(1.2);}
+    }
+
+    .card{
+      padding:14px 14px 13px;
+      border-radius:14px;
+      border:1px solid rgba(51,65,85,0.9);
+      background:radial-gradient(circle at 0 0,rgba(148,163,184,0.15),rgba(15,23,42,1));
+      margin-bottom:10px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 14px 35px rgba(15,23,42,0.9);
+      transform:translateY(0) translateZ(0);
+      transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+      opacity:0;
+      animation: fade-up 0.38s ease-out forwards;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.28),transparent 55%);
+      opacity:0;
+      transform:translate3d(-30%,0,0);
+      transition:opacity .3s ease,transform .3s ease;
+      pointer-events:none;
+    }
+    .card:hover{
+      transform:translateY(-3px);
+      box-shadow:0 20px 40px rgba(15,23,42,1);
+      border-color:rgba(148,163,184,0.9);
+      background:radial-gradient(circle at 0 0,rgba(148,163,184,0.2),rgba(15,23,42,1));
+    }
+    .card:hover::before{
+      opacity:1;
+      transform:translate3d(10%,0,0);
+    }
+    .card-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:4px;
+    }
+    .card-main{
+      font-size:14px;
+      margin-bottom:2px;
+    }
+    .card-sub{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .change-line{
+      font-size:12px;
+      margin-top:4px;
+    }
+
+    @keyframes fade-up{
+      0%{opacity:0;transform:translateY(8px);}
+      100%{opacity:1;transform:translateY(0);}
+    }
+
+    .rates{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .muted{color:var(--muted);font-size:12px;}
+
+    .num-anim{
+      display:inline-block;
+      animation: num-pop .32s ease-out;
+      transform-origin:bottom left;
+    }
+    @keyframes num-pop{
+      0%{transform:translateY(3px) scale(0.94);opacity:0;}
+      100%{transform:translateY(0) scale(1);opacity:1;}
+    }
+
+    /* Skeleton / boş veri */
+    .skeleton{
+      background:linear-gradient(
+        90deg,
+        rgba(148,163,184,0.12),
+        rgba(148,163,184,0.3),
+        rgba(148,163,184,0.12)
+      );
+      background-size:200% 100%;
+      animation:skeleton 1.3s ease-in-out infinite;
+      border-radius:999px;
+      height:10px;
+    }
+    @keyframes skeleton{
+      0%{background-position:0% 50%;}
+      100%{background-position:200% 50%;}
+    }
+
+    @media (max-width:640px){
+      header{padding-top:20px;}
+      h1{font-size:24px;}
+      .panel{margin:10px 8px 24px;padding:14px;}
+      .bar{gap:8px;}
+      #status{margin-left:0;margin-top:4px;}
+    }
   </style>
 </head>
 <body>
+  <!-- arka plan glowları -->
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+
   <header>
-    <h1>Kur / Döviz</h1>
+    <h1><span class="spark"></span>Kur / Döviz</h1>
     <p class="lead">Frankfurter API ile baz kur, tarih ve miktar dönüştürme.</p>
+    <div class="header-bar"></div>
   </header>
+
   <div class="panel">
     <div class="bar">
-      <a class="btn" href="../index.html">Ana sayfa</a>
+      <a class="btn" href="../index.html">
+        Ana Sayfa
+      </a>
       <select id="base">
-        <option>USD</option><option>EUR</option><option>GBP</option><option>TRY</option><option>CHF</option><option>CAD</option><option>AUD</option>
+        <option>USD</option>
+        <option>EUR</option>
+        <option>GBP</option>
+        <option>TRY</option>
+        <option>CHF</option>
+        <option>CAD</option>
+        <option>AUD</option>
       </select>
       <input type="date" id="date">
       <input type="number" id="amt" value="100" min="1" step="1" placeholder="Miktar">
-      <button class="btn" id="go">Hesapla</button>
-      <span class="badge" id="status">Hazır</span>
+      <button class="btn" id="go">
+        <span>▶</span><span>Hesapla</span>
+      </button>
+      <span class="status badge" id="status">Hazır</span>
     </div>
+
     <div class="bar">
       <button class="btn btn-range" data-range="1g">1G</button>
       <button class="btn btn-range" data-range="5g">5G</button>
       <button class="btn btn-range" data-range="1m">1 Ay</button>
     </div>
-    <div id="result" class="card"></div>
+
+    <div id="result" class="card" style="animation-delay:0s;">
+      <div class="skeleton" style="width:40%;margin-bottom:6px;"></div>
+      <div class="skeleton" style="width:65%;"></div>
+    </div>
     <div class="rates" id="rates"></div>
   </div>
+
   <script>
   (function(){
-    const baseEl=document.getElementById("base");
-    const dateEl=document.getElementById("date");
-    const amtEl=document.getElementById("amt");
-    const resEl=document.getElementById("result");
-    const ratesEl=document.getElementById("rates");
-    const status=document.getElementById("status");
-    const today=new Date();
-    dateEl.value=today.toISOString().slice(0,10);
-    dateEl.max=today.toISOString().slice(0,10);
+    const baseEl = document.getElementById("base");
+    const dateEl = document.getElementById("date");
+    const amtEl = document.getElementById("amt");
+    const resEl = document.getElementById("result");
+    const ratesEl = document.getElementById("rates");
+    const status = document.getElementById("status");
+    const rangeButtons = document.querySelectorAll(".btn-range");
+
+    const today = new Date();
+    const isoToday = today.toISOString().slice(0,10);
+    dateEl.value = isoToday;
+    dateEl.max = isoToday;
 
     function friendly(code){
-      const map={USD:"US Dollar",EUR:"Euro",TRY:"Turkish Lira",GBP:"Pound",CHF:"Swiss Franc",CAD:"Canadian Dollar",AUD:"Australian Dollar"};
-      return map[code]||code;
+      const map={
+        USD:"US Dollar",
+        EUR:"Euro",
+        TRY:"Turkish Lira",
+        GBP:"Pound",
+        CHF:"Swiss Franc",
+        CAD:"Canadian Dollar",
+        AUD:"Australian Dollar"
+      };
+      return map[code] || code;
     }
+
     async function fetchRates(base,date){
-      const url=date?`https://api.frankfurter.app/${date}?from=${base}`:`https://api.frankfurter.app/latest?from=${base}`;
-      const r=await fetch(url); return r.json();
+      const url = date
+        ? `https://api.frankfurter.app/${date}?from=${base}`
+        : `https://api.frankfurter.app/latest?from=${base}`;
+      const r = await fetch(url);
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
     }
+
     async function compare(base,date,deltaDays){
       const target = date ? new Date(date) : new Date();
-      target.setDate(target.getDate()-deltaDays);
+      target.setDate(target.getDate() - deltaDays);
       const refDate = target.toISOString().slice(0,10);
       const ref = await fetchRates(base, refDate);
       return { refDate, refRates: ref.rates || {} };
     }
+
+    function setStatusLoading(){
+      status.textContent = "Yükleniyor...";
+      status.classList.add("is-loading");
+      status.classList.remove("is-error");
+    }
+    function setStatusReady(){
+      status.textContent = "Hazır";
+      status.classList.remove("is-loading","is-error");
+    }
+    function setStatusError(){
+      status.textContent = "Hata";
+      status.classList.remove("is-loading");
+      status.classList.add("is-error");
+    }
+
+    function activateRangeButton(range){
+      rangeButtons.forEach(btn=>{
+        if(btn.dataset.range === range){
+          btn.classList.add("active");
+        }else{
+          btn.classList.remove("active");
+        }
+      });
+    }
+
     async function run(range){
       try{
-        status.textContent="Yükleniyor...";
-        const base=baseEl.value||"USD";
-        const date=dateEl.value?dateEl.value:"";
-        const amt=parseFloat(amtEl.value)||1;
-        const j=await fetchRates(base,date);
-        const rates=j.rates||{};
-        let refDateLabel="", refRates={};
+        setStatusLoading();
+        activateRangeButton(range || "");
+        // küçük skeleton etkisi
+        resEl.innerHTML = `
+          <div class="badge"><span class="badge-dot"></span><span>Kur Bilgisi</span></div>
+          <div class="skeleton" style="width:55%;margin-top:8px;"></div>
+        `;
+        ratesEl.innerHTML = "";
+
+        const base = baseEl.value || "USD";
+        const date = dateEl.value ? dateEl.value : "";
+        const amt = parseFloat(amtEl.value) || 1;
+
+        const j = await fetchRates(base, date);
+        const rates = j.rates || {};
+
+        let refDateLabel = "";
+        let refRates = {};
         if(range){
-          const delta = range==="1g"?1: range==="5g"?5:30;
-          const cmp = await compare(base, date||j.date, delta);
+          const delta = range === "1g" ? 1 : range === "5g" ? 5 : 30;
+          const cmp = await compare(base, date || j.date, delta);
           refDateLabel = cmp.refDate;
           refRates = cmp.refRates;
         }
-        resEl.innerHTML=`<div class="badge">Baz: ${base} ${date||j.date||""}</div>
-          <div class="muted">Toplam kur: ${Object.keys(rates).length}</div>`;
-        const html=Object.entries(rates).map(([k,v])=>{
-          const conv=(v*amt).toFixed(4);
-          let deltaHtml="";
+
+        resEl.innerHTML = `
+          <div class="card-header">
+            <div class="badge">
+              <span class="badge-dot"></span>
+              <span>Baz: ${base}</span>
+            </div>
+            <span class="muted">Tarih: ${date || j.date || ""}</span>
+          </div>
+          <div class="card-main">
+            Toplam kur: <span class="num-anim">${Object.keys(rates).length}</span>
+          </div>
+          <div class="card-sub">
+            Seçilen baz kura göre tüm karşı para birimlerinin son değerleri listelenmiştir.
+          </div>
+        `;
+
+        const entries = Object.entries(rates);
+        const html = entries.map(([k,v], idx)=>{
+          const conv = (v * amt).toFixed(4);
+          let deltaHtml = "";
+          let deltaColor = "var(--muted)";
+
           if(refRates[k]){
             const diff = v - refRates[k];
-            const perc = ((diff/refRates[k])*100).toFixed(2);
-            const arrow = diff>=0 ? "↑" : "↓";
-            const color = diff>=0 ? "#22c55e" : "#ef4444";
-            deltaHtml = `<div class="muted" style="color:${color}">${refDateLabel}: ${refRates[k].toFixed(4)} | ${arrow} ${perc}%</div>`;
+            const perc = ((diff / refRates[k]) * 100).toFixed(2);
+            const arrow = diff >= 0 ? "↑" : "↓";
+            const color = diff >= 0 ? "var(--success)" : "var(--danger)";
+            deltaColor = color;
+            deltaHtml = `
+              <div class="change-line" style="color:${color}">
+                ${refDateLabel}: ${refRates[k].toFixed(4)} | ${arrow} ${perc}%
+              </div>
+            `;
           }
-          return `<div class="card"><div class="badge">${k}</div><div>${friendly(k)}: ${v.toFixed(4)}</div><div class="muted">${amt} ${base} → ${conv} ${k}</div>${deltaHtml}</div>`;
+
+          const delay = 0.02 * idx;
+
+          return `
+            <div class="card" style="animation-delay:${delay}s;">
+              <div class="card-header">
+                <div class="badge">
+                  <span>${k}</span>
+                </div>
+                <span class="muted">${friendly(k)}</span>
+              </div>
+              <div class="card-main">
+                <span class="muted">1 ${base} = </span>
+                <span class="num-anim" style="color:${deltaColor}">${v.toFixed(4)}</span>
+                <span class="muted"> ${k}</span>
+              </div>
+              <div class="card-sub">
+                <span class="muted">${amt} ${base} → </span>
+                <span class="num-anim">${conv}</span>
+                <span class="muted"> ${k}</span>
+              </div>
+              ${deltaHtml}
+            </div>
+          `;
         }).join("");
-        ratesEl.innerHTML=html;
-        status.textContent="Hazır";
+
+        ratesEl.innerHTML = html;
+        setStatusReady();
       }catch(e){
-        status.textContent="Hata";
-        resEl.innerHTML="Veri alınamadı";
-        ratesEl.innerHTML="";
+        console.error(e);
+        setStatusError();
+        resEl.innerHTML = `
+          <div class="card-main" style="color:var(--danger);">
+            Veri alınamadı. Lütfen bağlantıyı veya tarihi kontrol edin.
+          </div>
+        `;
+        ratesEl.innerHTML = "";
       }
     }
+
     document.getElementById("go").addEventListener("click", ()=>run(null));
-    [baseEl,dateEl,amtEl].forEach(el=>el.addEventListener("change", ()=>run(null)));
-    document.querySelectorAll(".btn-range").forEach(btn=>{
-      btn.addEventListener("click", ()=>run(btn.dataset.range));
+    [baseEl, dateEl, amtEl].forEach(el=>{
+      el.addEventListener("change", ()=>run(null));
     });
+    rangeButtons.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        run(btn.dataset.range);
+      });
+    });
+
     run(null);
   })();
   </script>

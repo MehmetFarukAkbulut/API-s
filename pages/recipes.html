@@ -5,91 +5,601 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tarif + Besin</title>
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
+    :root{
+      --bg:#050816;
+      --panel:#0b1120;
+      --accent:#22d3ee;
+      --accent2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
     *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
-    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
-    p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
-    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:220px;}
-    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-    .chip{padding:8px 12px;border-radius:999px;background:rgba(34,211,238,0.12);color:#7dd3fc;border:1px solid rgba(34,211,238,0.3);cursor:pointer;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
-    .card{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
-    img.thumb{width:100%;border-radius:10px;margin-bottom:8px;}
-    .muted{color:var(--muted);}
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 10% 0%,rgba(34,211,238,0.14),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#0b1221);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+    /* Arka planda yüzen Baseborn vari bloblar */
+    body::before,
+    body::after{
+      content:"";
+      position:fixed;
+      inset:auto;
+      width:420px;
+      height:420px;
+      border-radius:999px;
+      background:radial-gradient(circle at 30% 30%,rgba(34,211,238,0.34),transparent 60%);
+      mix-blend-mode:screen;
+      filter:blur(4px);
+      opacity:0.85;
+      z-index:-1;
+      pointer-events:none;
+      animation:blobA 22s ease-in-out infinite alternate;
+    }
+    body::after{
+      width:520px;
+      height:520px;
+      background:radial-gradient(circle at 70% 70%,rgba(168,85,247,0.33),transparent 60%);
+      animation:blobB 26s ease-in-out infinite alternate;
+    }
+    @keyframes blobA{
+      0%{transform:translate3d(-20%, -10%,0) scale(1);}
+      50%{transform:translate3d(10%,30%,0) scale(1.15);}
+      100%{transform:translate3d(-5%,55%,0) scale(0.9);}
+    }
+    @keyframes blobB{
+      0%{transform:translate3d(40%,-30%,0) scale(1.1);}
+      50%{transform:translate3d(10%,10%,0) scale(0.95);}
+      100%{transform:translate3d(35%,40%,0) scale(1.2);}
+    }
+
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      animation:fadeDown 0.8s ease-out forwards;
+      opacity:0;
+    }
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.3px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    h1::after{
+      content:"";
+      flex:1;
+      height:1px;
+      background:linear-gradient(90deg,rgba(34,211,238,0.5),transparent);
+      opacity:0.7;
+    }
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:0 auto 26px;
+      padding:16px;
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(145deg,rgba(15,23,42,0.97),rgba(15,23,42,0.88));
+      box-shadow:
+        0 24px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.9) inset;
+      backdrop-filter:blur(20px);
+      position:relative;
+      overflow:hidden;
+      animation:fadeUp 0.9s 0.1s ease-out forwards;
+      opacity:0;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.28),transparent 55%),
+        radial-gradient(circle at 100% 0,rgba(168,85,247,0.24),transparent 55%);
+      opacity:0;
+      mix-blend-mode:soft-light;
+      pointer-events:none;
+      transition:opacity .5s ease;
+    }
+    .panel:hover::before{opacity:1;}
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    input{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:#020617;
+      color:#fff;
+      min-width:220px;
+      outline:none;
+      font-size:14px;
+      box-shadow:0 0 0 1px rgba(15,23,42,1);
+      transition:border-color .2s, box-shadow .2s, background .2s, transform .15s;
+    }
+    input:focus{
+      border-color:var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,1),
+        0 0 0 1px rgba(34,211,238,0.7),
+        0 0 20px rgba(34,211,238,0.35);
+      background:#020617;
+      transform:translateY(-1px);
+    }
+
+    .btn{
+      border:none;
+      padding:10px 14px;
+      border-radius:999px;
+      background:linear-gradient(120deg,rgba(34,211,238,0.9),rgba(168,85,247,0.9));
+      color:#0b1120;
+      cursor:pointer;
+      font-weight:500;
+      font-size:13px;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:transform .2s, box-shadow .2s, filter .2s, background .2s;
+      box-shadow:0 18px 40px rgba(15,23,42,0.9),0 0 0 1px rgba(15,23,42,1);
+      position:relative;
+      overflow:hidden;
+    }
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(255,255,255,0.35),transparent 55%);
+      opacity:0;
+      transform:translate3d(-40%, -40%,0);
+      transition:opacity .25s ease, transform .25s ease;
+    }
+    .btn:hover{
+      transform:translateY(-1px) scale(1.01);
+      box-shadow:
+        0 22px 50px rgba(8,47,73,0.95),
+        0 0 0 1px rgba(15,23,42,1);
+      filter:saturate(1.1);
+    }
+    .btn:hover::after{
+      opacity:0.9;
+      transform:translate3d(0,0,0);
+    }
+
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .chip{
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      color:#7dd3fc;
+      border:1px solid rgba(37,99,235,0.6);
+      cursor:pointer;
+      font-size:12px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      transition:color .2s, border-color .2s, background .2s, box-shadow .2s, transform .18s;
+    }
+    .chip::before{
+      content:"";
+      position:absolute;
+      width:180%;
+      height:180%;
+      left:-40%;
+      top:-40%;
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.6),transparent 55%);
+      opacity:0;
+      transition:opacity .25s, transform .25s;
+      transform:translate3d(-30%,0,0);
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+    .chip:hover{
+      transform:translateY(-1px);
+      background:rgba(15,23,42,1);
+      border-color:rgba(56,189,248,0.85);
+      box-shadow:0 18px 40px rgba(15,23,42,0.9);
+    }
+    .chip:hover::before{
+      opacity:0.8;
+      transform:translate3d(0,0,0);
+    }
+    .chip span{
+      opacity:.7;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+    }
+    .chip.active{
+      color:#e0f2fe;
+      background:linear-gradient(120deg,rgba(34,211,238,0.3),rgba(168,85,247,0.25));
+      border-color:rgba(125,211,252,0.95);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,1) inset,
+        0 16px 36px rgba(15,23,42,0.9);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:12px;
+      margin-top:4px;
+    }
+    .card{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,0.4);
+      background:radial-gradient(circle at 0 0,rgba(15,23,42,1),rgba(15,23,42,0.99));
+      box-shadow:
+        0 16px 40px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,1) inset;
+      position:relative;
+      overflow:hidden;
+      transform-style:preserve-3d;
+      transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+      opacity:0;
+      animation:cardIn 0.55s ease-out forwards;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.28),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(168,85,247,0.25),transparent 55%);
+      opacity:0;
+      mix-blend-mode:soft-light;
+      transition:opacity .25s ease;
+      pointer-events:none;
+    }
+    .card:hover{
+      box-shadow:
+        0 22px 60px rgba(8,47,73,0.95),
+        0 0 0 1px rgba(15,23,42,1) inset;
+      border-color:rgba(129,140,248,0.8);
+    }
+    .card:hover::before{opacity:1;}
+    .card h3{
+      margin:4px 0 4px;
+      font-size:15px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:rgba(15,23,42,1);
+      border:1px solid rgba(56,189,248,0.65);
+      color:#7dd3fc;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+    }
+    .badge::before{
+      content:"●";
+      font-size:9px;
+      color:#22c55e;
+    }
+    img.thumb{
+      width:100%;
+      border-radius:12px;
+      margin-bottom:8px;
+      display:block;
+      object-fit:cover;
+      max-height:190px;
+    }
+    .muted{color:var(--muted);font-size:12px;}
+
+    #status{
+      margin-left:auto;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      background:rgba(15,23,42,0.85);
+      border-radius:999px;
+      padding:6px 9px;
+      border:1px solid rgba(148,163,184,0.7);
+      box-shadow:0 0 0 1px rgba(15,23,42,1);
+    }
+    #status.bad{animation:shake 0.4s linear;}
+
+    /* Küçük 3D mouse glow (Baseborn havası) */
+    .cursor-glow{
+      position:fixed;
+      width:220px;
+      height:220px;
+      border-radius:999px;
+      pointer-events:none;
+      background:radial-gradient(circle at 50% 50%,rgba(56,189,248,0.5),transparent 65%);
+      mix-blend-mode:screen;
+      opacity:0;
+      transform:translate3d(-50%,-50%,0);
+      transition:opacity .25s ease-out;
+      z-index:5;
+    }
+
+    @keyframes fadeDown{
+      from{opacity:0;transform:translateY(-12px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(14px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+    @keyframes cardIn{
+      from{opacity:0;transform:translateY(14px) scale(.98);}
+      to{opacity:1;transform:translateY(0) scale(1);}
+    }
+    @keyframes shake{
+      0%,100%{transform:translateX(0);}
+      25%{transform:translateX(-2px);}
+      50%{transform:translateX(2px);}
+      75%{transform:translateX(-1px);}
+    }
+
+    @media (max-width:640px){
+      header{padding-top:20px;}
+      h1{font-size:24px;}
+      .panel{padding:14px;}
+      .btn{padding:9px 12px;}
+      #status{margin-left:0;}
+    }
   </style>
 </head>
 <body>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
   <header>
     <h1>Tarif + Besin</h1>
-    <p class="lead">Malzeme ya da yemek adına göre arama; hızlı sonuç.</p>
+    <p class="lead">Malzeme ya da yemek adına göre arama; hızlı sonuç. İstersen rastgele öneri al.</p>
   </header>
+
   <div class="panel">
     <div class="bar">
-      <a class="btn" href="../index.html">Ana sayfa</a>
-      <input id="q" placeholder="Tarif veya malzeme (örn: chicken)">
-      <button class="btn" id="go">Ara</button>
+      <a class="btn" href="../index.html">
+        <span>Ana sayfa</span>
+      </a>
+      <input id="q" placeholder="Tarif veya malzeme (örn: chicken, beef, pasta)">
+      <button class="btn" id="go">
+        <span>Ara</span>
+      </button>
       <span class="badge" id="status">Hazır</span>
     </div>
+
     <div class="chips" id="chips"></div>
-    <div class="grid" id="grid"><div class="card">Filtre veya arama yapın.</div></div>
+
+    <div class="grid" id="grid">
+      <div class="card" style="opacity:1;">
+        <h3>Tarif + Besin’e hoş geldiniz</h3>
+        <p class="muted">
+          Sayfa yüklenirken sizin için rastgele tarifler getirilecektir.
+          Dilerseniz yukarıdan bir mutfak / kategori filtresi seçebilir veya arama yapabilirsiniz.
+        </p>
+      </div>
+    </div>
   </div>
+
   <script>
   (function(){
-    const q=document.getElementById("q");
-    const grid=document.getElementById("grid");
-    const status=document.getElementById("status");
-    const chips=document.getElementById("chips");
-    const filters=[
-      {label:"Türk",type:"area",value:"Turkish"},
-      {label:"İtalyan",type:"area",value:"Italian"},
-      {label:"Meksika",type:"area",value:"Mexican"},
-      {label:"Deniz ürünü",type:"category",value:"Seafood"},
-      {label:"Tatlı",type:"category",value:"Dessert"},
-      {label:"Vejetaryen",type:"category",value:"Vegetarian"}
+    const q      = document.getElementById("q");
+    const grid   = document.getElementById("grid");
+    const status = document.getElementById("status");
+    const chips  = document.getElementById("chips");
+    const glow   = document.getElementById("cursorGlow");
+
+    const filters = [
+      // Öneriler
+      {label:"Hızlı Öneri", sub:"Random", type:"random", value:""},
+      // Bölgeler
+      {label:"Türk",      sub:"Mutfak", type:"area",     value:"Turkish"},
+      {label:"İtalyan",   sub:"Mutfak", type:"area",     value:"Italian"},
+      {label:"Japon",     sub:"Mutfak", type:"area",     value:"Japanese"},
+      {label:"Hint",      sub:"Mutfak", type:"area",     value:"Indian"},
+      {label:"Amerikan",  sub:"Mutfak", type:"area",     value:"American"},
+      {label:"Çin",       sub:"Mutfak", type:"area",     value:"Chinese"},
+      {label:"Meksika",   sub:"Mutfak", type:"area",     value:"Mexican"},
+      // Kategoriler
+      {label:"Tavuk",     sub:"Kategori", type:"category", value:"Chicken"},
+      {label:"Et (Beef)", sub:"Kategori", type:"category", value:"Beef"},
+      {label:"Kahvaltı",  sub:"Kategori", type:"category", value:"Breakfast"},
+      {label:"Vegan",     sub:"Kategori", type:"category", value:"Vegan"},
+      {label:"Vejetaryen",sub:"Kategori", type:"category", value:"Vegetarian"},
+      {label:"Deniz Ürünü",sub:"Kategori",type:"category", value:"Seafood"},
+      {label:"Tatlı",     sub:"Kategori", type:"category", value:"Dessert"},
+      {label:"Başlangıç", sub:"Kategori", type:"category", value:"Starter"},
+      {label:"Yan Yemek", sub:"Kategori", type:"category", value:"Side"},
+      {label:"Makarna",   sub:"Kategori", type:"category", value:"Pasta"}
     ];
-    chips.innerHTML=filters.map(f=>`<span class="chip" data-type="${f.type}" data-val="${f.value}">${f.label}</span>`).join("");
-    chips.addEventListener("click",e=>{const t=e.target;if(!t.dataset.type)return; run(t.dataset.type,t.dataset.val);});
 
-    async function run(type,value){
+    chips.innerHTML = filters.map((f,i)=>`
+      <button class="chip${i===0 ? " active" : ""}"
+              data-type="${f.type}"
+              data-val="${f.value}">
+        ${f.label}
+        <span>${f.sub}</span>
+      </button>
+    `).join("");
+
+    function setActiveChip(btn){
+      chips.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+      if(btn) btn.classList.add("active");
+    }
+
+    // Mouse glow ve kart tilt – Baseborn havası
+    document.addEventListener("mousemove", (e)=>{
+      glow.style.opacity = 0.85;
+      glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+    });
+
+    grid.addEventListener("mousemove", (e)=>{
+      const card = e.target.closest(".card");
+      if(!card) return;
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const maxTilt = 6;
+      const rotateX = (0.5 - y) * maxTilt;
+      const rotateY = (x - 0.5) * maxTilt;
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+    });
+
+    grid.addEventListener("mouseleave", (e)=>{
+      const card = e.target.closest && e.target.closest(".card");
+      if(card){
+        card.style.transform = "";
+      }
+    }, true);
+
+    async function loadRandomMeals(count=9){
       try{
-        status.textContent="Yükleniyor...";
-        const term=q.value.trim();
-        let url="";
-        let mode="search";
-        if(type==="area") { url=`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(value)}`; mode="filter"; }
-        else if(type==="category") { url=`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(value)}`; mode="filter"; }
-        else if(term) { url=`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`; mode="search"; }
-        else { grid.innerHTML="<div class='card'>Arama girin ya da filtre seçin.</div>"; status.textContent="Hazır"; return; }
-
-        const r=await fetch(url); const j=await r.json();
-        const meals=j.meals||[];
-        if(!meals.length){ grid.innerHTML="<div class='card'>Sonuç yok</div>"; status.textContent="Hazır"; return; }
-
-        const first12=meals.slice(0,12);
-        grid.innerHTML = first12.map(m=>`
-          <div class="card">
-            <div class="badge">${m.strArea||value||""}</div>
-            <img class="thumb" src="${m.strMealThumb||""}" alt="${m.strMeal||""}">
-            <h3>${m.strMeal||""}</h3>
-            <p class="muted">${mode==="search" ? (m.strCategory||"") : "Liste sonucu"}</p>
-            ${m.strSource ? `<a class="btn" href="${m.strSource}" target="_blank" rel="noreferrer">Tarifi Aç</a>` : ""}
-          </div>
-        `).join("");
-        status.textContent="Hazır";
-      }catch(e){
-        status.textContent="Hata";
-        grid.innerHTML="<div class='card'>Veri alınamadı.</div>";
+        status.textContent = "Rastgele öneriler getiriliyor...";
+        status.classList.remove("bad");
+        const requests = Array.from({length:count}, () =>
+          fetch("https://www.themealdb.com/api/json/v1/1/random.php").then(r=>r.json())
+        );
+        const results = await Promise.all(requests);
+        const meals = [];
+        results.forEach(j=>{
+          if(j && j.meals && j.meals[0]) meals.push(j.meals[0]);
+        });
+        if(!meals.length){
+          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Şu anda rastgele tarif alınamadı, lütfen tekrar deneyin.</p></div>";
+          status.textContent = "Hazır";
+          return;
+        }
+        renderMeals(meals,"random",{});
+        status.textContent = "Hazır";
+      }catch(err){
+        console.error(err);
+        status.textContent = "Hata";
+        status.classList.add("bad");
+        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Rastgele tarifler alınırken hata oluştu.</p></div>";
       }
     }
+
+    async function run(type, value){
+      try{
+        status.textContent = "Yükleniyor...";
+        status.classList.remove("bad");
+
+        const term = q.value.trim();
+        let url = "";
+        let mode = "search";
+        let meta = {};
+
+        if(type === "random"){
+          setActiveChip(chips.querySelector(".chip[data-type='random']"));
+          await loadRandomMeals();
+          return;
+        }else if(type === "area"){
+          url = `https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(value)}`;
+          mode = "filter";
+          meta = {badge:value, category:""};
+        }else if(type === "category"){
+          url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(value)}`;
+          mode = "filter";
+          meta = {badge:"", category:value};
+        }else if(term){
+          url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+          mode = "search";
+          meta = {};
+        }else{
+          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Arama girin, filtre seçin veya “Hızlı Öneri”ye tıklayın.</p></div>";
+          status.textContent = "Hazır";
+          return;
+        }
+
+        const r = await fetch(url);
+        const j = await r.json();
+        const meals = j.meals || [];
+        if(!meals.length){
+          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Sonuç bulunamadı.</p></div>";
+          status.textContent = "Hazır";
+          return;
+        }
+
+        const first12 = meals.slice(0,12);
+        renderMeals(first12,mode,meta);
+        status.textContent = "Hazır";
+      }catch(e){
+        console.error(e);
+        status.textContent = "Hata";
+        status.classList.add("bad");
+        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Veri alınamadı, lütfen daha sonra tekrar deneyin.</p></div>";
+      }
+    }
+
+    function renderMeals(meals, mode, meta){
+      grid.innerHTML = meals.map((m,idx)=> {
+        const badgeText = (m.strArea || meta.badge || "").trim();
+        const categoryText =
+          (m.strCategory || meta.category || (mode === "search" ? "" : "Liste sonucu")).trim();
+        const delay = 0.03 * idx;
+        return `
+          <div class="card" style="animation-delay:${delay}s;">
+            ${badgeText ? `<span class="badge">${badgeText}</span>` : ""}
+            ${m.strMealThumb ? `<img class="thumb" src="${m.strMealThumb}" alt="${m.strMeal || ""}">` : ""}
+            <h3>${m.strMeal || ""}</h3>
+            <p class="muted">${categoryText}</p>
+            ${
+              m.strSource
+                ? `<a class="btn" href="${m.strSource}" target="_blank" rel="noreferrer">
+                     <span>Tarifi Aç</span>
+                   </a>`
+                : ""
+            }
+          </div>
+        `;
+      }).join("");
+    }
+
+    chips.addEventListener("click",(e)=>{
+      const btn = e.target.closest(".chip");
+      if(!btn) return;
+      const t = btn.dataset.type;
+      const v = btn.dataset.val || "";
+      setActiveChip(btn);
+      run(t,v);
+    });
+
     document.getElementById("go").addEventListener("click", ()=>run());
-    q.addEventListener("keydown", e=>{if(e.key==="Enter") run();});
+    q.addEventListener("keydown", e=>{ if(e.key === "Enter") run(); });
+
+    // İlk açılışta rastgele yemekler
+    loadRandomMeals();
+
   })();
   </script>
 </body>

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hava Kalitesi</title>
+  <style>
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.45);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),
+        radial-gradient(circle at 80% 0,rgba(56,189,248,0.08),transparent 35%),
+        linear-gradient(135deg,#020617,#0f172a 40%,#020617 100%);
+      color:var(--text);
+      min-height:100vh;
+      overflow-x:hidden;
+      position:relative;
+      background-size:160% 160%;
+      animation:bgShift 24s ease-in-out infinite alternate;
+    }
+
+    /* Hafif noise layer */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-50px;
+      pointer-events:none;
+      opacity:0.22;
+      mix-blend-mode:soft-light;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E");
+      z-index:-1;
+      animation:noiseMove 4s steps(4,end) infinite;
+    }
+
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+
+    .btn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:linear-gradient(135deg,rgba(15,23,42,0.8),rgba(15,23,42,0.95));
+      color:#e0f2fe;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .2s ease,
+        background .25s ease;
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.35),transparent 55%);
+      opacity:0;
+      transform:translateX(-40%);
+      transition:opacity .25s ease,transform .45s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 30px rgba(15,23,42,0.8);
+      border-color:var(--accent-soft);
+      background:linear-gradient(135deg,rgba(15,23,42,0.9),rgba(15,23,42,1));
+    }
+
+    .btn:hover::before{
+      opacity:1;
+      transform:translateX(30%);
+    }
+
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      position:relative;
+    }
+
+    h1::after{
+      content:"";
+      position:absolute;
+      left:0;
+      bottom:-6px;
+      width:70px;
+      height:2px;
+      background:linear-gradient(90deg,var(--accent),transparent);
+      opacity:.85;
+    }
+
+    p.lead{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      max-width:420px;
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:0 auto 24px;
+      padding:16px;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.06),transparent 55%),
+                 radial-gradient(circle at 100% 100%,rgba(56,189,248,0.04),transparent 55%),
+                 var(--panel);
+      border:1px solid rgba(148,163,184,0.5);
+      border-radius:18px;
+      box-shadow:
+        0 24px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.9);
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(22px);
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background:radial-gradient(circle at 10% 0,rgba(34,211,238,0.12),transparent 55%),
+                 radial-gradient(circle at 90% 100%,rgba(56,189,248,0.08),transparent 55%);
+      opacity:0.8;
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+
+    .panel::after{
+      content:"";
+      position:absolute;
+      inset:1px;
+      border-radius:16px;
+      border:1px solid rgba(15,23,42,0.9);
+      pointer-events:none;
+      mix-blend-mode:overlay;
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    input{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.55);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.1),transparent 50%),
+                 #020617;
+      color:#fff;
+      min-width:220px;
+      font-size:13px;
+      outline:none;
+      transition:border-color .25s ease,box-shadow .25s ease,background .25s ease;
+    }
+
+    input::placeholder{color:rgba(148,163,184,0.8);}
+
+    input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.7),0 0 0 10px rgba(34,211,238,0.05);
+      background:#020617;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    .card{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(15,23,42,1);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+                 #020617;
+      position:relative;
+      overflow:hidden;
+      transition:
+        transform .25s cubic-bezier(.21,.98,.6,.99),
+        box-shadow .25s ease,
+        border-color .25s ease,
+        background .25s ease;
+      will-change:transform,box-shadow;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.55),transparent 60%),
+        radial-gradient(circle at 100% 100%,rgba(56,189,248,0.45),transparent 65%);
+      opacity:0;
+      transform:translate3d(-20%,20%,0);
+      transition:opacity .25s ease,transform .55s ease;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:-1;
+    }
+
+    .card:hover{
+      transform:translateY(-6px) scale(1.02);
+      box-shadow:
+        0 26px 80px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(34,211,238,0.35);
+      border-color:rgba(34,211,238,0.4);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.18),transparent 55%),
+                 #020617;
+    }
+
+    .card:hover::before{
+      opacity:1;
+      transform:translate3d(10%,-10%,0);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.6);
+      color:#e0f2fe;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+
+    .badge-dot{
+      width:7px;
+      height:7px;
+      border-radius:999px;
+      background:#4ade80;
+      box-shadow:0 0 0 4px rgba(74,222,128,0.25);
+    }
+
+    .muted{color:var(--muted);font-size:12px;}
+
+    #status{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.6);
+    }
+
+    /* Mouse-follow glow */
+    .cursor-blob{
+      position:fixed;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 20%,rgba(56,189,248,0.6),transparent 55%),
+        radial-gradient(circle at 70% 80%,rgba(45,212,191,0.4),transparent 55%);
+      mix-blend-mode:screen;
+      opacity:.22;
+      pointer-events:none;
+      z-index:0;
+      transform:translate3d(-50%,-50%,0);
+      filter:blur(10px);
+    }
+
+    /* Preset bar alt çizgi efekti */
+    #presets{
+      position:relative;
+      z-index:1;
+    }
+    #presets::before{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:-4px;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(148,163,184,0.4),transparent);
+      opacity:.4;
+      pointer-events:none;
+    }
+
+    /* Scroll reveal */
+    .reveal{
+      opacity:0;
+      transform:translateY(26px) translateZ(0);
+      filter:blur(4px);
+      will-change:transform,opacity,filter;
+      transition:
+        opacity .7s cubic-bezier(.21,.98,.6,.99),
+        transform .7s cubic-bezier(.21,.98,.6,.99),
+        filter .7s cubic-bezier(.21,.98,.6,.99);
+    }
+
+    .reveal.visible{
+      opacity:1;
+      transform:none;
+      filter:blur(0);
+    }
+
+    /* Animations */
+    @keyframes bgShift{
+      0%{background-position:0% 0%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:50% 100%;}
+    }
+
+    @keyframes noiseMove{
+      0%{transform:translate3d(0,0,0);}
+      25%{transform:translate3d(-20px,10px,0);}
+      50%{transform:translate3d(15px,-10px,0);}
+      75%{transform:translate3d(-10px,-20px,0);}
+      100%{transform:translate3d(0,0,0);}
+    }
+
+    @media (max-width:640px){
+      h1{font-size:26px;}
+      .panel{margin:8px 12px 24px;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Mouse-follow glow -->
+  <div class="cursor-blob" id="cursor-blob"></div>
+
+  <header class="reveal">
+    <a class="btn" href="../index.html">
+      <span>← Ana sayfa</span>
+    </a>
+    <div>
+      <h1>Hava Kalitesi</h1>
+      <p class="lead">PM2.5, PM10, NO₂, ozon ve polen benzeri parametrelerle özet hava kalitesi görünümü.</p>
+    </div>
+  </header>
+
+  <div class="panel reveal">
+    <div class="bar">
+      <input id="q" placeholder="Şehir (örn: Istanbul)">
+      <button class="btn" id="go">Ara</button>
+      <span class="badge" id="status"><span class="badge-dot"></span> Hazır</span>
+    </div>
+    <div class="bar" id="presets"></div>
+    <div class="grid" id="grid">
+      <div class="card reveal visible">Arama yapın.</div>
+    </div>
+  </div>
+
+  <script>
+  // Scroll reveal observer
+  let revealObserver = null;
+  if ("IntersectionObserver" in window) {
+    revealObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add("visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.2});
+  }
+
+  // Başlangıç reveal elemanları
+  document.querySelectorAll(".reveal").forEach(el=>{
+    if(revealObserver) revealObserver.observe(el);
+  });
+
+  // Mouse-follow glow
+  (function initCursorBlob(){
+    const blob=document.getElementById("cursor-blob");
+    if(!blob) return;
+    let targetX=window.innerWidth/2;
+    let targetY=window.innerHeight/2;
+    let currentX=targetX;
+    let currentY=targetY;
+
+    window.addEventListener("mousemove",(e)=>{
+      targetX=e.clientX;
+      targetY=e.clientY;
+    });
+
+    function animate(){
+      const lerp=0.12;
+      currentX+=(targetX-currentX)*lerp;
+      currentY+=(targetY-currentY)*lerp;
+      blob.style.transform=`translate3d(${currentX-130}px,${currentY-130}px,0)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+
+  // Ana işlevler
+  const q = document.getElementById("q");
+  const grid = document.getElementById("grid");
+  const statusEl = document.getElementById("status");
+  const presets = [
+    "Istanbul","Ankara","Izmir","London","Paris","Berlin","Madrid","Rome",
+    "New York","Los Angeles","Chicago","Toronto","Mexico City","Sao Paulo","Buenos Aires","Rio de Janeiro",
+    "Cairo","Lagos","Johannesburg","Nairobi",
+    "Moscow","Delhi","Mumbai","Bangalore","Beijing","Shanghai","Shenzhen","Guangzhou","Seoul","Tokyo","Osaka","Bangkok","Jakarta","Singapore","Hong Kong"
+  ];
+
+  const presetsEl = document.getElementById("presets");
+  presetsEl.innerHTML = presets.map(p =>
+    `<button class="btn" data-city="${p}" style="font-size:11px;">${p}</button>`
+  ).join("");
+
+  presetsEl.addEventListener("click",(e)=>{
+    const c=e.target.dataset.city;
+    if(c){
+      q.value=c;
+      search(c);
+    }
+  });
+
+  function setStatus(text,colorHex){
+    statusEl.childNodes[1].nodeValue = " " + text;
+    if(colorHex){
+      statusEl.style.borderColor=colorHex;
+      const dot=statusEl.querySelector(".badge-dot");
+      if(dot){
+        dot.style.background=colorHex;
+        dot.style.boxShadow=`0 0 0 4px ${hexToRgba(colorHex,0.25)}`;
+      }
+    }
+  }
+
+  function hexToRgba(hex,alpha){
+    const h=hex.replace("#","");
+    if(h.length!==6) return hex;
+    const r=parseInt(h.slice(0,2),16);
+    const g=parseInt(h.slice(2,4),16);
+    const b=parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  async function search(city){
+    if(!city){
+      grid.innerHTML="<div class='card reveal visible'>Şehir yazın.</div>";
+      return;
+    }
+    try{
+      setStatus("Yükleniyor...","#22d3ee");
+      const g = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=tr`);
+      const gj = await g.json();
+      const loc = gj?.results?.[0];
+      if(!loc){
+        grid.innerHTML="<div class='card reveal visible'>Bulunamadı</div>";
+        setStatus("Hazır","#94a3b8");
+        return;
+      }
+      const {latitude,longitude,name,country} = loc;
+      const r = await fetch(
+        `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,dust,uv_index,aerosol_optical_depth`
+      );
+      const j = await r.json();
+      const c = j.current || {};
+      const timeStr = c.time ? new Date(c.time).toLocaleString("tr-TR") : "";
+
+      const items = [
+        {label:"PM2.5", key:"pm2_5", val:c.pm2_5, unit:"µg/m³", healthy:"≤12 iyi (24s)", desc:"İnce partikül madde", limit:12},
+        {label:"PM10", key:"pm10", val:c.pm10, unit:"µg/m³", healthy:"≤50 iyi (24s)", desc:"Toz partiküller", limit:50},
+        {label:"NO₂", key:"nitrogen_dioxide", val:c.nitrogen_dioxide, unit:"µg/m³", healthy:"≤40 yıllık (AB)", desc:"Azot dioksit", limit:40},
+        {label:"Ozon", key:"ozone", val:c.ozone, unit:"µg/m³", healthy:"≤100 (8s)", desc:"Yer seviyesi ozon", limit:100},
+        {label:"Toz", key:"dust", val:c.dust, unit:"µg/m³", healthy:"Düşük olmalı", desc:"Toz/PM karışımı", limit:20},
+        {label:"UV", key:"uv_index", val:c.uv_index, unit:"", healthy:"0–2 düşük", desc:"UV indeks", limit:2, reverse:false}
+      ];
+
+      grid.innerHTML = items.map(it=>{
+        const val = it.val ?? "?";
+        const num = Number(val);
+        let colorGood="#4ade80";
+        let colorBad="#f97316";
+        let color="inherit";
+        let chip="Normal";
+
+        if(!isNaN(num)){
+          const ok = it.reverse ? num<=it.limit : num<=it.limit;
+          if(ok){
+            color=colorGood;
+            chip="İyi";
+          }else{
+            color=colorBad;
+            chip="Yüksek";
+          }
+        }else{
+          chip="Bilinmiyor";
+          color="#e5e7eb";
+        }
+
+        const borderColor = hexToRgba(color,0.5);
+
+        return `
+        <div class="card reveal" style="border-color:${borderColor};">
+          <div class="badge" style="margin-bottom:6px;">
+            <span class="badge-dot" style="background:${color};box-shadow:0 0 0 4px ${hexToRgba(color,0.25)}"></span>
+            ${name}, ${country||""}
+          </div>
+          <h3 style="margin:4px 0 4px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;">${it.label}</h3>
+          <p style="margin:0 0 4px;color:${color};font-weight:600;font-size:18px;">${val} ${it.unit}</p>
+          <p class="muted" style="margin:0 0 4px;">Durum: <span style="color:${color};font-weight:500;">${chip}</span></p>
+          <p class="muted" style="margin:0 0 4px;">Sağlıklı referans: ${it.healthy}</p>
+          <p class="muted" style="margin:0;">${it.desc}</p>
+          ${timeStr ? `<p class="muted" style="margin:6px 0 0;font-size:11px;">Güncelleme: ${timeStr}</p>` : ""}
+        </div>`;
+      }).join("");
+
+      // Yeni kartlara reveal ekle
+      const cards = grid.querySelectorAll(".card.reveal");
+      cards.forEach(c=>{
+        if(revealObserver && !c.classList.contains("visible")){
+          revealObserver.observe(c);
+        }
+      });
+
+      setStatus("Hazır","#94a3b8");
+    }catch(e){
+      console.error(e);
+      setStatus("Hata","#f87171");
+      grid.innerHTML="<div class='card reveal visible'>Veri alınamadı.</div>";
+    }
+  }
+
+  document.getElementById("go").addEventListener("click",()=>search(q.value.trim()));
+  q.addEventListener("keydown",e=>{if(e.key==="Enter")search(q.value.trim());});
+
+  // İstersen default şehir
+  // search("Istanbul");
+  </script>
+</body>
+</html>

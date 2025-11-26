@@ -1,106 +1,654 @@
-<!doctype html>
+<!doctype html> 
 <html lang="tr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kitap Keşfi</title>
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --text:#e5e7eb; --muted:#94a3b8; }
-    *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
-    h1{margin:0;font-size:30px;}
-    p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
-    input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:220px;}
-    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-    .chip{padding:8px 12px;border-radius:999px;background:rgba(34,211,238,0.12);color:#7dd3fc;border:1px solid rgba(34,211,238,0.3);cursor:pointer;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
-    .card{padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
-    .muted{color:var(--muted);}
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.7);
+      --accent-alt:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --tilt-x:0;
+      --tilt-y:0;
+    }
+
+    * { box-sizing:border-box; }
+
+    html {
+      scroll-behavior:smooth;
+    }
+
+    body {
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 20% 20%,rgba(34,211,238,0.16),transparent 55%),
+        radial-gradient(circle at 80% 80%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 20%,#020617 40%,#0b1221 70%,#0f172a);
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* Noise / grain overlay */
+    body::before {
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:0.13;
+      mix-blend-mode:soft-light;
+      background-image:url("https://grainy-gradients.vercel.app/noise.svg");
+      background-size:250px 250px;
+      animation:grainShift 1.3s steps(3) infinite;
+      z-index:0;
+    }
+
+    @keyframes grainShift {
+      0% { transform:translate3d(0,0,0); }
+      25% { transform:translate3d(-10px,5px,0); }
+      50% { transform:translate3d(5px,-10px,0); }
+      75% { transform:translate3d(-5px,10px,0); }
+      100% { transform:translate3d(0,0,0); }
+    }
+
+    /* Floaty orbs (dekoratif) */
+    .orb {
+      position:absolute;
+      border-radius:999px;
+      filter:blur(18px);
+      opacity:0.7;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .orb.orb-1 {
+      width:220px;height:220px;
+      top:10%;left:-40px;
+      background:radial-gradient(circle,var(--accent-soft),transparent 60%);
+      animation:orbFloat1 16s ease-in-out infinite alternate;
+    }
+    .orb.orb-2 {
+      width:260px;height:260px;
+      right:-60px;bottom:5%;
+      background:radial-gradient(circle,rgba(168,85,247,0.85),transparent 65%);
+      animation:orbFloat2 18s ease-in-out infinite alternate;
+    }
+    @keyframes orbFloat1 {
+      0%   { transform:translate3d(0,0,0); }
+      50%  { transform:translate3d(30px,-20px,0); }
+      100% { transform:translate3d(10px,20px,0); }
+    }
+    @keyframes orbFloat2 {
+      0%   { transform:translate3d(0,0,0); }
+      50%  { transform:translate3d(-30px,30px,0); }
+      100% { transform:translate3d(-10px,-10px,0); }
+    }
+
+    /* Layout */
+    main {
+      position:relative;
+      z-index:1;
+      padding-bottom:40px;
+    }
+
+    header {
+      max-width:1100px;
+      margin:0 auto;
+      padding:28px 16px 14px;
+      transform:translate3d(calc(var(--tilt-x)*8px),calc(var(--tilt-y)*-8px),0);
+      transition:transform .35s ease-out;
+    }
+
+    .kicker {
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.18em;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    h1 {
+      margin:0;
+      font-size:34px;
+      line-height:1.05;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      background:linear-gradient(120deg,#f9fafb,var(--accent),var(--accent-alt));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 0 18px rgba(34,211,238,0.35);
+    }
+
+    p.lead {
+      margin:10px 0 0;
+      color:var(--muted);
+      max-width:520px;
+      font-size:14px;
+    }
+
+    .panel {
+      max-width:1100px;
+      margin:0 auto 26px;
+      padding:18px 16px 18px;
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.12),transparent 55%),var(--panel);
+      border-radius:18px;
+      position:relative;
+      border:1px solid rgba(148,163,184,0.22);
+      box-shadow:
+        0 22px 80px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+      overflow:hidden;
+      transform:translate3d(calc(var(--tilt-x)*10px),calc(var(--tilt-y)*-10px),0);
+      transition:transform .35s ease-out,box-shadow .35s ease-out,border-color .35s ease-out;
+    }
+
+    .panel::before {
+      content:"";
+      position:absolute;
+      inset:-120px;
+      background:
+        conic-gradient(from 210deg at 10% 0%,rgba(34,211,238,0.95),transparent 40%),
+        conic-gradient(from -30deg at 90% 120%,rgba(168,85,247,0.8),transparent 45%);
+      opacity:0.16;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:-1;
+      animation:panelGlow 26s linear infinite;
+    }
+
+    @keyframes panelGlow {
+      0% { transform:translate3d(0,0,0) rotate(0deg); }
+      100% { transform:translate3d(0,-10px,0) rotate(360deg); }
+    }
+
+    .bar {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+    }
+
+    input {
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      background:rgba(15,23,42,0.9);
+      color:#fff;
+      min-width:220px;
+      font-size:13px;
+      outline:none;
+      box-shadow:0 0 0 1px rgba(15,23,42,0.7);
+      transition:border-color .25s ease,box-shadow .25s ease,background .25s ease,transform .18s ease;
+    }
+
+    input::placeholder {
+      color:rgba(148,163,184,0.7);
+    }
+
+    input:focus {
+      border-color:rgba(34,211,238,0.8);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.3),0 0 35px rgba(8,47,73,0.8);
+      background:#020617;
+      transform:translateY(-1px);
+    }
+
+    .btn {
+      border:none;
+      padding:10px 16px;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.85),transparent 60%),
+        linear-gradient(120deg,rgba(34,211,238,0.92),rgba(168,85,247,0.9));
+      color:#0b1221;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:600;
+      letter-spacing:0.03em;
+      text-transform:uppercase;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 14px 35px rgba(15,23,42,0.95);
+      transition:transform .18s ease-out,box-shadow .18s ease-out,background-position .35s ease-out;
+      background-size:180% 180%;
+      background-position:0% 50%;
+    }
+
+    .btn::after {
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(255,255,255,0.7),transparent 55%);
+      opacity:0;
+      transform:translate3d(-60%,0,0);
+      transition:opacity .18s ease-out,transform .35s ease-out;
+      mix-blend-mode:screen;
+      pointer-events:none;
+    }
+
+    .btn:hover {
+      transform:translateY(-2px);
+      box-shadow:0 20px 50px rgba(15,23,42,1);
+      background-position:100% 50%;
+    }
+
+    .btn:hover::after {
+      opacity:0.75;
+      transform:translate3d(40%,0,0);
+    }
+
+    .btn:active {
+      transform:translateY(0);
+      box-shadow:0 10px 25px rgba(15,23,42,0.8);
+    }
+
+    .chips {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .chip {
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      color:#7dd3fc;
+      border:1px solid rgba(56,189,248,0.5);
+      cursor:pointer;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.09em;
+      position:relative;
+      overflow:hidden;
+      transition:transform .18s ease-out,box-shadow .18s ease-out,border-color .25s ease-out,background .25s ease-out;
+    }
+
+    .chip::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg,rgba(56,189,248,0.18),rgba(168,85,247,0.18));
+      opacity:0;
+      transition:opacity .25s ease-out;
+      pointer-events:none;
+    }
+
+    .chip:hover {
+      transform:translateY(-2px);
+      background:#020617;
+      box-shadow:0 10px 24px rgba(15,23,42,0.9);
+      border-color:rgba(56,189,248,0.9);
+    }
+
+    .chip:hover::before {
+      opacity:1;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
+      margin-top:4px;
+    }
+
+    .card {
+      padding:12px 12px 13px;
+      border-radius:14px;
+      border:1px solid rgba(15,23,42,0.9);
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.16),transparent 55%),#020617;
+      box-shadow:0 14px 38px rgba(15,23,42,0.95);
+      position:relative;
+      overflow:hidden;
+      transform-origin:50% 100%;
+      transform:perspective(900px) translate3d(0,10px,0) rotateX(4deg) scale(.98);
+      opacity:0;
+      transition:
+        transform .45s cubic-bezier(.19,.8,.25,1),
+        opacity .45s ease-out,
+        box-shadow .25s ease-out,
+        border-color .25s ease-out;
+    }
+
+    .card::before {
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.8),transparent 55%);
+      opacity:0;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      transition:opacity .35s ease-out,transform .45s ease-out;
+      transform:translate3d(-40%,0,0);
+    }
+
+    .card:hover {
+      transform:perspective(900px) translate3d(0,-6px,0) rotateX(1deg) scale(1.02);
+      box-shadow:0 24px 60px rgba(15,23,42,1);
+      border-color:rgba(56,189,248,0.65);
+    }
+
+    .card:hover::before {
+      opacity:0.9;
+      transform:translate3d(10%,0,0);
+    }
+
+    .card strong {
+      display:block;
+      margin:6px 0 4px;
+      font-size:14px;
+    }
+
+    .muted {
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(56,189,248,0.7);
+      color:#7dd3fc;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      margin-bottom:4px;
+    }
+
+    .badge::before {
+      content:"";
+      width:6px;height:6px;
+      border-radius:999px;
+      background:radial-gradient(circle,#22d3ee,#0ea5e9);
+      box-shadow:0 0 12px rgba(56,189,248,0.9);
+    }
+
+    #status {
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.14em;
+      background:rgba(15,23,42,0.9);
+      border-radius:999px;
+      padding:6px 10px;
+      border:1px solid rgba(148,163,184,0.5);
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    #status::before {
+      content:"";
+      width:8px;height:8px;
+      border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 12px rgba(34,197,94,0.9);
+      animation:statusPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes statusPulse {
+      0% { transform:scale(.9); box-shadow:0 0 8px rgba(34,197,94,0.8); }
+      50% { transform:scale(1.15); box-shadow:0 0 18px rgba(34,197,94,1); }
+      100% { transform:scale(.9); box-shadow:0 0 8px rgba(34,197,94,0.8); }
+    }
+
+    #status.is-loading::before {
+      background:#eab308;
+      box-shadow:0 0 15px rgba(234,179,8,0.9);
+      animation:statusPulse 0.9s ease-in-out infinite;
+    }
+
+    #status.is-error::before {
+      background:#ef4444;
+      box-shadow:0 0 15px rgba(239,68,68,0.95);
+    }
+
+    /* Scroll reveal states */
+    .reveal {
+      opacity:0;
+      transform:translate3d(0,16px,0);
+    }
+    .reveal.is-visible {
+      opacity:1;
+      transform:translate3d(0,0,0);
+      transition:opacity .5s ease-out,transform .6s cubic-bezier(.19,.8,.25,1);
+    }
+
+    .card.revealed {
+      opacity:1;
+      transform:perspective(900px) translate3d(0,0,0) rotateX(0deg) scale(1);
+    }
+
+    .card.revealed:nth-child(1)  { transition-delay:0.02s; }
+    .card.revealed:nth-child(2)  { transition-delay:0.04s; }
+    .card.revealed:nth-child(3)  { transition-delay:0.06s; }
+    .card.revealed:nth-child(4)  { transition-delay:0.08s; }
+    .card.revealed:nth-child(5)  { transition-delay:0.10s; }
+    .card.revealed:nth-child(6)  { transition-delay:0.12s; }
+    .card.revealed:nth-child(7)  { transition-delay:0.14s; }
+    .card.revealed:nth-child(8)  { transition-delay:0.16s; }
+    .card.revealed:nth-child(9)  { transition-delay:0.18s; }
+    .card.revealed:nth-child(10) { transition-delay:0.20s; }
+
+    /* Small screens */
+    @media (max-width:640px) {
+      h1 { font-size:24px; }
+      .panel { border-radius:16px; padding:16px 12px 16px; }
+      .bar { gap:8px; }
+      .btn { padding:9px 14px; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Kitap Keşfi</h1>
-    <p class="lead">OpenLibrary üzerinden konu/başlık arama, hızlı filtreler.</p>
-  </header>
-  <div class="panel">
-    <div class="bar">
-      <a class="btn" href="../index.html">Ana sayfa</a>
-      <input id="q" placeholder="Konu veya başlık (örn: science)">
-      <button class="btn" id="go">Ara</button>
-      <span class="badge" id="status">Hazır</span>
+  <!-- Dekoratif orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <main>
+    <header class="reveal">
+      <div class="kicker">kitap keşfi · deneysel arayüz</div>
+      <h1>Yeni kitaplar keşfet,<br>okuma listeni güçlendir.</h1>
+      <p class="lead">OpenLibrary ve Google Books üzerinden konu / başlık araması, hızlı keşif filtreleri ve animasyonlu kartlarla keşif deneyimi.</p>
+    </header>
+
+    <div class="panel reveal">
+      <div class="bar">
+        <a class="btn" href="../index.html">Ana sayfa</a>
+        <input id="q" placeholder="Konu veya başlık (örn: science)">
+        <button class="btn" id="go">Ara</button>
+        <span class="badge" id="status">Hazır</span>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="grid" id="grid">
+        <div class="card revealed">
+          <div class="badge">Başla</div>
+          <strong>Arama yap veya bir konu çipi seç.</strong>
+          <div class="muted">Science, history, fantasy gibi hazır konulara tıklayarak animasyonlu kartlarla hızlıca keşfe başlayabilirsin.</div>
+        </div>
+      </div>
+      <div class="bar" style="justify-content:flex-end;margin-top:10px;">
+        <button class="btn" id="more">Daha fazla</button>
+      </div>
     </div>
-    <div class="chips" id="chips"></div>
-    <div class="grid" id="grid"><div class="card">Arama ya da konu seçin.</div></div>
-  </div>
+  </main>
+
   <script>
   (function(){
-    const chips=document.getElementById("chips");
-    const grid=document.getElementById("grid");
-    const status=document.getElementById("status");
-    const q=document.getElementById("q");
-    const subjects=["science","history","fantasy","technology","business","philosophy","space"];
-    chips.innerHTML=subjects.map(s=>`<span class="chip" data-sub="${s}">${s}</span>`).join("");
-    chips.addEventListener("click",e=>{const s=e.target.dataset.sub;if(s) loadSubject(s);});
+    const chips   = document.getElementById("chips");
+    const grid    = document.getElementById("grid");
+    const status  = document.getElementById("status");
+    const q       = document.getElementById("q");
+    const goBtn   = document.getElementById("go");
+    const subjects = ["science","history","fantasy","technology","business","philosophy","space"];
 
-    document.getElementById("go").addEventListener("click",()=>search(q.value.trim()));
-    q.addEventListener("keydown",e=>{if(e.key==="Enter") search(q.value.trim());});
+    // Hazır konu chipleri
+    chips.innerHTML = subjects.map(s =>
+      `<span class="chip" data-sub="${s}">${s}</span>`
+    ).join("");
+
+    // Parallax mouse hareketi
+    document.addEventListener("mousemove", (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      document.documentElement.style.setProperty("--tilt-x", x.toFixed(3));
+      document.documentElement.style.setProperty("--tilt-y", y.toFixed(3));
+    });
+
+    // Scroll reveal için IntersectionObserver
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18 });
+
+    // Başlık ve paneli bağla
+    document.querySelectorAll(".reveal").forEach(el => revealObserver.observe(el));
+
+    // Kartlar için ayrı observer (tilt giriş animasyonu)
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          cardObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    function observeCards() {
+      document.querySelectorAll(".card").forEach(card => {
+        if (!card.classList.contains("revealed")) {
+          cardObserver.observe(card);
+        }
+      });
+    }
+
+    observeCards(); // başlangıç kartı
+
+    // Chip click
+    chips.addEventListener("click", (e) => {
+      const el = e.target.closest(".chip");
+      if (!el) return;
+      const sub = el.dataset.sub;
+      if (sub) {
+        loadSubject(sub);
+      }
+    });
+
+    // Arama butonu
+    goBtn.addEventListener("click", () => {
+      search(q.value.trim());
+    });
+
+    // Enter ile arama
+    q.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        search(q.value.trim());
+      }
+    });
+
+    function setStatus(text, mode) {
+      status.textContent = text;
+      status.classList.remove("is-loading","is-error");
+      if (mode === "loading") status.classList.add("is-loading");
+      if (mode === "error")   status.classList.add("is-error");
+    }
 
     async function loadSubject(sub){
       try{
-        status.textContent="Yükleniyor...";
-        const res=await fetch(`https://openlibrary.org/subjects/${sub}.json?limit=18`);
-        const j=await res.json();
-        const works=j.works||[];
-        if(!works.length){grid.innerHTML="<div class='card'>Sonuç yok</div>";status.textContent="Hazır";return;}
-        grid.innerHTML=works
+        setStatus("Yükleniyor...", "loading");
+        const res = await fetch(`https://openlibrary.org/subjects/${sub}.json?limit=18`);
+        const j   = await res.json();
+        const works = j.works || [];
+        if(!works.length){
+          grid.innerHTML = `<div class="card"><div class="badge">${sub}</div><strong>Sonuç yok.</strong><div class="muted">Bu konu için sonuç bulunamadı.</div></div>`;
+          setStatus("Hazır");
+          observeCards();
+          return;
+        }
+        grid.innerHTML = works
           .sort((a,b)=>(b.ratings_average||0)-(a.ratings_average||0))
-          .slice(0,18).map(w=>`
-          <div class="card">
-            <div class="badge">${sub}</div>
-            <strong>${w.title||""}</strong>
-            <div class="muted">${w.authors?.[0]?.name||""} · ${w.first_publish_year||""}</div>
-            <div class="muted">Puan: ${w.ratings_average ? w.ratings_average.toFixed(1) : "?"}</div>
-            ${w.key ? `<a class="btn" href="https://openlibrary.org${w.key}" target="_blank" rel="noreferrer">Detay</a>` : ""}
-          </div>
-        `).join("");
-        status.textContent="Hazır";
+          .slice(0,18)
+          .map(w => `
+            <div class="card">
+              <div class="badge">${sub}</div>
+              <strong>${w.title || ""}</strong>
+              <div class="muted">${w.authors?.[0]?.name || ""} · ${w.first_publish_year || ""}</div>
+              <div class="muted" style="margin-top:4px;">Puan: ${w.ratings_average ? w.ratings_average.toFixed(1) : "?"}</div>
+              ${w.key ? `<div style="margin-top:8px;"><a class="btn" href="https://openlibrary.org${w.key}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
+            </div>
+          `).join("");
+        setStatus("Hazır");
+        observeCards();
       }catch(err){
-        status.textContent="Hata";
-        grid.innerHTML="<div class='card'>Veri alınamadı.</div>";
+        console.error(err);
+        setStatus("Hata", "error");
+        grid.innerHTML = "<div class='card revealed'><div class='badge'>Hata</div><strong>Veri alınamadı.</strong><div class='muted'>İnternet bağlantını veya API erişimini kontrol et.</div></div>";
       }
     }
 
     async function search(term){
-      if(!term){grid.innerHTML="<div class='card'>Arama yapın.</div>";return;}
+      if(!term){
+        grid.innerHTML = "<div class='card revealed'><div class='badge'>Arama</div><strong>Arama yapın.</strong><div class='muted'>Üstteki alana bir başlık veya konu yazabilirsiniz.</div></div>";
+        setStatus("Hazır");
+        return;
+      }
       try{
-        status.textContent="Yükleniyor...";
-        const res=await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(term)}&orderBy=relevance&maxResults=20&langRestrict=tr,en`);
-        const j=await res.json();
-        const items=j.items||[];
-        if(!items.length){grid.innerHTML="<div class='card'>Sonuç yok</div>";status.textContent="Hazır";return;}
-        grid.innerHTML=items
-          .sort((a,b)=>((b.volumeInfo?.averageRating||0)-(a.volumeInfo?.averageRating||0)))
-          .slice(0,16).map(it=>{
-          const info=it.volumeInfo||{};
-          return `<div class="card">
-            <div class="badge">${(info.categories&&info.categories[0])||"Kategori"}</div>
-            <strong>${info.title||""}</strong>
-            <div class="muted">${(info.authors&&info.authors[0])||"Bilinmiyor"} · ${info.publishedDate||""}</div>
-            <div class="muted" style="margin-top:4px;">Puan: ${info.averageRating ?? "?"}</div>
-            ${info.infoLink ? `<div style="margin-top:8px;"><a class="btn" href="${info.infoLink}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
-          </div>`;
-        }).join("");
-        status.textContent="Hazır";
+        setStatus("Yükleniyor...", "loading");
+        const res = await fetch(
+          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(term)}&orderBy=relevance&maxResults=20&langRestrict=tr,en`
+        );
+        const j = await res.json();
+        const items = j.items || [];
+        if(!items.length){
+          grid.innerHTML = "<div class='card revealed'><div class='badge'>Sonuç</div><strong>Sonuç yok.</strong><div class='muted'>Farklı bir anahtar kelime ile tekrar deneyebilirsin.</div></div>";
+          setStatus("Hazır");
+          return;
+        }
+        grid.innerHTML = items
+          .sort((a,b)=>( (b.volumeInfo?.averageRating||0) - (a.volumeInfo?.averageRating||0) ))
+          .slice(0,16)
+          .map(it => {
+            const info = it.volumeInfo || {};
+            return `
+              <div class="card">
+                <div class="badge">${(info.categories && info.categories[0]) || "Kategori"}</div>
+                <strong>${info.title || ""}</strong>
+                <div class="muted">
+                  ${(info.authors && info.authors[0]) || "Bilinmiyor"} · ${info.publishedDate || ""}
+                </div>
+                <div class="muted" style="margin-top:4px;">Puan: ${info.averageRating ?? "?"}</div>
+                ${info.infoLink ? `<div style="margin-top:8px;"><a class="btn" href="${info.infoLink}" target="_blank" rel="noreferrer">Detay</a></div>` : ""}
+              </div>
+            `;
+          }).join("");
+        setStatus("Hazır");
+        observeCards();
       }catch(err){
-        status.textContent="Hata";
-        grid.innerHTML="<div class='card'>Veri alınamadı.</div>";
+        console.error(err);
+        setStatus("Hata", "error");
+        grid.innerHTML = "<div class='card revealed'><div class='badge'>Hata</div><strong>Veri alınamadı.</strong><div class='muted'>İnternet veya Google Books API erişimi ile ilgili bir sorun olabilir.</div></div>";
       }
     }
   })();

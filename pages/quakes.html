@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Depremler</title>
+  <style>
+    :root{
+      --bg:#020617;
+      --bg2:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent-soft:rgba(34,211,238,0.35);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;}
+
+    @keyframes bgShift{
+      0%{background-position:0% 0%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:0% 0%;}
+    }
+
+    body{
+      margin:0;
+      font-family:"Inter","Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 10% 0%,rgba(34,211,238,0.20),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(56,189,248,0.18),transparent 55%),
+        radial-gradient(circle at 0% 100%,rgba(168,85,247,0.18),transparent 55%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+      background-size:180% 180%;
+      animation:bgShift 26s ease-in-out infinite;
+      min-height:100vh;
+    }
+
+    header{
+      max-width:1000px;
+      margin:0 auto;
+      padding:24px 16px 8px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+      text-shadow:0 0 18px rgba(15,23,42,0.9);
+    }
+
+    .lead{margin-top:4px;font-size:14px;color:var(--muted);}
+
+    .btn{
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(15,23,42,0.9));
+      color:#7dd3fc;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:14px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      box-shadow:0 0 0 0 rgba(34,211,238,0.0);
+      transform:translateY(0);
+      transition:
+        background .22s ease,
+        border-color .22s ease,
+        box-shadow .22s ease,
+        transform .16s ease,
+        color .22s ease;
+    }
+    .btn:hover{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.28),rgba(15,23,42,0.98));
+      border-color:var(--accent-soft);
+      box-shadow:0 8px 22px rgba(15,23,42,0.9),
+                  0 0 18px rgba(34,211,238,0.35);
+      transform:translateY(-1px);
+      color:#e0f2fe;
+    }
+    .btn:active{
+      transform:translateY(1px) scale(.99);
+      box-shadow:0 3px 10px rgba(15,23,42,0.7);
+    }
+
+    .panel{
+      max-width:1000px;
+      margin:0 auto 24px;
+      padding:16px 16px 18px;
+      background:rgba(15,23,42,0.92);
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,0.28);
+      box-shadow:
+        0 24px 70px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+      backdrop-filter:blur(18px);
+    }
+
+    .bar{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    /* INPUT TASARIMI */
+    #country{
+      padding:10px 14px;
+      min-width:230px;
+      background:rgba(15,23,42,0.96);
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.55);
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+      box-shadow:0 0 0 0 rgba(34,211,238,0.0);
+      transition:
+        background .22s ease,
+        border-color .22s ease,
+        box-shadow .22s ease,
+        transform .16s ease;
+    }
+    #country::placeholder{
+      color:rgba(148,163,184,0.85);
+      font-size:13px;
+    }
+    #country:hover{
+      background:rgba(15,23,42,0.9);
+      border-color:rgba(56,189,248,0.65);
+      box-shadow:0 0 0 1px rgba(56,189,248,0.30);
+    }
+    #country:focus{
+      background:rgba(15,23,42,0.98);
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(56,189,248,0.7),
+                 0 0 22px rgba(56,189,248,0.4);
+      transform:translateY(-1px);
+    }
+
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:10px 0 4px;
+    }
+
+    .chip{
+      padding:6px 11px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.96);
+      color:#7dd3fc;
+      border:1px solid rgba(56,189,248,0.45);
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:.01em;
+      transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .12s ease,
+        box-shadow .2s ease,
+        color .2s ease;
+    }
+    .chip:hover{
+      background:radial-gradient(circle at 0 0,rgba(56,189,248,0.35),rgba(15,23,42,1));
+      border-color:rgba(56,189,248,0.9);
+      box-shadow:0 8px 18px rgba(15,23,42,0.9),
+                  0 0 16px rgba(56,189,248,0.45);
+      transform:translateY(-1px);
+      color:#e0f2fe;
+    }
+
+    .muted{color:var(--muted);font-size:13px;}
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+
+    @keyframes cardIn{
+      from{opacity:0;transform:translateY(10px) scale(.98);}
+      to{opacity:1;transform:translateY(0) scale(1);}
+    }
+
+    .card{
+      padding:10px 11px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:linear-gradient(145deg,#020617,#020617 35%,#0b1221);
+      box-shadow:0 12px 32px rgba(15,23,42,0.9);
+      transition:
+        transform .18s ease,
+        box-shadow .22s ease,
+        border-color .22s ease,
+        background .22s ease;
+      opacity:0;
+      animation:cardIn .35s ease forwards;
+    }
+
+    .card h3{
+      margin:0 0 6px;
+      font-size:14px;
+      letter-spacing:.01em;
+    }
+
+    .card .muted{margin-bottom:2px;}
+
+    .card:hover{
+      transform:translateY(-4px) scale(1.01);
+      box-shadow:0 18px 45px rgba(15,23,42,0.95),
+                  0 0 20px rgba(34,211,238,0.35);
+      border-color:rgba(56,189,248,0.65);
+      background:linear-gradient(145deg,#020617,#020617 15%,#0b1221 55%,#020617);
+    }
+
+    @media (max-width:600px){
+      header{padding-top:18px;}
+      h1{font-size:24px;}
+      .panel{margin:0 10px 20px;}
+      #country{flex:1;min-width:180px;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn" href="../index.html">Ana sayfa</a>
+    <div>
+      <h1>Depremler</h1>
+      <p class="lead">USGS son depremler.</p>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="bar">
+      <button class="btn" data-mag="0" id="all-btn">Tümü</button>
+      <button class="btn" data-mag="4">Mag 4+</button>
+      <button class="btn" data-mag="5">Mag 5+</button>
+
+      <input id="country" placeholder="Ülke filtre (örn: Turkey)">
+      <button class="btn" id="go">Filtrele</button>
+      <span class="muted" id="status">Hazır</span>
+    </div>
+
+    <div class="chips" id="country-chips"></div>
+
+    <div class="grid" id="grid">
+      <div class="card">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll("[data-mag]");
+    let magMin = 0;
+
+    buttons.forEach(b => b.onclick = () => {
+      magMin = Number(b.dataset.mag);
+      load();
+    });
+
+    document.getElementById("go").onclick = load;
+
+    const countries = [
+      "Turkey","Ireland","Belgium","Germany","France","Netherlands","United Kingdom","Azerbaijan",
+      "Thailand","India","Brazil","China","Italy","Australia","Japan","Canada","Ukraine","Russian Federation","Finland",
+      "United States of America","Republic of Korea","Argentina","Sweden","Uruguay","Mexico","Spain","Romania","Norway",
+      "Switzerland","Portugal"
+    ];
+
+    document.getElementById("country-chips").innerHTML =
+      countries.map(c => `<span class="chip" data-c="${c}">${c}</span>`).join("");
+
+    document.getElementById("country-chips").addEventListener("click", e => {
+      const c = e.target.dataset.c;
+      if (c) {
+        document.getElementById("country").value = c;
+        load();
+      }
+    });
+
+    document.getElementById("all-btn").addEventListener("click", () => {
+      magMin = 0;
+      document.getElementById("country").value = "";
+      load();
+    });
+
+    async function load(){
+      const grid   = document.getElementById("grid");
+      const status = document.getElementById("status");
+      const country = document.getElementById("country").value.trim().toLowerCase();
+
+      try{
+        status.textContent = "Yükleniyor...";
+        const r = await fetch("https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&orderby=time&limit=100");
+        const j = await r.json();
+
+        let feats = j.features || [];
+        feats = feats.filter(f => (f.properties?.mag || 0) >= magMin);
+        if (country)
+          feats = feats.filter(f => (f.properties?.place || "").toLowerCase().includes(country));
+
+        feats = feats.sort((a,b) => (b.properties?.mag || 0) - (a.properties?.mag || 0));
+
+        if (!feats.length){
+          grid.innerHTML = "<div class='card'>Sonuç yok</div>";
+          status.textContent = "Hazır";
+          return;
+        }
+
+        grid.innerHTML = feats.map((f,idx) => {
+          const p = f.properties || {};
+          const delay = 0.02 * idx;
+          return `<div class="card" style="animation-delay:${delay}s;">
+            <h3>${p.place || "Konum yok"}</h3>
+            <div class="muted">Mag: ${p.mag ?? "?"}</div>
+            <div class="muted">${new Date(p.time).toLocaleString()}</div>
+            ${p.url ? `<a class="btn" href="${p.url}" target="_blank">USGS</a>` : ""}
+          </div>`;
+        }).join("");
+
+        status.textContent = "Hazır";
+      }catch(e){
+        console.error(e);
+        grid.innerHTML = "<div class='card'>Veri alınamadı.</div>";
+        status.textContent = "Hata";
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

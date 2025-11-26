@@ -5,44 +5,458 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hesaplamalar</title>
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
-    *{box-sizing:border-box;}
-    body{margin:0;font-family:"Inter","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);color:var(--text);}
-    header{max-width:1180px;margin:0 auto;padding:28px 16px 8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-    .btn-home{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(34,211,238,0.12);color:#7dd3fc;text-decoration:none;}
-    h1{margin:0;font-size:32px;}
-    p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1180px;margin:0 auto 26px;padding:18px;background:var(--panel);border:1px solid rgba(255,255,255,0.08);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,0.35);}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
-    .card{background:#0f182c;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;position:relative;overflow:hidden;}
-    .card::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(34,211,238,0.08),transparent 60%);pointer-events:none;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.15);color:#7dd3fc;font-size:12px;border:1px solid rgba(34,211,238,0.35);}
-    .muted{color:var(--muted);}
-    input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;margin:6px 0;}
-    .result{margin-top:8px;font-size:18px;}
-    .note{color:var(--muted);font-size:13px;margin-top:4px;}
-    .btn{display:inline-block;padding:8px 12px;border-radius:10px;border:1px solid rgba(34,211,238,0.4);color:#7dd3fc;background:rgba(34,211,238,0.12);cursor:pointer;}
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
+
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Inter","Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 0%,rgba(34,211,238,0.18),transparent 55%),
+        radial-gradient(circle at 85% 100%,rgba(168,85,247,0.20),transparent 55%),
+        linear-gradient(135deg,#020617,#020617 40%,#0b1221);
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* Hafif noise ve parlayan grid hissi */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-40px;
+      background-image:
+        radial-gradient(circle at 0 0,rgba(148,163,184,0.15) 0,transparent 55%),
+        radial-gradient(circle at 100% 0,rgba(56,189,248,0.12) 0,transparent 60%),
+        radial-gradient(circle at 0 100%,rgba(168,85,247,0.14) 0,transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(15,23,42,0.9) 0,transparent 70%);
+      mix-blend-mode:soft-light;
+      opacity:0.5;
+      z-index:-2;
+      pointer-events:none;
+      animation:bgDrift 32s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgDrift {
+      0% { transform:translate3d(0,0,0) scale(1); }
+      50% { transform:translate3d(-20px,-10px,0) scale(1.03); }
+      100% { transform:translate3d(10px,15px,0) scale(1.02); }
+    }
+
+    /* Mouse’u takip eden glow */
+    .cursor-glow{
+      position:fixed;
+      width:260px;
+      height:260px;
+      border-radius:999px;
+      pointer-events:none;
+      background:radial-gradient(circle at center,rgba(34,211,238,0.22),transparent 60%);
+      mix-blend-mode:screen;
+      opacity:0;
+      transform:translate3d(-130px,-130px,0);
+      transition:opacity .45s ease, transform .12s ease-out;
+      z-index:-1;
+    }
+    body.ready .cursor-glow{ opacity:1; }
+
+    header{
+      max-width:1180px;
+      margin:0 auto;
+      padding:28px 16px 8px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+
+    .btn-home{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.4);
+      background:radial-gradient(circle at top left,rgba(34,211,238,0.18),rgba(15,23,42,0.9));
+      color:#7dd3fc;
+      text-decoration:none;
+      font-size:13px;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(14px);
+      box-shadow:0 14px 40px rgba(15,23,42,0.9);
+      transition:
+        background .25s ease,
+        border-color .25s ease,
+        transform .25s ease,
+        box-shadow .25s ease;
+    }
+    .btn-home::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.6));
+      mix-blend-mode:soft-light;
+      opacity:0;
+      transition:opacity .25s ease;
+    }
+    .btn-home:hover{
+      transform:translateY(-2px);
+      border-color:rgba(34,211,238,0.8);
+      box-shadow:0 20px 60px rgba(15,23,42,0.95);
+    }
+    .btn-home:hover::after{ opacity:0.22; }
+
+    h1{
+      margin:0;
+      font-size:32px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      background:linear-gradient(120deg,#e5e7eb,#38bdf8,#a855f7,#e5e7eb);
+      background-size:220% 220%;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      animation:titleGlow 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { background-position:0% 50%; text-shadow:0 0 12px rgba(56,189,248,0.4); }
+      50% { background-position:100% 50%; text-shadow:0 0 18px rgba(168,85,247,0.6); }
+      100% { background-position:0% 50%; text-shadow:0 0 10px rgba(15,23,42,0.8); }
+    }
+
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      max-width:420px;
+      opacity:.9;
+    }
+
+    .panel{
+      max-width:1180px;
+      margin:0 auto 26px;
+      padding:18px;
+      background:radial-gradient(circle at top left,rgba(34,211,238,0.18),transparent 55%), var(--panel);
+      border-radius:20px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 30px 90px rgba(0,0,0,0.75);
+      border:1px solid rgba(148,163,184,0.35);
+      backdrop-filter:blur(18px);
+      z-index:1;
+    }
+
+    /* Panel glow çerçevesi */
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      padding:1px;
+      background:conic-gradient(from 120deg at 10% 0,
+        rgba(34,211,238,0.6),
+        rgba(168,85,247,0.7),
+        rgba(15,23,42,0.2),
+        rgba(34,211,238,0.6));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);  
+      -webkit-mask-composite:xor;
+              mask-composite:exclude;
+      opacity:.32;
+      pointer-events:none;
+    }
+
+    /* Arka planda yüzen orblar */
+    .orb{
+      position:absolute;
+      width:220px;
+      height:220px;
+      border-radius:999px;
+      filter:blur(40px);
+      opacity:.16;
+      pointer-events:none;
+      mix-blend-mode:screen;
+      background:radial-gradient(circle at center,rgba(34,211,238,0.9),transparent 65%);
+      animation:orbFloat 24s ease-in-out infinite alternate;
+    }
+    .orb.orb-purple{
+      background:radial-gradient(circle at center,rgba(168,85,247,0.9),transparent 65%);
+      animation-duration:28s;
+      animation-delay:4s;
+    }
+    .orb.orb-1{ top:-40px; right:-60px; }
+    .orb.orb-2{ bottom:-80px; left:-40px; }
+
+    @keyframes orbFloat{
+      0% { transform:translate3d(0,0,0) scale(1); }
+      50% { transform:translate3d(20px,-10px,0) scale(1.08); }
+      100% { transform:translate3d(-10px,18px,0) scale(1.02); }
+    }
+
+    .grid{
+      position:relative;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
+      z-index:1;
+    }
+
+    .card{
+      background:radial-gradient(circle at top left,rgba(15,23,42,0.95),#020617);
+      border-radius:16px;
+      padding:14px 14px 13px;
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(148,163,184,0.45);
+      box-shadow:0 18px 55px rgba(15,23,42,0.95);
+      transform-origin:50% 100%;
+      opacity:0;
+      transform:translateY(24px) scale(0.96);
+      transition:
+        transform .45s cubic-bezier(.22,.61,.36,1),
+        box-shadow .45s ease,
+        border-color .35s ease,
+        background .35s ease;
+    }
+
+    /* Giriş animasyonu – IntersectionObserver ile .card.show eklenecek */
+    .card.show{
+      animation:cardIn .7s var(--delay,0ms) cubic-bezier(.22,.61,.36,1) forwards;
+    }
+
+    @keyframes cardIn{
+      0% { opacity:0; transform:translateY(26px) scale(.95); }
+      60%{ opacity:1; transform:translateY(-4px) scale(1.01); }
+      100%{ opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at top,rgba(34,211,238,0.32),transparent 60%);
+      opacity:0;
+      transform:translate3d(0,20%,0) rotate(8deg);
+      transition:opacity .45s ease, transform .45s ease;
+      pointer-events:none;
+    }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      background:linear-gradient(135deg,rgba(34,211,238,0.16),transparent 70%);
+      mix-blend-mode:soft-light;
+      opacity:.45;
+      pointer-events:none;
+    }
+
+    .card:hover{
+      transform:translateY(-6px) translateZ(0);
+      border-color:rgba(34,211,238,0.85);
+      box-shadow:0 26px 75px rgba(15,23,42,0.98);
+      background:radial-gradient(circle at top left,rgba(15,23,42,1),#020617);
+    }
+    .card:hover::before{
+      opacity:0.7;
+      transform:translate3d(0,0,0) rotate(0deg);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(34,211,238,0.55);
+      color:#7dd3fc;
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      position:relative;
+      z-index:1;
+      margin-bottom:8px;
+    }
+    .badge::before{
+      content:"●";
+      font-size:10px;
+      color:#22d3ee;
+      text-shadow:0 0 10px rgba(34,211,238,0.9);
+    }
+
+    .muted{ color:var(--muted); }
+
+    label.muted{
+      display:block;
+      font-size:12px;
+      margin-top:4px;
+      margin-bottom:2px;
+      opacity:.9;
+    }
+
+    input{
+      width:100%;
+      padding:9px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.5);
+      background:radial-gradient(circle at top left,#020617,#020617 60%,#0b1221);
+      color:#fff;
+      margin:4px 0 2px;
+      font-size:13px;
+      outline:none;
+      transition:
+        border-color .25s ease,
+        box-shadow .25s ease,
+        background .25s ease,
+        transform .18s ease;
+    }
+    input::placeholder{ color:rgba(148,163,184,0.8); }
+
+    input:hover{
+      border-color:rgba(34,211,238,0.75);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.45);
+    }
+    input:focus{
+      border-color:rgba(168,85,247,0.9);
+      box-shadow:0 0 0 1px rgba(168,85,247,0.55),0 0 35px rgba(15,23,42,1);
+      background:radial-gradient(circle at top,rgba(15,23,42,0.95),#020617);
+      transform:translateY(-1px);
+    }
+
+    .result{
+      margin-top:8px;
+      font-size:15px;
+      color:#e5e7eb;
+      min-height:20px;
+      opacity:.85;
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:4px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(34,211,238,0.7);
+      color:#7dd3fc;
+      background:radial-gradient(circle at top left,rgba(15,23,42,0.9),rgba(8,47,73,0.98));
+      cursor:pointer;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin-top:10px;
+      position:relative;
+      overflow:hidden;
+      transition:
+        border-color .25s ease,
+        background .25s ease,
+        transform .22s ease,
+        box-shadow .25s ease;
+      box-shadow:0 14px 40px rgba(15,23,42,0.95);
+    }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.9),transparent 60%);
+      opacity:0;
+      transform:translate3d(-30%,40%,0);
+      transition:opacity .35s ease, transform .35s ease;
+      mix-blend-mode:screen;
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      border-color:rgba(168,85,247,0.9);
+      background:radial-gradient(circle at top left,rgba(8,47,73,0.98),rgba(15,23,42,0.98));
+      box-shadow:0 20px 55px rgba(15,23,42,1);
+    }
+
+    .btn:hover::before{
+      opacity:1;
+      transform:translate3d(5%,0,0);
+    }
+
+    .btn:active{
+      transform:translateY(0);
+      box-shadow:0 10px 30px rgba(15,23,42,0.9);
+    }
+
+    /* Küçük ekran iyileştirmeleri */
+    @media (max-width:640px){
+      header{ padding-top:22px; padding-bottom:4px; }
+      h1{ font-size:26px; }
+      .panel{ padding:14px; border-radius:18px; }
+      .grid{ gap:10px; }
+      .card{ border-radius:14px; padding:12px 12px 11px; }
+    }
   </style>
 </head>
 <body>
+  <div class="cursor-glow"></div>
   <header>
-    <a class="btn-home" href="../index.html">Ana sayfa</a>
+    <a class="btn-home" href="../index.html">
+      <span>⟵</span>
+      <span>Ana sayfa</span>
+    </a>
     <div>
       <h1>Hesaplamalar</h1>
-      <p class="lead">Sık kullanılan hesaplar, hızlı sonuç + yorum.</p>
+      <p class="lead">Sık kullanılan hesaplar, hızlı sonuç + mini yorumlarla tek panelde.</p>
     </div>
   </header>
+
   <div class="panel">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-purple orb-2"></div>
     <div class="grid" id="grid"></div>
   </div>
+
   <script>
   (function(){
     const calculators=[
-      { id:"exam", title:"Vize/Final Ortalaması", fields:["vize","vizeAgirlik","final","finalAgirlik"], labels:["Vize","Vize %","Final","Final %"], fn:examFn },
+      { id:"exam", title:"Vize / Final Ortalaması", fields:["vize","vizeAgirlik","final","finalAgirlik"], labels:["Vize","Vize %","Final","Final %"], fn:examFn },
       { id:"kdv", title:"KDV Hesaplama", fields:["tutar","oran"], labels:["Tutar","KDV %"], fn:kdvFn },
       { id:"bmi", title:"Vücut Kitle İndeksi", fields:["kilo","boy"], labels:["Kilo (kg)","Boy (cm)"], fn:bmiFn },
       { id:"faiz", title:"Basit Faiz", fields:["anapara","oran","gun"], labels:["Anapara","%","Gün"], fn:f=>((f.anapara*f.oran/100*f.gun)/365).toFixed(2) },
-      { id:"taksit", title:"Kredi Taksit", fields:["anapara","oran","ay"], labels:["Anapara","Aylık %","Ay"], fn:f=>{const r=f.oran/100;const n=f.ay;if(r===0) return (f.anapara/n).toFixed(2);const pay=r*Math.pow(1+r,n);const payda=Math.pow(1+r,n)-1;return (f.anapara*pay/payda).toFixed(2);} },
+      { id:"taksit", title:"Kredi Taksit", fields:["anapara","oran","ay"], labels:["Anapara","Aylık %","Ay"], fn:f=>{
+          const r=f.oran/100;
+          const n=f.ay;
+          if(r===0) return (f.anapara/n).toFixed(2);
+          const pay=r*Math.pow(1+r,n);
+          const payda=Math.pow(1+r,n)-1;
+          return (f.anapara*pay/payda).toFixed(2);
+        } },
       { id:"indir", title:"İndirimli Fiyat", fields:["fiyat","indirim"], labels:["Fiyat","İndirim %"], fn:f=>(f.fiyat*(1-f.indirim/100)).toFixed(2) },
       { id:"speed", title:"Ortalama Hız", fields:["mesafe","sure"], labels:["Mesafe (km)","Süre (saat)"], fn:f=>(f.mesafe/f.sure).toFixed(2) },
       { id:"fuel", title:"Yakıt Tüketimi", fields:["km","litre"], labels:["Gidilen km","Harcanan litre"], fn:f=>(f.litre/f.km*100).toFixed(2)+" L/100km" }
@@ -52,13 +466,26 @@
     grid.innerHTML=calculators.map(calc=>renderCard(calc)).join("");
 
     function renderCard(calc){
-      const inputs=calc.fields.map((f,i)=>`<label class="muted">${calc.labels[i]}</label><input data-field="${f}" data-id="${calc.id}" type="number" step="0.01">`).join("");
-      return `<div class="card" data-id="${calc.id}">
-        <div class="badge">${calc.title}</div>
-        ${inputs}
-        <div class="result muted">Sonuç bekleniyor</div>
-        <button class="btn" data-run="${calc.id}">Hesapla</button>
-      </div>`;
+      const inputs=calc.fields.map((f,i)=>`
+        <label class="muted">${calc.labels[i]}</label>
+        <input
+          data-field="${f}"
+          data-id="${calc.id}"
+          type="number"
+          step="0.01"
+          placeholder="0"
+        >
+      `).join("");
+      return `
+        <div class="card" data-id="${calc.id}">
+          <div class="badge">${calc.title}</div>
+          ${inputs}
+          <div class="result muted">Sonuç bekleniyor</div>
+          <button class="btn" data-run="${calc.id}">
+            <span>Hesapla</span>
+          </button>
+        </div>
+      `;
     }
 
     grid.addEventListener("click",e=>{
@@ -69,7 +496,7 @@
       if(!calc) return;
       const values={};
       calc.fields.forEach(f=>{
-        const val=parseFloat(card.querySelector(`[data-field='${f}']`).value||"0");
+        const val=parseFloat(card.querySelector("[data-field='"+f+"']").value || "0");
         values[f]=isNaN(val)?0:val;
       });
       const out=calc.fn(values);
@@ -79,21 +506,51 @@
     function examFn(f){
       const score = f.vize*(f.vizeAgirlik/100)+f.final*(f.finalAgirlik/100);
       const passLine=60;
-      if(score>=passLine) return `${score.toFixed(2)} · Geçtiniz 🎉`;
+      if(score>=passLine) return score.toFixed(2)+" · Geçtiniz 🎉";
       const need = (passLine - f.vize*(f.vizeAgirlik/100)) * 100 / (f.finalAgirlik||1);
-      return `${score.toFixed(2)} · Kalır. Finalde en az ${Math.max(0,need).toFixed(1)} almalısınız.`;
+      return score.toFixed(2)+" · Kalır. Finalde en az "+Math.max(0,need).toFixed(1)+" almalısınız.";
     }
+
     function kdvFn(f){
       const br=f.tutar||0, oran=f.oran||20;
       const kdv=br*oran/100, toplam=br+kdv;
-      return `${toplam.toFixed(2)} (KDV: ${kdv.toFixed(2)} | oran ${oran}%)`;
+      return toplam.toFixed(2)+" (KDV: "+kdv.toFixed(2)+" | oran "+oran+"%)";
     }
+
     function bmiFn(f){
       const bmi = (f.kilo/((f.boy/100)**2));
-      const txt = bmi<18.5?"Zayıf":bmi<25?"Normal":bmi<30?"Kilolu":"Obez";
-      const min = 18.5*((f.boy/100)**2), max=24.9*((f.boy/100)**2);
-      return `${bmi.toFixed(2)} · ${txt} · Normal kilo aralığı: ${min.toFixed(1)} - ${max.toFixed(1)} kg`;
+      const txt = bmi<18.5 ? "Zayıf" : bmi<25 ? "Normal" : bmi<30 ? "Kilolu" : "Obez";
+      const min = 18.5*((f.boy/100)**2);
+      const max = 24.9*((f.boy/100)**2);
+      return bmi.toFixed(2)+" · "+txt+" · Normal kilo aralığı: "+min.toFixed(1)+" - "+max.toFixed(1)+" kg";
     }
+
+    /* Kart giriş animasyonları (CriticalDanger benzeri yumuşak pop-in) */
+    const cards = Array.from(document.querySelectorAll(".card"));
+    cards.forEach((card,idx)=>{
+      card.style.setProperty("--delay", (idx*70)+"ms");
+    });
+
+    const io = new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add("show");
+          io.unobserve(entry.target);
+        }
+      });
+    },{threshold:0.2});
+
+    cards.forEach(c=>io.observe(c));
+
+    /* Mouse glow */
+    const glow=document.querySelector(".cursor-glow");
+    document.body.classList.add("ready");
+
+    window.addEventListener("pointermove",e=>{
+      const x=e.clientX;
+      const y=e.clientY;
+      glow.style.transform="translate3d("+(x-130)+"px,"+(y-130)+"px,0)";
+    });
   })();
   </script>
 </body>

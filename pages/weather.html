@@ -1,130 +1,1043 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hava Durumu</title>
   <style>
-    :root { --bg:#0b1221; --panel:#101a30; --accent:#22d3ee; --accent2:#a855f7; --text:#e5e7eb; --muted:#94a3b8; }
+    :root {
+      --bg:#0b1221;
+      --panel:#101a30;
+      --accent:#22d3ee;
+      --accent2:#a855f7;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+    }
     *{box-sizing:border-box;}
+
     body{
       margin:0;
       font-family:"Inter","Segoe UI",sans-serif;
-      background:radial-gradient(circle at 20% 20%,rgba(34,211,238,0.08),transparent 30%),linear-gradient(135deg,#0b1221,#0f172a);
+      background:
+        radial-gradient(circle at 20% 20%,rgba(34,211,238,0.09),transparent 30%),
+        radial-gradient(circle at 110% 110%,rgba(168,85,247,0.18),transparent 40%),
+        linear-gradient(135deg,#020617,#0f172a);
       color:var(--text);
       min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
     }
-    header{max-width:1100px;margin:0 auto;padding:26px 16px 10px;}
-    h1{margin:0;font-size:30px;letter-spacing:0.3px;}
-    p.lead{margin:6px 0 0;color:var(--muted);}
-    .panel{max-width:1100px;margin:0 auto 26px;padding:16px;background:var(--panel);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
-    input, select{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0c1528;color:#fff;min-width:160px;}
-    .btn{border:none;padding:10px 14px;border-radius:10px;background:linear-gradient(120deg,rgba(34,211,238,0.6),rgba(168,85,247,0.5));color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 15px 40px rgba(34,211,238,0.25);}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
-    .card{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:#0f182c;position:relative;overflow:hidden;}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:#7dd3fc;font-size:12px;}
-    .muted{color:var(--muted);}
-    .skeleton{background:linear-gradient(90deg,#0f172a 0%,#141f38 50%,#0f172a 100%);background-size:200% 100%;animation:shine 1.6s linear infinite;border-radius:8px;height:14px;margin:6px 0;}
-    @keyframes shine{to{background-position-x:-200%;}}
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-25%;
+      background:
+        radial-gradient(circle at 10% 0%,rgba(56,189,248,0.25),transparent 55%),
+        radial-gradient(circle at 90% 100%,rgba(129,140,248,0.22),transparent 55%);
+      opacity:0.8;
+      filter:blur(18px);
+      z-index:-1;
+      animation:drift 22s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+
+    @keyframes drift{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      50%{transform:translate3d(-30px,10px,0) scale(1.05);}
+      100%{transform:translate3d(40px,-25px,0) scale(1.08);}
+    }
+
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:26px 16px 10px;
+    }
+
+    h1{
+      margin:0;
+      font-size:30px;
+      letter-spacing:0.3px;
+      background:linear-gradient(120deg,#e0f2fe,#7dd3fc,#a855f7);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 0 18px rgba(15,23,42,0.85);
+      animation:headlineGlow 12s ease-in-out infinite;
+    }
+
+    @keyframes headlineGlow{
+      0%{filter:drop-shadow(0 0 10px rgba(34,211,238,0.35));}
+      50%{filter:drop-shadow(0 0 16px rgba(168,85,247,0.55));}
+      100%{filter:drop-shadow(0 0 10px rgba(34,211,238,0.35));}
+    }
+
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      opacity:0.9;
+    }
+
+    .panel{
+      max-width:1100px;
+      margin:0 auto 26px;
+      padding:16px 16px 18px;
+      background:radial-gradient(circle at top left,rgba(15,23,42,0.95),rgba(15,23,42,0.92));
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,0.35);
+      box-shadow:0 24px 80px rgba(0,0,0,0.7);
+      position:relative;
+      overflow:hidden;
+      backdrop-filter:blur(20px);
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at var(--hover-x,20%) var(--hover-y,0%),rgba(34,211,238,0.18),transparent 55%),
+        radial-gradient(circle at 120% 160%,rgba(168,85,247,0.24),transparent 55%);
+      opacity:0.85;
+      mix-blend-mode:soft-light;
+      pointer-events:none;
+      transition:background-position 0.3s ease-out;
+    }
+
+    .panel::after{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      background:conic-gradient(from 220deg,
+        rgba(34,211,238,0.35),
+        rgba(168,85,247,0.5),
+        transparent,
+        transparent,
+        rgba(34,211,238,0.3));
+      opacity:0.35;
+      mask:
+        linear-gradient(#000,#000) content-box,
+        linear-gradient(#000,#000);
+      -webkit-mask:
+        linear-gradient(#000,#000) content-box,
+        linear-gradient(#000,#000);
+      mask-composite:exclude;
+      -webkit-mask-composite:xor;
+      padding:1px;
+      border-radius:18px;
+      pointer-events:none;
+      animation:panelBorder 18s linear infinite;
+    }
+
+    @keyframes panelBorder{
+      0%{transform:rotate(0deg);}
+      100%{transform:rotate(360deg);}
+    }
+
+    .bar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:14px;
+      position:relative;
+      z-index:2;
+    }
+
+    input{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:rgba(15,23,42,0.92);
+      color:#fff;
+      min-width:200px;
+      font-size:14px;
+      outline:none;
+      transition:border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+      flex:1;
+    }
+
+    input::placeholder{
+      color:rgba(148,163,184,0.9);
+    }
+
+    input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(34,211,238,0.7),0 0 30px rgba(34,211,238,0.35);
+      background:rgba(15,23,42,0.98);
+      transform:translateY(-1px);
+    }
+
+    .btn{
+      border:none;
+      padding:10px 16px;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.6),transparent 55%),
+        linear-gradient(120deg,rgba(34,211,238,0.88),rgba(168,85,247,0.8));
+      color:#fff;
+      cursor:pointer;
+      transition:all 0.22s cubic-bezier(0.22,0.61,0.36,1);
+      box-shadow:0 14px 35px rgba(0,0,0,0.65);
+      font-weight:500;
+      font-size:14px;
+      position:relative;
+      overflow:hidden;
+      transform:translateZ(0);
+      white-space:nowrap;
+    }
+
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg,rgba(255,255,255,0.25),transparent 60%);
+      opacity:0;
+      transform:translateX(-40%);
+      transition:opacity 0.25s ease, transform 0.4s ease;
+      pointer-events:none;
+    }
+
+    .btn:hover{
+      transform:translateY(-2px) scale(1.02);
+      box-shadow:0 20px 50px rgba(15,23,42,0.9);
+    }
+
+    .btn:hover::after{
+      opacity:1;
+      transform:translateX(40%);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(0.99);
+      box-shadow:0 8px 20px rgba(15,23,42,0.9);
+    }
+
+    /* Popüler şehirler grid */
+    .popular-cities{
+      margin:22px 0 18px;
+      padding-bottom:10px;
+      border-bottom:1px solid rgba(148,163,184,0.28);
+    }
+
+    .popular-cities h2{
+      margin:0 0 14px;
+      font-size:18px;
+      color:var(--text);
+      opacity:0.9;
+      letter-spacing:0.4px;
+    }
+
+    .city-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .city-item{
+      position:relative;
+      border-radius:14px;
+      border:1px solid rgba(34,211,238,0.35);
+      background:rgba(15,23,42,0.95);
+      box-shadow:0 10px 25px rgba(15,23,42,0.7);
+      overflow:hidden;
+      transition:
+        transform 0.25s cubic-bezier(0.22,0.61,0.36,1),
+        box-shadow 0.25s,
+        border-color 0.25s,
+        grid-column 0.25s;
+    }
+
+    .city-item.active{
+      grid-column:1 / -1;
+      box-shadow:0 20px 60px rgba(15,23,42,0.95);
+      border-color:rgba(34,211,238,0.85);
+      transform:translateY(-2px) scale(1.01);
+    }
+
+    .city-btn{
+      width:100%;
+      padding:10px 14px;
+      background:transparent;
+      border:none;
+      color:#e2e8f0;
+      font-size:15px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .city-main{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .city-flag{
+      font-size:18px;
+    }
+
+    .city-name{
+      font-weight:500;
+    }
+
+    .city-country{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .city-arrow{
+      font-size:13px;
+      color:var(--muted);
+      opacity:0.8;
+      transition:transform 0.25s;
+    }
+
+    .city-item.active .city-arrow{
+      transform:rotate(90deg);
+    }
+
+    .city-extra{
+      border-top:1px solid rgba(15,23,42,0.9);
+      background:radial-gradient(circle at top left,rgba(34,211,238,0.16),transparent 55%);
+      padding:0 14px;
+      max-height:0;
+      opacity:0;
+      overflow:hidden;
+      transition:max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+    }
+
+    .city-item.active .city-extra{
+      padding:8px 14px 12px;
+      max-height:550px;
+      opacity:1;
+    }
+
+    .city-extra-inner{
+      font-size:13px;
+      color:var(--muted);
+      transition:opacity .3s ease, transform .3s ease;
+    }
+
+    /* smooth içerik değişimi */
+    .city-extra-inner.fade-out{
+      opacity:0;
+      transform:translateY(4px);
+    }
+    .city-extra-inner.fade-in{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .city-extra-inner strong{
+      color:var(--text);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    .card{
+      padding:14px 14px 16px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,0.45);
+      background:
+        radial-gradient(circle at top left,rgba(34,211,238,0.14),transparent 60%),
+        radial-gradient(circle at bottom right,rgba(15,23,42,0.95),rgba(15,23,42,0.98));
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 18px 40px rgba(15,23,42,0.9);
+      transform:translate3d(0,6px,0);
+      opacity:0;
+      animation:cardIn 0.7s ease-out forwards;
+      animation-delay:var(--delay,0ms);
+    }
+
+    @keyframes cardIn{
+      0%{opacity:0;transform:translate3d(0,10px,0) scale(0.98);}
+      100%{opacity:1;transform:translate3d(0,0,0) scale(1);}
+    }
+
+    .card h3{
+      margin:10px 0 4px;
+      font-size:22px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.95);
+      border:1px solid rgba(34,211,238,0.6);
+      color:#7dd3fc;
+      font-size:11px;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+    }
+
+    .badge::before{
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:999px;
+      background:radial-gradient(circle,#22c55e,#22c55e 40%,transparent 60%);
+      box-shadow:0 0 8px rgba(34,197,94,0.9);
+    }
+
+    .badge.is-loading::before{
+      animation:dotPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes dotPulse{
+      0%,100%{transform:scale(0.9);box-shadow:0 0 4px rgba(34,197,94,0.4);}
+      50%{transform:scale(1.25);box-shadow:0 0 12px rgba(34,197,94,1);}
+    }
+
+    .muted{color:var(--muted);font-size:13px;}
+
+    @media (max-width:900px){
+      .city-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media (max-width:600px){
+      header{padding-top:20px;}
+      h1{font-size:24px;}
+      .panel{margin:0 10px 22px;padding:14px 12px 16px;}
+      .bar{gap:8px;}
+      input{min-width:0;flex:1;}
+      .btn{width:auto;}
+      .city-grid{grid-template-columns:repeat(1,minmax(0,1fr));}
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>Hava Durumu</h1>
-    <p class="lead">Şehir adına göre bugün/yarın ve anlık bilgiler.</p>
+    <p class="lead">Şehir adına göre bugün, yarın ve anlık bilgiler.</p>
   </header>
-  <div class="panel">
+
+  <div class="panel" id="panel">
     <div class="bar">
       <a class="btn" href="../index.html">Ana sayfa</a>
-      <select id="cityPreset">
-        <option value="Istanbul">Istanbul</option>
-        <option value="Ankara">Ankara</option>
-        <option value="Izmir">Izmir</option>
-        <option value="London">London</option>
-        <option value="New York">New York</option>
-        <option value="Tokyo">Tokyo</option>
-        <option value="Paris">Paris</option>
-      </select>
-      <input id="city" placeholder="Şehir veya koordinat (örn: Istanbul)">
+      <input id="city" placeholder="Şehir (örn: Istanbul)">
       <button class="btn" id="search">Ara</button>
       <span class="badge" id="status">Hazır</span>
     </div>
-    <div class="grid" id="cards">
-      <div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
-      <div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
-      <div class="card"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
+
+    <div class="popular-cities">
+      <h2>Popüler Şehirler</h2>
+      <div class="city-grid" id="cityGrid">
+        <!-- 1. satır -->
+        <div class="city-item active" data-city="Istanbul">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇹🇷</span>
+              <div>
+                <div class="city-name">Istanbul</div>
+                <div class="city-country">Türkiye</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra">
+            <div class="city-extra-inner">
+              Bir şehir seçin veya arama kutusundan yazın.
+            </div>
+          </div>
+        </div>
+        <div class="city-item" data-city="Ankara">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇹🇷</span>
+              <div>
+                <div class="city-name">Ankara</div>
+                <div class="city-country">Türkiye</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Izmir">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇹🇷</span>
+              <div>
+                <div class="city-name">Izmir</div>
+                <div class="city-country">Türkiye</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="London">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇬🇧</span>
+              <div>
+                <div class="city-name">London</div>
+                <div class="city-country">Birleşik Krallık</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 2. satır -->
+        <div class="city-item" data-city="Paris">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇫🇷</span>
+              <div>
+                <div class="city-name">Paris</div>
+                <div class="city-country">Fransa</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Berlin">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇩🇪</span>
+              <div>
+                <div class="city-name">Berlin</div>
+                <div class="city-country">Almanya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Madrid">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇪🇸</span>
+              <div>
+                <div class="city-name">Madrid</div>
+                <div class="city-country">İspanya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Rome">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇮🇹</span>
+              <div>
+                <div class="city-name">Rome</div>
+                <div class="city-country">İtalya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 3. satır -->
+        <div class="city-item" data-city="New York">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇺🇸</span>
+              <div>
+                <div class="city-name">New York</div>
+                <div class="city-country">ABD</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Los Angeles">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇺🇸</span>
+              <div>
+                <div class="city-name">Los Angeles</div>
+                <div class="city-country">ABD</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Chicago">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇺🇸</span>
+              <div>
+                <div class="city-name">Chicago</div>
+                <div class="city-country">ABD</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Toronto">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇨🇦</span>
+              <div>
+                <div class="city-name">Toronto</div>
+                <div class="city-country">Kanada</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 4. satır -->
+        <div class="city-item" data-city="Vancouver">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇨🇦</span>
+              <div>
+                <div class="city-name">Vancouver</div>
+                <div class="city-country">Kanada</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Tokyo">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇯🇵</span>
+              <div>
+                <div class="city-name">Tokyo</div>
+                <div class="city-country">Japonya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Osaka">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇯🇵</span>
+              <div>
+                <div class="city-name">Osaka</div>
+                <div class="city-country">Japonya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Seoul">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇰🇷</span>
+              <div>
+                <div class="city-name">Seoul</div>
+                <div class="city-country">Güney Kore</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 5. satır -->
+        <div class="city-item" data-city="Beijing">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇨🇳</span>
+              <div>
+                <div class="city-name">Beijing</div>
+                <div class="city-country">Çin</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Shanghai">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇨🇳</span>
+              <div>
+                <div class="city-name">Shanghai</div>
+                <div class="city-country">Çin</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Hong Kong">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇭🇰</span>
+              <div>
+                <div class="city-name">Hong Kong</div>
+                <div class="city-country">Çin (HK)</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Singapore">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇸🇬</span>
+              <div>
+                <div class="city-name">Singapore</div>
+                <div class="city-country">Singapur</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 6. satır -->
+        <div class="city-item" data-city="Dubai">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇦🇪</span>
+              <div>
+                <div class="city-name">Dubai</div>
+                <div class="city-country">BAE</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Moscow">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇷🇺</span>
+              <div>
+                <div class="city-name">Moscow</div>
+                <div class="city-country">Rusya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Bangkok">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇹🇭</span>
+              <div>
+                <div class="city-name">Bangkok</div>
+                <div class="city-country">Tayland</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Mumbai">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇮🇳</span>
+              <div>
+                <div class="city-name">Mumbai</div>
+                <div class="city-country">Hindistan</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 7. satır -->
+        <div class="city-item" data-city="Delhi">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇮🇳</span>
+              <div>
+                <div class="city-name">Delhi</div>
+                <div class="city-country">Hindistan</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="São Paulo">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇧🇷</span>
+              <div>
+                <div class="city-name">São Paulo</div>
+                <div class="city-country">Brezilya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Rio de Janeiro">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇧🇷</span>
+              <div>
+                <div class="city-name">Rio de Janeiro</div>
+                <div class="city-country">Brezilya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Buenos Aires">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇦🇷</span>
+              <div>
+                <div class="city-name">Buenos Aires</div>
+                <div class="city-country">Arjantin</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+
+        <!-- 8. satır -->
+        <div class="city-item" data-city="Sydney">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇦🇺</span>
+              <div>
+                <div class="city-name">Sydney</div>
+                <div class="city-country">Avustralya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Melbourne">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇦🇺</span>
+              <div>
+                <div class="city-name">Melbourne</div>
+                <div class="city-country">Avustralya</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Mexico City">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇲🇽</span>
+              <div>
+                <div class="city-name">Mexico City</div>
+                <div class="city-country">Meksika</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+        <div class="city-item" data-city="Johannesburg">
+          <button class="city-btn" type="button">
+            <div class="city-main">
+              <span class="city-flag">🇿🇦</span>
+              <div>
+                <div class="city-name">Johannesburg</div>
+                <div class="city-country">Güney Afrika</div>
+              </div>
+            </div>
+            <span class="city-arrow">▶</span>
+          </button>
+          <div class="city-extra"><div class="city-extra-inner"></div></div>
+        </div>
+      </div>
     </div>
   </div>
+
   <script>
   (function(){
-    const cityEl=document.getElementById("city");
-    const preset=document.getElementById("cityPreset");
-    const cards=document.getElementById("cards");
-    const status=document.getElementById("status");
-    cityEl.value="Istanbul";
+    const cityEl    = document.getElementById("city");
+    const status    = document.getElementById("status");
+    const panel     = document.getElementById("panel");
+    const cityItems = document.querySelectorAll(".city-item");
+    let firstRender = true;
+
+    const countryMeta = {
+      TR:{name:"Türkiye",flag:"🇹🇷"},
+      GB:{name:"Birleşik Krallık",flag:"🇬🇧"},
+      FR:{name:"Fransa",flag:"🇫🇷"},
+      DE:{name:"Almanya",flag:"🇩🇪"},
+      ES:{name:"İspanya",flag:"🇪🇸"},
+      IT:{name:"İtalya",flag:"🇮🇹"},
+      US:{name:"ABD",flag:"🇺🇸"},
+      CA:{name:"Kanada",flag:"🇨🇦"},
+      JP:{name:"Japonya",flag:"🇯🇵"},
+      KR:{name:"Güney Kore",flag:"🇰🇷"},
+      CN:{name:"Çin",flag:"🇨🇳"},
+      HK:{name:"Çin (HK)",flag:"🇭🇰"},
+      SG:{name:"Singapur",flag:"🇸🇬"},
+      AE:{name:"BAE",flag:"🇦🇪"},
+      RU:{name:"Rusya",flag:"🇷🇺"},
+      TH:{name:"Tayland",flag:"🇹🇭"},
+      IN:{name:"Hindistan",flag:"🇮🇳"},
+      BR:{name:"Brezilya",flag:"🇧🇷"},
+      AR:{name:"Arjantin",flag:"🇦🇷"},
+      AU:{name:"Avustralya",flag:"🇦🇺"},
+      MX:{name:"Meksika",flag:"🇲🇽"},
+      ZA:{name:"Güney Afrika",flag:"🇿🇦"}
+    };
+
+    cityEl.value = "Istanbul";
 
     async function geocode(q){
-      const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&language=tr&count=1`;
-      const r=await fetch(url); const j=await r.json();
-      const p=j?.results?.[0]; if(!p) throw new Error("Şehir bulunamadı");
-      return {lat:p.latitude, lon:p.longitude, name:`${p.name}, ${p.country_code}`};
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&language=tr&count=1`;
+      const r = await fetch(url);
+      const j = await r.json();
+      const p = j?.results?.[0];
+      if(!p) throw new Error("Şehir bulunamadı");
+      return {
+        lat:p.latitude,
+        lon:p.longitude,
+        city:p.name,
+        countryCode:p.country_code
+      };
     }
+
     async function fetchWeather(lat,lon){
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&current_weather=true&timezone=auto`;
-      const r=await fetch(url); return r.json();
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&current_weather=true&timezone=auto`;
+      const r = await fetch(url);
+      return r.json();
     }
-    function render(name,data){
-      const today=data.daily.time[0];
-      const tomorrow=data.daily.time[1];
-      const todayMax=data.daily.temperature_2m_max[0];
-      const todayMin=data.daily.temperature_2m_min[0];
-      const tomorrowMax=data.daily.temperature_2m_max[1];
-      const tomorrowMin=data.daily.temperature_2m_min[1];
-      const current=data.current_weather;
-      const cloud = data.hourly.cloudcover[0];
-      const windNow = data.hourly.windspeed_10m[0];
-      const rainToday = data.daily.precipitation_sum[0];
-      const desc = descForCode(current.weathercode);
-      cards.innerHTML = `
+
+    function updateActiveHeader(cityName, countryCode){
+      const activeItem = document.querySelector(".city-item.active");
+      if(!activeItem) return;
+      const meta = countryMeta[countryCode] || {name:countryCode || "",flag:"🌍"};
+      const nameEl    = activeItem.querySelector(".city-name");
+      const countryEl = activeItem.querySelector(".city-country");
+      const flagEl    = activeItem.querySelector(".city-flag");
+      if(nameEl)    nameEl.textContent    = cityName;
+      if(countryEl) countryEl.textContent = meta.name || cityName;
+      if(flagEl)    flagEl.textContent    = meta.flag;
+    }
+
+    function render(displayName,data){
+      const today       = data.daily.time[0];
+      const tomorrow    = data.daily.time[1];
+      const todayMax    = data.daily.temperature_2m_max[0];
+      const todayMin    = data.daily.temperature_2m_min[0];
+      const tomorrowMax = data.daily.temperature_2m_max[1];
+      const tomorrowMin = data.daily.temperature_2m_min[1];
+      const current     = data.current_weather;
+      const cloud       = data.hourly.cloudcover[0];
+      const windNow     = data.hourly.windspeed_10m[0];
+      const rainToday   = data.daily.precipitation_sum[0];
+      const desc        = descForCode(current.weathercode);
+
+      const rainText = (rainToday?.toFixed ? rainToday.toFixed(1) : (rainToday || 0)) + " mm";
+
+      const cardsHTML = `
         <div class="card">
           <div class="badge">Bugün</div>
-          <h3>${todayMax}/${todayMin}°C ${iconForCode(current.weathercode)}</h3>
+          <h3>${todayMax.toFixed(1)}/${todayMin.toFixed(1)}°C ${iconForCode(current.weathercode)}</h3>
           <div class="muted">${today}</div>
-          <div class="muted">Yağış: ${rainToday || 0} mm</div>
+          <div class="muted">Yağış: ${rainText}</div>
         </div>
         <div class="card">
           <div class="badge">Yarın</div>
-          <h3>${tomorrowMax}/${tomorrowMin}°C</h3>
+          <h3>${tomorrowMax.toFixed(1)}/${tomorrowMin.toFixed(1)}°C</h3>
           <div class="muted">${tomorrow}</div>
+          <div class="muted">Tahmin aralığı: 24 saat</div>
         </div>
         <div class="card">
-          <div class="badge">${name}</div>
-          <h3>${current.temperature}°C ${iconForCode(current.weathercode)}</h3>
+          <div class="badge">${displayName}</div>
+          <h3>${current.temperature.toFixed(1)}°C ${iconForCode(current.weathercode)}</h3>
           <div class="muted">${desc}</div>
-          <div class="muted">Rüzgar: ${current.windspeed} km/s</div>
+          <div class="muted">Rüzgar: ${current.windspeed.toFixed(1)} km/s</div>
           <div class="muted">Bulut: ${cloud}%</div>
-          <div class="muted">Anlık rüzgar: ${windNow} km/s</div>
+          <div class="muted">Anlık rüzgar: ${windNow.toFixed(1)} km/s</div>
         </div>
       `;
-    }
-    async function run(){
-      try{
-        status.textContent="Yükleniyor...";
-        cards.classList.add("loading");
-        const q=cityEl.value.trim()||"Istanbul";
-        const g=await geocode(q);
-        const w=await fetchWeather(g.lat,g.lon);
-        render(g.name,w);
-        status.textContent="Hazır";
-      }catch(e){
-        status.textContent="Hata";
-        cards.innerHTML=`<div class="card">Hata: ${e.message}</div>`;
+
+      const activeItem = document.querySelector(".city-item.active");
+      if(activeItem){
+        const extra = activeItem.querySelector(".city-extra-inner");
+        if(extra){
+          if(firstRender){
+            extra.innerHTML = `<div class="grid">${cardsHTML}</div>`;
+            Array.from(extra.querySelectorAll(".card")).forEach((el,idx)=>{
+              el.style.setProperty("--delay", (idx*90) + "ms");
+            });
+            firstRender = false;
+          }else{
+            extra.classList.remove("fade-in");
+            extra.classList.add("fade-out");
+            setTimeout(()=>{
+              extra.innerHTML = `<div class="grid">${cardsHTML}</div>`;
+              Array.from(extra.querySelectorAll(".card")).forEach((el,idx)=>{
+                el.style.setProperty("--delay", (idx*90) + "ms");
+              });
+              extra.classList.remove("fade-out");
+              // küçük bir reflow ile animasyonu garantiye al
+              void extra.offsetWidth;
+              extra.classList.add("fade-in");
+              setTimeout(()=>extra.classList.remove("fade-in"), 350);
+            },150);
+          }
+        }
       }
     }
+
+    async function run(){
+      try{
+        status.textContent = "Yükleniyor...";
+        status.classList.add("is-loading");
+
+        const q = cityEl.value.trim() || "Istanbul";
+        const g = await geocode(q);
+        const displayName = `${g.city}, ${g.countryCode}`;
+
+        updateActiveHeader(g.city, g.countryCode);
+
+        const w = await fetchWeather(g.lat,g.lon);
+        render(displayName,w);
+
+        status.textContent = "Hazır";
+      }catch(e){
+        status.textContent = "Hata";
+        const activeItem = document.querySelector(".city-item.active");
+        if(activeItem){
+          const extra = activeItem.querySelector(".city-extra-inner");
+          if(extra){
+            extra.textContent = "Hata: " + e.message;
+          }
+        }
+      }finally{
+        status.classList.remove("is-loading");
+      }
+    }
+
     function iconForCode(code){
-      const map={
+      const map = {
         0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
         45:"🌫️",48:"🌫️",
         51:"🌦️",53:"🌦️",55:"🌧️",
@@ -138,8 +1051,9 @@
       };
       return map[code] || "";
     }
+
     function descForCode(code){
-      const map={
+      const map = {
         0:"Açık hava",1:"Hafif bulutlu",2:"Parçalı bulutlu",3:"Kapalı",
         45:"Sisli",48:"Sisli",
         51:"Çiseleme",53:"Yağmurlu",55:"Yağmurlu",
@@ -151,9 +1065,39 @@
       };
       return map[code] || "Hava durumu";
     }
+
+    // Arama alanı
     document.getElementById("search").addEventListener("click", run);
-    cityEl.addEventListener("keydown",e=>{if(e.key==="Enter") run();});
-    preset.addEventListener("change", ()=>{ cityEl.value=preset.value; run(); });
+    cityEl.addEventListener("keydown",e=>{ if(e.key==="Enter") run(); });
+
+    function setActive(item){
+      cityItems.forEach(i=>i.classList.remove("active"));
+      if(item) item.classList.add("active");
+    }
+
+    // Şehir kutularına tıklama
+    cityItems.forEach(item=>{
+      const btn = item.querySelector(".city-btn");
+      btn.addEventListener("click", ()=>{
+        setActive(item);
+        const label = item.querySelector(".city-name")?.textContent || item.dataset.city;
+        cityEl.value = label;
+        run();
+      });
+    });
+
+    // Panel hover ışık efekti
+    if(panel){
+      panel.addEventListener("mousemove", (e)=>{
+        const rect = panel.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        panel.style.setProperty("--hover-x", x + "%");
+        panel.style.setProperty("--hover-y", y + "%");
+      });
+    }
+
+    // ilk yüklemede İstanbul
     run();
   })();
   </script>
