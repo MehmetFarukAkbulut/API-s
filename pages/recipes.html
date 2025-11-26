@@ -354,6 +354,39 @@
       from{opacity:0;transform:translateY(-12px);}
       to{opacity:1;transform:translateY(0);}
     }
+
+    .more-bar{
+      justify-content:flex-end;
+      margin-top:12px;
+    }
+    .btn-ghost{
+      background:rgba(34,211,238,0.14);
+      color:#e0f2fe;
+      border:1px solid rgba(34,211,238,0.5);
+      box-shadow:none;
+    }
+    .btn-ghost:hover{
+      box-shadow:0 10px 30px rgba(34,211,238,0.25);
+    }
+
+    @media (max-width: 768px){
+      .bar, .chips{
+        flex-wrap:nowrap;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        padding-bottom:6px;
+        margin-bottom:12px;
+      }
+      .bar::-webkit-scrollbar,
+      .chips::-webkit-scrollbar{display:none;}
+      .bar > *, .chips > *{
+        flex:0 0 auto;
+      }
+      .panel{box-shadow:0 14px 44px rgba(0,0,0,0.78);backdrop-filter:blur(10px);}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none !important;transition:none !important;}
+    }
     @keyframes fadeUp{
       from{opacity:0;transform:translateY(14px);}
       to{opacity:1;transform:translateY(0);}
@@ -402,12 +435,16 @@
 
     <div class="grid" id="grid">
       <div class="card" style="opacity:1;">
-        <h3>Tarif + Besin’e hoş geldiniz</h3>
+        <h3>Tarif + Besin'e hoş geldiniz</h3>
         <p class="muted">
           Sayfa yüklenirken sizin için rastgele tarifler getirilecektir.
           Dilerseniz yukarıdan bir mutfak / kategori filtresi seçebilir veya arama yapabilirsiniz.
         </p>
       </div>
+    </div>
+
+    <div class="bar more-bar">
+      <button class="btn btn-ghost" id="loadMore" style="display:none;">Daha fazla göster</button>
     </div>
   </div>
 
@@ -418,6 +455,13 @@
     const status = document.getElementById("status");
     const chips  = document.getElementById("chips");
     const glow   = document.getElementById("cursorGlow");
+    const loadMoreBtn = document.getElementById("loadMore");
+
+    const PAGE_SIZE = 8;
+    let currentMeals = [];
+    let currentMode = "";
+    let currentMeta = {};
+    let visibleCount = 0;
 
     const filters = [
       // Öneriler
@@ -457,6 +501,22 @@
       if(btn) btn.classList.add("active");
     }
 
+    function updateMeals(meals, mode, meta={}){
+      currentMeals = meals;
+      currentMode = mode;
+      currentMeta = meta;
+      visibleCount = Math.min(meals.length, PAGE_SIZE);
+      renderMeals();
+    }
+
+    function toggleLoadMore(){
+      if(!loadMoreBtn) return;
+      const hasMore = currentMode === "random" || currentMeals.length > visibleCount;
+      loadMoreBtn.style.display = hasMore && currentMeals.length ? "inline-flex" : "none";
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = currentMode === "random" ? "Yeni öneriler" : "Daha fazla göster";
+    }
+
     // Mouse glow ve kart tilt – Baseborn havası
     document.addEventListener("mousemove", (e)=>{
       glow.style.opacity = 0.85;
@@ -482,36 +542,44 @@
       }
     }, true);
 
+    async function fetchRandomBatch(count=9){
+      const requests = Array.from({length:count}, () =>
+        fetch("https://www.themealdb.com/api/json/v1/1/random.php").then(r=>r.json())
+      );
+      const results = await Promise.all(requests);
+      const meals = [];
+      results.forEach(j=>{
+        if(j && j.meals && j.meals[0]) meals.push(j.meals[0]);
+      });
+      return meals;
+    }
+
     async function loadRandomMeals(count=9){
       try{
-        status.textContent = "Rastgele öneriler getiriliyor...";
+        status.textContent = "Rastgele ?neriler getiriliyor...";
         status.classList.remove("bad");
-        const requests = Array.from({length:count}, () =>
-          fetch("https://www.themealdb.com/api/json/v1/1/random.php").then(r=>r.json())
-        );
-        const results = await Promise.all(requests);
-        const meals = [];
-        results.forEach(j=>{
-          if(j && j.meals && j.meals[0]) meals.push(j.meals[0]);
-        });
+        const meals = await fetchRandomBatch(count);
         if(!meals.length){
-          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Şu anda rastgele tarif alınamadı, lütfen tekrar deneyin.</p></div>";
-          status.textContent = "Hazır";
+          currentMeals = [];
+          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>?u anda rastgele tarif al?namad?, l?tfen tekrar deneyin.</p></div>";
+          status.textContent = "Haz?r";
+          toggleLoadMore();
           return;
         }
-        renderMeals(meals,"random",{});
-        status.textContent = "Hazır";
+        updateMeals(meals,"random",{});
+        status.textContent = "Haz?r";
       }catch(err){
         console.error(err);
         status.textContent = "Hata";
         status.classList.add("bad");
-        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Rastgele tarifler alınırken hata oluştu.</p></div>";
+        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Rastgele tarifler al?n?rken hata olu?tu.</p></div>";
+        toggleLoadMore();
       }
     }
 
     async function run(type, value){
       try{
-        status.textContent = "Yükleniyor...";
+        status.textContent = "Y?kleniyor...";
         status.classList.remove("bad");
 
         const term = q.value.trim();
@@ -536,8 +604,10 @@
           mode = "search";
           meta = {};
         }else{
-          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Arama girin, filtre seçin veya “Hızlı Öneri”ye tıklayın.</p></div>";
-          status.textContent = "Hazır";
+          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Arama girin, filtre se?in veya h?zl? ?neriye t?klay?n.</p></div>";
+          status.textContent = "Haz?r";
+          currentMeals = [];
+          toggleLoadMore();
           return;
         }
 
@@ -545,44 +615,72 @@
         const j = await r.json();
         const meals = j.meals || [];
         if(!meals.length){
-          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Sonuç bulunamadı.</p></div>";
-          status.textContent = "Hazır";
+          grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Sonu? bulunamad?.</p></div>";
+          status.textContent = "Haz?r";
+          currentMeals = [];
+          toggleLoadMore();
           return;
         }
 
-        const first12 = meals.slice(0,12);
-        renderMeals(first12,mode,meta);
-        status.textContent = "Hazır";
+        updateMeals(meals.slice(0,24), mode, meta);
+        status.textContent = "Haz?r";
       }catch(e){
         console.error(e);
         status.textContent = "Hata";
         status.classList.add("bad");
-        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Veri alınamadı, lütfen daha sonra tekrar deneyin.</p></div>";
+        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Veri al?namad?, l?tfen daha sonra tekrar deneyin.</p></div>";
+        currentMeals = [];
+        toggleLoadMore();
       }
     }
 
-    function renderMeals(meals, mode, meta){
+    function renderMeals(){
+      if(!currentMeals.length){
+        grid.innerHTML = "<div class='card' style='opacity:1;'><p class='muted'>Sonu? bulunamad?.</p></div>";
+        toggleLoadMore();
+        return;
+      }
+      const meals = currentMeals.slice(0, visibleCount);
       grid.innerHTML = meals.map((m,idx)=> {
-        const badgeText = (m.strArea || meta.badge || "").trim();
+        const badgeText = (m.strArea || currentMeta.badge || "").trim();
         const categoryText =
-          (m.strCategory || meta.category || (mode === "search" ? "" : "Liste sonucu")).trim();
+          (m.strCategory || currentMeta.category || (currentMode === "search" ? "" : "Liste sonucu")).trim();
         const delay = 0.03 * idx;
         return `
           <div class="card" style="animation-delay:${delay}s;">
             ${badgeText ? `<span class="badge">${badgeText}</span>` : ""}
-            ${m.strMealThumb ? `<img class="thumb" src="${m.strMealThumb}" alt="${m.strMeal || ""}">` : ""}
+            ${m.strMealThumb ? `<img class="thumb" src="${m.strMealThumb}" alt="${m.strMeal || ''}">` : ""}
             <h3>${m.strMeal || ""}</h3>
             <p class="muted">${categoryText}</p>
             ${
               m.strSource
                 ? `<a class="btn" href="${m.strSource}" target="_blank" rel="noreferrer">
-                     <span>Tarifi Aç</span>
+                     <span>Tarifi A?</span>
                    </a>`
                 : ""
             }
           </div>
         `;
       }).join("");
+      toggleLoadMore();
+    }
+
+    async function handleLoadMore(){
+      if(!currentMeals.length) return;
+      if(currentMode === "random"){
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = "Y?kleniyor...";
+        try{
+          const extra = await fetchRandomBatch(6);
+          currentMeals = currentMeals.concat(extra);
+        }catch(err){
+          console.error(err);
+        }
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.textContent = "Yeni ?neriler";
+      }
+      visibleCount = Math.min(currentMeals.length, visibleCount + PAGE_SIZE);
+      renderMeals();
     }
 
     chips.addEventListener("click",(e)=>{
@@ -594,6 +692,7 @@
       run(t,v);
     });
 
+    loadMoreBtn?.addEventListener("click", handleLoadMore);
     document.getElementById("go").addEventListener("click", ()=>run());
     q.addEventListener("keydown", e=>{ if(e.key === "Enter") run(); });
 
