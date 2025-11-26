@@ -313,6 +313,7 @@
         opacity 200ms ease-out,
         filter 220ms ease-out;
       cursor:grab;
+      touch-action: pan-y;
     }
 
     img:active{
@@ -335,6 +336,17 @@
       gap:6px;
       backdrop-filter:blur(10px);
       border:1px solid rgba(148,163,184,0.5);
+    }
+
+    @media (max-width: 768px){
+      header{align-items:flex-start;}
+      .panel{box-shadow:0 16px 50px rgba(0,0,0,0.75);backdrop-filter:blur(12px);}
+      .card{animation-duration:.45s;}
+      .card-swipe-loading .img-inner::after{animation-duration:.9s;}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none !important;transition:none !important;}
+      img{transition:none !important;}
     }
 
     .img-hint span{
@@ -553,7 +565,7 @@
       const img = document.getElementById("meal-image");
       if(!img) return;
 
-      // Tarayıcının kendi sürükleme davranışını kapat
+      // Varsayilan surukleme ve image drag davranislarini kapat
       img.addEventListener("dragstart", e => e.preventDefault());
 
       let isDragging = false;
@@ -570,24 +582,27 @@
       }
 
       function handleDown(e){
-        // Sadece sol tuş (button === 0) ile çalışsın
-        if(e.button !== 0) return;
+        const isMouse = e.pointerType === "mouse";
+        if(isMouse && e.button !== 0) return;
 
-        e.preventDefault();        // varsayılan davranışı engelle (image drag vs.)
+        e.preventDefault();
         isDragging = true;
         pointerId = e.pointerId;
-        startX = e.clientX;
+        startX = e.clientX ?? (e.touches?.[0]?.clientX || 0);
         currentX = 0;
-        img.setPointerCapture(pointerId);
+        if(pointerId != null && img.setPointerCapture){
+          try { img.setPointerCapture(pointerId); } catch(_) {}
+        }
         img.style.transition = "none";
       }
 
       function handleMove(e){
         if(!isDragging) return;
-        currentX = e.clientX - startX;
+        const posX = e.clientX ?? (e.touches?.[0]?.clientX || startX);
+        currentX = posX - startX;
 
         if(currentX < 0){
-          const dragRatio = Math.max(currentX / -180, -1); // 0..1
+          const dragRatio = Math.max(currentX / -180, -1);
           img.style.transform = `translateX(${currentX}px) rotate(${currentX/25}deg)`;
           img.style.opacity = String(1 - dragRatio * 0.6);
           img.style.filter = `blur(${dragRatio*2}px) brightness(${1 - dragRatio*0.1})`;
@@ -599,12 +614,11 @@
         if(!isDragging) return;
         isDragging = false;
         if(pointerId !== null){
-          try{ img.releasePointerCapture(pointerId); }catch(_){}
+          try { img.releasePointerCapture(pointerId); } catch(_) {}
         }
 
-        const threshold = -120; // sola minimum sürükleme mesafesi
+        const threshold = -120;
         if(currentX < threshold){
-          // Swipe kabul edildi
           img.style.transition = "transform 220ms ease, opacity 220ms ease, filter 220ms ease";
           img.style.transform = "translateX(-220px) rotate(-18deg)";
           img.style.opacity = "0";
