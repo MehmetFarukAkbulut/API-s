@@ -378,7 +378,7 @@ const apps = [
     id: "anichart",
     title: { tr: "Anime Takvimi", en: "Anime Schedule" },
     subtitle: { tr: "AniList sezon listesi", en: "AniList seasonal list" },
-    image: "https://www.asialogy.com/wp-content/uploads/anime-nedir-nasil-yapilir.webp",
+    image: "https://i0.wp.com/highschool.latimes.com/wp-content/uploads/2021/02/anime-small-1000x667-1.jpg?fit=1000%2C667&ssl=1&w=640",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -1726,3 +1726,4 @@ if (aboutAnchor) {
 
 closeBtn.addEventListener("click", () => modal.classList.remove("active"));
 modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
+
