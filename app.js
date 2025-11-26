@@ -1726,4 +1726,3 @@ if (aboutAnchor) {
 
 closeBtn.addEventListener("click", () => modal.classList.remove("active"));
 modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
-
