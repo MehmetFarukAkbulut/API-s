@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MFA TCMB Widget</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --bg:#0b1221;
@@ -33,7 +36,7 @@
       overflow-x:hidden;
     }
 
-    /* Ambient orbs - CriticalDanger tarzı */
+    /* Ambient orbs */
     .orb{
       position:fixed;
       width:280px;
@@ -320,6 +323,8 @@
       transform:translateY(0) translateZ(0);
       box-shadow:0 14px 40px rgba(15,23,42,0.95);
       transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+      opacity:0;
+      animation:cardIn .28s ease forwards;
     }
     .card::before{
       content:"";
@@ -338,6 +343,10 @@
                  rgba(15,23,42,0.99);
     }
     .card:hover::before{opacity:1;}
+    .card.active-card{
+      border-color:rgba(34,211,238,0.95);
+      box-shadow:0 22px 60px rgba(34,211,238,0.35);
+    }
 
     .card-header{
       display:flex;
@@ -438,14 +447,6 @@
       font-size:12px;
     }
 
-    .badge-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      align-items:center;
-      margin-top:3px;
-    }
-
     #resultDate{
       margin-bottom:10px;
       display:inline-flex;
@@ -453,170 +454,281 @@
       gap:6px;
     }
 
-    /* Chart overlay */
-    .chart-panel{
-      position:fixed;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:radial-gradient(circle at 20% 0,rgba(15,23,42,0.95),rgba(15,23,42,0.96));
-      backdrop-filter:blur(16px);
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .25s ease;
-      z-index:20;
-    }
-    .chart-panel.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-    .chart-inner{
-      width:min(640px,90vw);
-      max-height:80vh;
-      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.2),transparent 55%),
-                 radial-gradient(circle at 100% 100%,rgba(168,85,247,0.2),transparent 55%),
-                 #020617;
-      border-radius:18px;
-      border:1px solid rgba(148,163,184,0.5);
-      box-shadow:0 30px 90px rgba(0,0,0,0.9);
-      padding:14px 14px 10px;
-      position:relative;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .chart-close{
-      position:absolute;
-      top:9px;
-      right:9px;
-      width:26px;
-      height:26px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.6);
-      background:rgba(15,23,42,0.95);
-      color:var(--muted);
-      cursor:pointer;
-      font-size:14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transition:background .16s ease, transform .16s ease, border-color .16s ease;
-    }
-    .chart-close:hover{
-      background:rgba(248,113,113,0.95);
-      border-color:rgba(248,113,113,0.95);
-      color:#020617;
-      transform:translateY(-1px);
-    }
-
-    .chart-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      margin-bottom:4px;
-      padding-right:26px;
-    }
-    .chart-title-main{
-      font-size:14px;
-      font-weight:600;
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-    }
-    .chart-title-sub{
-      font-size:11px;
-      color:var(--muted);
-    }
-    .chart-meta{
-      text-align:right;
-      font-size:11px;
-      color:var(--muted);
-    }
-
-    .chart-svg-wrap{
-      margin-top:4px;
-      border-radius:12px;
-      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.16),transparent 60%),
-                 rgba(15,23,42,0.96);
-      border:1px solid rgba(148,163,184,0.45);
-      padding:8px 10px 10px;
-    }
-    .chart-svg-wrap svg{
-      width:100%;
-      height:180px;
-      display:block;
-    }
-
-    .chart-axis-line{
-      stroke:rgba(148,163,184,0.35);
-      stroke-width:0.4;
-    }
-    .chart-line{
-      fill:none;
-      stroke:rgba(34,211,238,0.95);
-      stroke-width:0.9;
-    }
-    .chart-circle{
-      fill:#020617;
-      stroke:rgba(34,211,238,0.9);
-      stroke-width:0.7;
-    }
-
-    .chart-list{
-      margin-top:6px;
-      padding:6px 3px 2px;
-      border-radius:10px;
-      background:rgba(15,23,42,0.9);
-      border:1px solid rgba(51,65,85,0.9);
-      max-height:180px;
-      overflow:auto;
-      font-size:11px;
-    }
-    .chart-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:3px 6px;
-      border-radius:7px;
-      transition:background .12s ease;
-    }
-    .chart-row:nth-child(odd){
-      background:rgba(15,23,42,0.8);
-    }
-    .chart-row:nth-child(even){
-      background:rgba(15,23,42,0.6);
-    }
-    .chart-row span.date{color:var(--muted);}
-    .chart-row span.value{
-      font-family:"JetBrains Mono","SF Mono",ui-monospace,monospace;
-      color:#e5e7eb;
-      margin:0 6px;
-    }
-    .chart-row span.diff-up{color:var(--red);}
-    .chart-row span.diff-down{color:var(--green);}
-    .chart-row span.diff-flat{color:var(--muted);}
-
     @keyframes cardIn{
       from{opacity:0;transform:translateY(6px) scale(0.98);}
       to{opacity:1;transform:translateY(0) scale(1);}
     }
-    .card{
+
+    /* ANALYTICS (Chart.js panel) */
+    .analytics{
+      margin-top:24px;
+      padding:14px 10px 8px;
+      border-radius:16px;
+      background:
+        radial-gradient(circle at 0 0,rgba(34,211,238,0.12),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(168,85,247,0.18),transparent 55%),
+        rgba(15,23,42,0.96);
+      border:1px solid rgba(51,65,85,0.9);
+      box-shadow:0 20px 55px rgba(15,23,42,0.95);
+    }
+    .analytics-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .analytics-title{
+      font-size:16px;
+      font-weight:600;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+    }
+    .analytics-sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+    .analytics-meta{
+      text-align:right;
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      align-items:flex-end;
+    }
+    .analytics-meta span:first-child{
+      font-size:13px;
+      font-weight:600;
+      color:#e5e7eb;
+    }
+
+    .analytics-kpis{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .kpi-card{
+      border-radius:12px;
+      padding:9px 10px;
+      background:linear-gradient(145deg,rgba(15,23,42,0.9),rgba(15,23,42,0.75));
+      border:1px solid rgba(51,65,85,0.9);
+      box-shadow:0 14px 38px rgba(15,23,42,0.9);
+    }
+    .kpi-label{
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .kpi-value{
+      font-size:18px;
+      font-weight:600;
+    }
+    .kpi-sub{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+    .kpi-up{color:var(--green);}
+    .kpi-down{color:var(--red);}
+
+    .analytics-main{
+      display:grid;
+      grid-template-columns:minmax(0,2.2fr) minmax(0,1.4fr);
+      gap:14px;
+    }
+    .analytics-block{
+      border-radius:12px;
+      background:rgba(15,23,42,0.96);
+      border:1px solid rgba(51,65,85,0.9);
+      box-shadow:0 16px 40px rgba(15,23,42,0.95);
+      padding:10px 10px 8px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height:0;
+    }
+    .analytics-block-header{
+      font-size:13px;
+      font-weight:500;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      color:#e5e7eb;
+    }
+    .analytics-block-sub{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .analytics-chart-wrap{
+      position:relative;
+      width:100%;
+      min-height:200px;
+      height:220px;
+    }
+    #mainChart,#spreadChart{
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    .analytics-yearly{
+      margin-top:6px;
+      border-radius:10px;
+      background:rgba(15,23,42,0.96);
+      border:1px solid rgba(30,64,175,0.4);
+      max-height:210px;
+      overflow:auto;
+    }
+    .analytics-yearly table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:11px;
+    }
+    .analytics-yearly thead{
+      background:rgba(15,23,42,0.98);
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    .analytics-yearly th,
+    .analytics-yearly td{
+      padding:6px 8px;
+      border-bottom:1px solid rgba(30,64,175,0.3);
+    }
+    .analytics-yearly th{
+      text-align:left;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.06em;
+      font-size:10px;
+      color:#e5e7eb;
+    }
+    .analytics-yearly tbody tr:nth-child(odd){
+      background:rgba(15,23,42,0.95);
+    }
+    .analytics-yearly tbody tr:nth-child(even){
+      background:rgba(15,23,42,0.9);
+    }
+    .analytics-yearly tbody tr:hover{
+      background:rgba(30,64,175,0.35);
+    }
+
+    /* Zaman filtresi barı */
+    .analytics-ranges{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .range-buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .range-btn{
+      border-radius:999px;
+      border:1px solid rgba(51,65,85,0.9);
+      background:rgba(15,23,42,0.95);
+      color:var(--muted);
+      font-size:10px;
+      padding:5px 9px;
+      cursor:pointer;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease,box-shadow .15s ease;
+    }
+    .range-btn.active{
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.5),transparent 60%),rgba(15,23,42,0.98);
+      border-color:rgba(34,211,238,0.9);
+      color:#e5e7eb;
+      transform:translateY(-1px);
+      box-shadow:0 10px 26px rgba(15,23,42,0.9);
+    }
+    .range-custom{
+      display:flex;
+      flex-wrap:wrap;
+      gap:4px;
+      align-items:center;
+      font-size:10px;
+      color:var(--muted);
+    }
+    .range-custom label{
+      font-size:10px;
+    }
+    .range-custom input[type="date"]{
+      background:rgba(15,23,42,0.95);
+      border-radius:999px;
+      border:1px solid rgba(51,65,85,0.9);
+      color:#e5e7eb;
+      font-size:10px;
+      padding:4px 7px;
+      outline:none;
+    }
+    .range-custom input[type="date"]:focus{
+      border-color:rgba(34,211,238,0.9);
+    }
+    .btn-compact{
+      padding:5px 10px;
+      font-size:10px;
+    }
+
+    /* Scroll top button */
+    .scroll-top-btn{
+      position:fixed;
+      bottom:18px;
+      right:18px;
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:radial-gradient(circle at 0 0,rgba(34,211,238,0.45),transparent 55%),
+                 rgba(15,23,42,0.98);
+      color:#e5e7eb;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 14px 40px rgba(15,23,42,0.95);
+      z-index:30;
+      transition:opacity .2s ease, transform .2s ease;
+    }
+    .scroll-top-btn.hide{
       opacity:0;
-      animation:cardIn .28s ease forwards;
+      pointer-events:none;
+      transform:translateY(8px);
+    }
+
+    @media (max-width:900px){
+      .analytics-main{
+        grid-template-columns:1fr;
+      }
+      .analytics-chart-wrap{
+        height:240px;
+      }
     }
 
     @media (max-width:720px){
       .bar{align-items:flex-start;}
-      .chart-inner{padding:12px 10px 8px;}
-      .chart-svg-wrap svg{height:150px;}
+      .analytics-ranges{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .range-custom{width:100%;}
     }
 
-    /* Mobilde sağa kaymayı engelle – butonlar alta sarılsın */
-    @media (max-width:768px){
-      .bar{
-        flex-wrap:wrap;
-        overflow:visible;
+    @media (max-width:600px){
+      .analytics{
+        padding:10px 8px 6px;
+      }
+      .analytics-chart-wrap{
+        min-height:230px;
+        height:260px;
       }
     }
 
@@ -633,7 +745,7 @@
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
 
-  <header style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;position:relative;z-index:2;">
+  <header id="pageHeader" style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;position:relative;z-index:2;">
     <a class="home-link" href="../index.html" id="homeLink">
       <span>◀</span><span id="homeText">Ana sayfa</span>
     </a>
@@ -661,6 +773,8 @@
         <button class="btn btn-compare" data-days="7" id="btn7g"><span>7 Gün</span></button>
         <button class="btn btn-compare" data-days="30" id="btn30g"><span>1 Ay</span></button>
 
+        <button class="btn" id="btnScrollAnalytics"><span>Detay Analiz</span></button>
+
         <span class="badge badge-muted" id="status">
           <span class="status-dot"></span>
           <span>Hazır</span>
@@ -670,24 +784,106 @@
       <div id="resultDate" class="badge badge-muted"></div>
 
       <div class="cards" id="cards"></div>
+
+      <!-- ANALYTICS -->
+      <div class="analytics" id="analyticsSection">
+        <div class="analytics-header">
+          <div>
+            <div class="analytics-title" id="analyticsTitle">Detaylı Kur Analizi</div>
+            <div class="analytics-sub" id="analyticsSubtitle">ABD DOLARI · USD</div>
+          </div>
+          <div class="analytics-meta">
+            <span id="analyticsPair">USD/TRY</span>
+            <span id="analyticsRange">Veri aralığı: -- / --</span>
+            <span id="analyticsStart"></span>
+          </div>
+        </div>
+
+        <div class="analytics-ranges">
+          <div class="range-buttons">
+            <button class="range-btn active" data-range="all" id="rangeAll">Tümü</button>
+            <button class="range-btn" data-range="7d" id="range7d">1 Hafta</button>
+            <button class="range-btn" data-range="30d" id="range30d">1 Ay</button>
+            <button class="range-btn" data-range="1y" id="range1y">1 Yıl</button>
+            <button class="range-btn" data-range="2y" id="range2y">2 Yıl</button>
+            <button class="range-btn" data-range="5y" id="range5y">5 Yıl</button>
+          </div>
+          <div class="range-custom">
+            <label for="chartFrom" id="labelChartFrom">Başlangıç</label>
+            <input type="date" id="chartFrom">
+            <label for="chartTo" id="labelChartTo">Bitiş</label>
+            <input type="date" id="chartTo">
+            <button class="btn btn-compact" id="rangeApply"><span>Uygula</span></button>
+          </div>
+        </div>
+
+        <div class="analytics-kpis">
+          <div class="kpi-card">
+            <div class="kpi-label" id="kpiLabelCurrent">Son Satış Kuru</div>
+            <div class="kpi-value" id="kpiCurrent">--</div>
+            <div class="kpi-sub" id="kpiCurrentSub"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label" id="kpiLabelChange">Toplam Değişim</div>
+            <div class="kpi-value" id="kpiChange">--</div>
+            <div class="kpi-sub" id="kpiChangeSub"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label" id="kpiLabelHigh">En Yüksek Değer (ATH)</div>
+            <div class="kpi-value" id="kpiHigh">--</div>
+            <div class="kpi-sub" id="kpiHighDate">Tarih: --</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label" id="kpiLabelSpread">Ort. Alış/Satış Makası</div>
+            <div class="kpi-value" id="kpiSpread">--</div>
+            <div class="kpi-sub" id="kpiSpreadSub"></div>
+          </div>
+        </div>
+
+        <div class="analytics-main">
+          <div class="analytics-block">
+            <div class="analytics-block-header">
+              <span id="mainChartTitle">Zaman İçinde Değişim (Alış / Satış)</span>
+            </div>
+            <div class="analytics-block-sub" id="mainChartSub"></div>
+            <div class="analytics-chart-wrap">
+              <canvas id="mainChart"></canvas>
+            </div>
+          </div>
+
+          <div class="analytics-block">
+            <div class="analytics-block-header">
+              <span id="spreadChartTitle">Makas (Spread) Analizi</span>
+            </div>
+            <div class="analytics-block-sub" id="spreadChartSub"></div>
+            <div class="analytics-chart-wrap" style="height:140px;margin-bottom:6px;">
+              <canvas id="spreadChart"></canvas>
+            </div>
+            <div class="analytics-block-header" style="margin-top:2px;">
+              <span id="yearlyTitle">Yıllık Ortalama Değerler</span>
+            </div>
+            <div class="analytics-yearly">
+              <table>
+                <thead>
+                  <tr>
+                    <th id="thYear">Yıl</th>
+                    <th id="thAvgBuy">Ort. Alış</th>
+                    <th id="thAvgSell">Ort. Satış</th>
+                    <th id="thYearChange">Yıllık Değişim (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="statsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /ANALYTICS -->
     </div>
   </div>
 
-  <!-- Chart overlay -->
-  <div class="chart-panel" id="chartPanel">
-    <div class="chart-inner">
-      <button class="chart-close" id="chartClose">×</button>
-      <div class="chart-header">
-        <div>
-          <div class="chart-title-main" id="chartTitle"></div>
-          <div class="chart-title-sub" id="chartSubtitle"></div>
-        </div>
-        <div class="chart-meta" id="chartMeta"></div>
-      </div>
-      <div class="chart-svg-wrap" id="chartSvgWrap"></div>
-      <div class="chart-list" id="chartList"></div>
-    </div>
-  </div>
+  <!-- Yukarı dön butonu -->
+  <button class="scroll-top-btn hide" id="btnScrollTop">▲</button>
 
   <script>
   (function(){
@@ -708,7 +904,7 @@
         cmp1: "1 Gün",
         cmp7: "7 Gün",
         cmp30: "1 Ay",
-        chipChart: "Son 30G Grafik",
+        chipChart: "Detaylı Analiz",
         statusReady: "Hazır",
         statusLoading: "Yükleniyor...",
         statusError: "Hata",
@@ -719,11 +915,37 @@
         labelBid: "Alış",
         labelAsk: "Satış",
         changeWord: "DEĞİŞİM",
-        chartSubtitleSuffix: "Son 30 Günlük Hareket",
-        chartPointsLabel: "Nokta sayısı",
-        chartNoData: "Grafik için veri yok.",
-        chartNoDataMeta: "Veri yok",
-        chartMetaRange: (from,to,count) => `${from} → ${to} · Nokta sayısı: ${count}`
+
+        analyticsTitle: "Detaylı Kur Analizi",
+        analyticsRangeLabel: (from,to)=>`Veri aralığı: ${from} / ${to}`,
+        analyticsStartLabel: (start)=>`Veri başlangıcı: ${start}`,
+        mainChartTitle: "Zaman İçinde Değişim (Alış / Satış)",
+        mainChartSub: "TCMB verilerine göre seçili para biriminin zaman içindeki satış ve alış kurları.",
+        spreadChartTitle: "Makas (Spread) Analizi",
+        spreadChartSub: "Bankanın alış ve satış fiyatı arasındaki farkın zaman içindeki değişimi.",
+        yearlyTitle: "Yıllık Ortalama Değerler",
+        kpiCurrentLabel: "Son Satış Kuru",
+        kpiCurrentSub: "Veri setindeki son güncel satış kuru.",
+        kpiTotalChangeLabel: "Toplam Değişim",
+        kpiTotalChangeSub: "Veri başlangıcından bugüne yüzde değişim.",
+        kpiHighLabel: "En Yüksek Değer (ATH)",
+        kpiHighDatePrefix: "Tarih:",
+        kpiSpreadLabel: "Ort. Alış/Satış Makası",
+        kpiSpreadSub: "Dönem boyunca ortalama alış-satış farkı.",
+        yearlyThYear: "Yıl",
+        yearlyThAvgBuy: "Ort. Alış",
+        yearlyThAvgSell: "Ort. Satış",
+        yearlyThChange: "Yıllık Değişim (%)",
+        scrollAnalyticsBtn: "Detay Analiz",
+        rangeAll: "Tümü",
+        range7d: "1 Hafta",
+        range30d: "1 Ay",
+        range1y: "1 Yıl",
+        range2y: "2 Yıl",
+        range5y: "5 Yıl",
+        rangeFrom: "Başlangıç",
+        rangeTo: "Bitiş",
+        rangeApply: "Uygula"
       },
       en: {
         pageTitle: "MFA CBRT FX Widget",
@@ -736,7 +958,7 @@
         cmp1: "1 Day",
         cmp7: "7 Days",
         cmp30: "1 Month",
-        chipChart: "Last 30D Chart",
+        chipChart: "Detailed Analytics",
         statusReady: "Ready",
         statusLoading: "Loading...",
         statusError: "Error",
@@ -747,11 +969,37 @@
         labelBid: "Bid",
         labelAsk: "Ask",
         changeWord: "CHANGE",
-        chartSubtitleSuffix: "Last 30 Days Movement",
-        chartPointsLabel: "Points",
-        chartNoData: "No data for chart.",
-        chartNoDataMeta: "No data",
-        chartMetaRange: (from,to,count) => `${from} → ${to} · Points: ${count}`
+
+        analyticsTitle: "Detailed FX Analytics",
+        analyticsRangeLabel: (from,to)=>`Data range: ${from} / ${to}`,
+        analyticsStartLabel: (start)=>`Data start: ${start}`,
+        mainChartTitle: "Time Series (Bid / Ask)",
+        mainChartSub: "CBRT time series for the selected currency's selling and buying rates.",
+        spreadChartTitle: "Spread Analysis",
+        spreadChartSub: "Change of bid/ask spread over time.",
+        yearlyTitle: "Yearly Average Values",
+        kpiCurrentLabel: "Last Selling Rate",
+        kpiCurrentSub: "Most recent selling price in the dataset.",
+        kpiTotalChangeLabel: "Total Change",
+        kpiTotalChangeSub: "Percentage change from first to last point.",
+        kpiHighLabel: "All-Time High (ATH)",
+        kpiHighDatePrefix: "Date:",
+        kpiSpreadLabel: "Avg. Bid/Ask Spread",
+        kpiSpreadSub: "Average difference between buying and selling.",
+        yearlyThYear: "Year",
+        yearlyThAvgBuy: "Avg. Bid",
+        yearlyThAvgSell: "Avg. Ask",
+        yearlyThChange: "Year Change (%)",
+        scrollAnalyticsBtn: "Details",
+        rangeAll: "All",
+        range7d: "1 Week",
+        range30d: "1 Month",
+        range1y: "1 Year",
+        range2y: "2 Years",
+        range5y: "5 Years",
+        rangeFrom: "From",
+        rangeTo: "To",
+        rangeApply: "Apply"
       }
     };
     const t = texts[prefLang];
@@ -772,16 +1020,60 @@
     const btn1g = document.getElementById("btn1g");
     const btn7g = document.getElementById("btn7g");
     const btn30g = document.getElementById("btn30g");
+    const btnScrollAnalytics = document.getElementById("btnScrollAnalytics");
+    const btnScrollTop = document.getElementById("btnScrollTop");
+    const headerEl = document.getElementById("pageHeader");
+    const analyticsSection = document.getElementById("analyticsSection");
 
-    const chartPanel = document.getElementById("chartPanel");
-    const chartClose = document.getElementById("chartClose");
-    const chartTitle = document.getElementById("chartTitle");
-    const chartSubtitle = document.getElementById("chartSubtitle");
-    const chartMeta = document.getElementById("chartMeta");
-    const chartSvgWrap = document.getElementById("chartSvgWrap");
-    const chartList = document.getElementById("chartList");
+    // Analytics DOM
+    const analyticsTitleEl = document.getElementById("analyticsTitle");
+    const analyticsSubtitleEl = document.getElementById("analyticsSubtitle");
+    const analyticsPairEl = document.getElementById("analyticsPair");
+    const analyticsRangeEl = document.getElementById("analyticsRange");
+    const analyticsStartEl = document.getElementById("analyticsStart");
 
-    // Statik metinleri uygula
+    const kpiLabelCurrent = document.getElementById("kpiLabelCurrent");
+    const kpiCurrent = document.getElementById("kpiCurrent");
+    const kpiCurrentSub = document.getElementById("kpiCurrentSub");
+    const kpiLabelChange = document.getElementById("kpiLabelChange");
+    const kpiChange = document.getElementById("kpiChange");
+    const kpiChangeSub = document.getElementById("kpiChangeSub");
+    const kpiLabelHigh = document.getElementById("kpiLabelHigh");
+    const kpiHigh = document.getElementById("kpiHigh");
+    const kpiHighDate = document.getElementById("kpiHighDate");
+    const kpiLabelSpread = document.getElementById("kpiLabelSpread");
+    const kpiSpread = document.getElementById("kpiSpread");
+    const kpiSpreadSub = document.getElementById("kpiSpreadSub");
+
+    const mainChartTitleEl = document.getElementById("mainChartTitle");
+    const mainChartSubEl = document.getElementById("mainChartSub");
+    const spreadChartTitleEl = document.getElementById("spreadChartTitle");
+    const spreadChartSubEl = document.getElementById("spreadChartSub");
+    const yearlyTitleEl = document.getElementById("yearlyTitle");
+    const thYear = document.getElementById("thYear");
+    const thAvgBuy = document.getElementById("thAvgBuy");
+    const thAvgSell = document.getElementById("thAvgSell");
+    const thYearChange = document.getElementById("thYearChange");
+    const statsTableBody = document.getElementById("statsTableBody");
+
+    const mainChartCanvas = document.getElementById("mainChart");
+    const spreadChartCanvas = document.getElementById("spreadChart");
+
+    // Range controls
+    const rangeButtons = document.querySelectorAll(".range-btn");
+    const rangeAllBtn = document.getElementById("rangeAll");
+    const range7dBtn = document.getElementById("range7d");
+    const range30dBtn = document.getElementById("range30d");
+    const range1yBtn = document.getElementById("range1y");
+    const range2yBtn = document.getElementById("range2y");
+    const range5yBtn = document.getElementById("range5y");
+    const chartFromInput = document.getElementById("chartFrom");
+    const chartToInput = document.getElementById("chartTo");
+    const rangeApplyBtn = document.getElementById("rangeApply");
+    const labelChartFrom = document.getElementById("labelChartFrom");
+    const labelChartTo = document.getElementById("labelChartTo");
+
+    // Statik metinler
     if(homeText) homeText.textContent = t.home;
     if(headerTitle) headerTitle.textContent = t.headerTitle;
     if(headerLead) headerLead.textContent = t.headerLead;
@@ -792,6 +1084,35 @@
     if(btn7g) btn7g.querySelector("span").textContent = t.cmp7;
     if(btn30g) btn30g.querySelector("span").textContent = t.cmp30;
     if(status) status.lastChild.textContent = " " + t.statusReady;
+    if(btnScrollAnalytics) btnScrollAnalytics.querySelector("span").textContent = t.scrollAnalyticsBtn;
+
+    analyticsTitleEl.textContent = t.analyticsTitle;
+    mainChartTitleEl.textContent = t.mainChartTitle;
+    mainChartSubEl.textContent = t.mainChartSub;
+    spreadChartTitleEl.textContent = t.spreadChartTitle;
+    spreadChartSubEl.textContent = t.spreadChartSub;
+    yearlyTitleEl.textContent = t.yearlyTitle;
+    kpiLabelCurrent.textContent = t.kpiCurrentLabel;
+    kpiCurrentSub.textContent = t.kpiCurrentSub;
+    kpiLabelChange.textContent = t.kpiTotalChangeLabel;
+    kpiChangeSub.textContent = t.kpiTotalChangeSub;
+    kpiLabelHigh.textContent = t.kpiHighLabel;
+    kpiLabelSpread.textContent = t.kpiSpreadLabel;
+    kpiSpreadSub.textContent = t.kpiSpreadSub;
+    thYear.textContent = t.yearlyThYear;
+    thAvgBuy.textContent = t.yearlyThAvgBuy;
+    thAvgSell.textContent = t.yearlyThAvgSell;
+    thYearChange.textContent = t.yearlyThChange;
+
+    rangeAllBtn.textContent = t.rangeAll;
+    range7dBtn.textContent = t.range7d;
+    range30dBtn.textContent = t.range30d;
+    range1yBtn.textContent = t.range1y;
+    range2yBtn.textContent = t.range2y;
+    range5yBtn.textContent = t.range5y;
+    labelChartFrom.textContent = t.rangeFrom;
+    labelChartTo.textContent = t.rangeTo;
+    rangeApplyBtn.querySelector("span").textContent = t.rangeApply;
 
     // TCMB URL (obfuscated)
     const obf = "aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9NZWhtZXRGYXJ1a0FrYnVsdXQvNWViNGY4MjhlMGJiMTczZWNjNTljZTE1OWVhYTE5ZDMvcmF3L3RjbWIuanNvbg==";
@@ -818,6 +1139,11 @@
     let loaded = false;
     let currentRecord = null;
     let compareWindow = null; // 1,7,30
+    let charts = { main:null, spread:null };
+    let chartsInitialized = false;
+    let currentChartCode = null;
+    let seriesByCode = {};
+    let chartRangeMode = "all"; // all,7d,30d,1y,2y,5y,custom
 
     function setStatus(text, mode){
       const dot = status.querySelector(".status-dot");
@@ -826,7 +1152,11 @@
       if(mode==="loading") dot.classList.add("status-loading");
       else if(mode==="error") dot.classList.add("status-error");
     }
-
+    function smoothScrollToAnalytics() {
+      const headerHeight = headerEl.offsetHeight + 20;
+      const top = analyticsSection.getBoundingClientRect().top + window.scrollY - headerHeight;
+      window.scrollTo({ top, behavior:"smooth" });
+    }
     function parseDate(str){
       if(!str) return null;
       const d=new Date(str);
@@ -840,20 +1170,12 @@
       return `${y}-${m}-${day}`;
     }
 
-    function parseTarih(t){
-      // "dd-mm-yyyy" veya "yyyy-mm-dd"
-      const parts = t.split("-").map(Number);
+    function parseTarih(tStr){
+      const parts = tStr.split("-").map(Number);
       if(parts[0]>1900){
         return new Date(parts[0],parts[1]-1,parts[2]);
       }
       return new Date(parts[2],parts[1]-1,parts[0]);
-    }
-
-    function formatTarih(d){
-      const dd = String(d.getDate()).padStart(2,"0");
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const yy = d.getFullYear();
-      return `${dd}-${mm}-${yy}`;
     }
 
     function sortRowsOnce(rows){
@@ -1025,6 +1347,17 @@
         `;
       });
       cards.innerHTML = html;
+
+      if(currentChartCode){
+        highlightActiveCard(currentChartCode);
+      }
+    }
+
+    function highlightActiveCard(code){
+      const cardEls = cards.querySelectorAll(".card");
+      cardEls.forEach(c=>{
+        c.classList.toggle("active-card", c.getAttribute("data-code")===code);
+      });
     }
 
     async function loadForCurrentDate(){
@@ -1036,102 +1369,289 @@
       const rec = findRecordForTargetDate(targetTarih);
       currentRecord = rec;
       render(rec);
+
+      if(!chartsInitialized){
+        chartsInitialized = true;
+        const defaultCode = CODES[0] || "USD";
+        updateDashboard(defaultCode);
+      }
     }
 
-    async function showChartForCode(code){
-      await ensureData();
-      if(!allRows.length || !currentRecord) return;
-
-      const baseDate = parseTarih(currentRecord.TARIH);
-      const maxBackDays = 60;
-      const startDate = new Date(baseDate.getTime() - maxBackDays*24*60*60*1000);
-
+    // ----- Analytics / Chart.js -----
+    function buildSeriesForCode(code){
+      if(!allRows.length) return [];
       const series = [];
-      for(let i=0;i<allRows.length;i++){
-        const r = allRows[i];
-        const d = parseTarih(r.TARIH);
-        if(d < startDate || d > baseDate) continue;
+      for(const r of allRows){
         const sell = parseFloat(r[code+"_SATIS"]||"0");
+        const buy = parseFloat(r[code+"_ALIS"]||"0");
         if(!sell) continue;
-        series.push({date:d, tarih:r.TARIH, value:sell});
+        const d = parseTarih(r.TARIH);
+        const dateStr = d.toISOString().split("T")[0];
+        series.push({
+          date: dateStr,
+          buying: isNaN(buy) ? sell : buy,
+          selling: sell
+        });
       }
-      if(!series.length){
-        chartSvgWrap.innerHTML = `<div style='font-size:12px;color:var(--muted);'>${t.chartNoData}</div>`;
-        chartList.innerHTML = "";
-        chartTitle.textContent = code + "/TRY";
-        chartSubtitle.textContent = NAMES[code] || code;
-        chartMeta.textContent = t.chartNoDataMeta;
-        chartPanel.classList.add("show");
+      series.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      return series;
+    }
+
+    function updateDashboard(code){
+      if(!allRows.length) return;
+      const data = buildSeriesForCode(code);
+      seriesByCode[code] = data;
+
+      if(!data.length){
+        analyticsPairEl.textContent = code + "/TRY";
+        analyticsSubtitleEl.textContent = (NAMES[code]||code);
+        analyticsRangeEl.textContent = t.analyticsRangeLabel("--","--");
+        if(analyticsStartEl) analyticsStartEl.textContent = "";
+        kpiCurrent.textContent = "--";
+        kpiChange.textContent = "--";
+        kpiHigh.textContent = "--";
+        kpiHighDate.textContent = t.kpiHighDatePrefix + " --";
+        kpiSpread.textContent = "--";
+        statsTableBody.innerHTML = "";
+        if(charts.main) charts.main.destroy();
+        if(charts.spread) charts.spread.destroy();
+        currentChartCode = code;
+        highlightActiveCard(code);
         return;
       }
-      series.sort((a,b)=>a.date-b.date);
 
-      chartTitle.textContent = code + "/TRY";
-      chartSubtitle.textContent = (NAMES[code]||code) + " · " + t.chartSubtitleSuffix;
-      const first = series[0];
-      const last = series[series.length-1];
-      chartMeta.textContent = t.chartMetaRange(first.tarih, last.tarih, series.length);
+      currentChartCode = code;
+      highlightActiveCard(code);
 
-      // SVG min/max
-      let min = series[0].value;
-      let max = series[0].value;
-      for(const p of series){
-        if(p.value<min) min=p.value;
-        if(p.value>max) max=p.value;
+      // Başlıklar
+      analyticsPairEl.textContent = code + "/TRY";
+      analyticsSubtitleEl.textContent = (NAMES[code]||code) + " · " + code;
+
+      // Tarih input min/max
+      const first = data[0];
+      const last = data[data.length-1];
+      chartFromInput.min = chartToInput.min = first.date;
+      chartFromInput.max = chartToInput.max = last.date;
+      if(!chartFromInput.value) chartFromInput.value = first.date;
+      if(!chartToInput.value) chartToInput.value = last.date;
+
+      // Veri başlangıç tarihi (full set)
+      if(analyticsStartEl) analyticsStartEl.textContent = t.analyticsStartLabel(first.date);
+
+      applyChartRange(); // tüm KPI+grafik+tabloyu seçili range'e göre güncelle
+    }
+
+    function applyChartRange(){
+      const fullSeries = seriesByCode[currentChartCode] || [];
+      if(!fullSeries.length){
+        if(charts.main) charts.main.destroy();
+        if(charts.spread) charts.spread.destroy();
+        statsTableBody.innerHTML = "";
+        analyticsRangeEl.textContent = t.analyticsRangeLabel("--","--");
+        return;
       }
-      const range = (max-min) || 1;
 
-      const points = series.map((p,idx)=>{
-        const tVal = series.length===1 ? 0 : idx/(series.length-1);
-        const x = 5 + tVal*90;
-        const norm = (p.value-min)/range;
-        const y = 90 - norm*70;
-        return {x,y};
-      });
+      let filtered = fullSeries.slice();
+      const last = fullSeries[fullSeries.length-1];
+      const lastDate = new Date(last.date);
 
-      const poly = points.map(p=>`${p.x},${p.y}`).join(" ");
+      function filterLastDays(days){
+        const ms = days*24*60*60*1000;
+        const threshold = new Date(lastDate.getTime() - ms);
+        filtered = fullSeries.filter(p=>new Date(p.date)>=threshold);
+        if(!filtered.length) filtered = fullSeries.slice();
+      }
 
-      let circles = "";
-      points.forEach(p=>{
-        circles += `<circle class="chart-circle" cx="${p.x}" cy="${p.y}" r="1.4"></circle>`;
-      });
-
-      const svg = `
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-          <line class="chart-axis-line" x1="5" y1="90" x2="95" y2="90"></line>
-          <line class="chart-axis-line" x1="5" y1="20" x2="5" y2="90"></line>
-          <polyline class="chart-line" points="${poly}" />
-          ${circles}
-        </svg>
-      `;
-      chartSvgWrap.innerHTML = svg;
-
-      // Liste – günlük değişimler
-      let listHtml = "";
-      for(let i=0;i<series.length;i++){
-        const p = series[i];
-        const prev = i>0 ? series[i-1] : null;
-        let diffSpan = `<span class="diff-flat">-</span>`;
-        if(prev){
-          const diff = p.value - prev.value;
-          if(diff>0){
-            diffSpan = `<span class="diff-up">↑ ${diff.toFixed(4)}</span>`;
-          }else if(diff<0){
-            diffSpan = `<span class="diff-down">↓ ${diff.toFixed(4)}</span>`;
-          }else{
-            diffSpan = `<span class="diff-flat">0.0000</span>`;
+      if(chartRangeMode==="7d") filterLastDays(7);
+      else if(chartRangeMode==="30d") filterLastDays(30);
+      else if(chartRangeMode==="1y") filterLastDays(365);
+      else if(chartRangeMode==="2y") filterLastDays(365*2);
+      else if(chartRangeMode==="5y") filterLastDays(365*5);
+      else if(chartRangeMode==="custom"){
+        const fromVal = chartFromInput.value;
+        const toVal = chartToInput.value;
+        if(fromVal && toVal){
+          const fromD = new Date(fromVal);
+          const toD = new Date(toVal);
+          if(fromD <= toD){
+            filtered = fullSeries.filter(p=>{
+              const d = new Date(p.date);
+              return d>=fromD && d<=toD;
+            });
+            if(!filtered.length) filtered = fullSeries.slice();
           }
         }
-        listHtml += `
-          <div class="chart-row">
-            <span class="date">${p.tarih}</span>
-            <span class="value">${p.value.toFixed(4)}</span>
-            ${diffSpan}
-          </div>
-        `;
       }
-      chartList.innerHTML = listHtml;
-      chartPanel.classList.add("show");
+      // chartRangeMode "all" => filtered zaten fullSeries
+
+      const first = filtered[0];
+      const lastF = filtered[filtered.length-1];
+      analyticsRangeEl.textContent = t.analyticsRangeLabel(first.date,lastF.date);
+
+      updateCharts(filtered);
+      updateYearlyTable(filtered);
+    }
+
+    function updateCharts(data){
+      const labels = data.map(d=>d.date);
+      const sellingData = data.map(d=>d.selling);
+      const buyingData = data.map(d=>d.buying);
+      const spreadData = data.map(d=>d.selling-d.buying);
+
+      const ctxMain = mainChartCanvas.getContext("2d");
+      if(charts.main) charts.main.destroy();
+
+      const gradientFill = ctxMain.createLinearGradient(0,0,0,220);
+      gradientFill.addColorStop(0,"rgba(59,130,246,0.5)");
+      gradientFill.addColorStop(1,"rgba(59,130,246,0.0)");
+
+      charts.main = new Chart(ctxMain,{
+        type:"line",
+        data:{
+          labels,
+          datasets:[
+            {
+              label: prefLang==="tr" ? "Satış" : "Ask",
+              data: sellingData,
+              borderColor:"#3b82f6",
+              backgroundColor: gradientFill,
+              borderWidth:2,
+              pointRadius:0,
+              pointHoverRadius:5,
+              fill:true,
+              tension:0.35
+            },
+            {
+              label: prefLang==="tr" ? "Alış" : "Bid",
+              data: buyingData,
+              borderColor:"#10b981",
+              borderWidth:1,
+              borderDash:[5,5],
+              pointRadius:0,
+              fill:false,
+              tension:0.35
+            }
+          ]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          interaction:{mode:"index",intersect:false},
+          plugins:{
+            legend:{labels:{color:"#cbd5e1",font:{size:10}}},
+            tooltip:{
+              backgroundColor:"#020617",
+              titleColor:"#e5e7eb",
+              bodyColor:"#cbd5e1",
+              borderColor:"#475569",
+              borderWidth:1
+            }
+          },
+          scales:{
+            x:{
+              grid:{color:"#1f2937"},
+              ticks:{color:"#9ca3af",maxTicksLimit:8,font:{size:9}}
+            },
+            y:{
+              grid:{color:"#1f2937"},
+              ticks:{color:"#9ca3af",font:{size:9}}
+            }
+          }
+        }
+      });
+
+      const ctxSpread = spreadChartCanvas.getContext("2d");
+      if(charts.spread) charts.spread.destroy();
+
+      charts.spread = new Chart(ctxSpread,{
+        type:"bar",
+        data:{
+          labels,
+          datasets:[{
+            label:"Spread",
+            data:spreadData,
+            backgroundColor:"#f97316",
+            borderRadius:2
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{display:false},
+            y:{
+              grid:{color:"#1f2937"},
+              ticks:{color:"#9ca3af",font:{size:9}}
+            }
+          }
+        }
+      });
+
+      // KPI'lar (range'e göre)
+      if(data.length){
+        const first = data[0];
+        const last = data[data.length-1];
+        const maxVal = Math.max(...data.map(d=>d.selling));
+        const maxValData = data.find(d=>d.selling===maxVal);
+        const totalChange = ((last.selling-first.selling)/first.selling)*100;
+        const avgSpread = data.reduce((acc,c)=>acc+(c.selling-c.buying),0)/data.length;
+
+        kpiCurrent.textContent = last.selling.toFixed(4);
+        kpiChange.textContent = (totalChange>=0?"+":"") + totalChange.toFixed(2) + "%";
+        kpiChange.classList.remove("kpi-up","kpi-down");
+        kpiChange.classList.add(totalChange>=0 ? "kpi-up" : "kpi-down");
+        kpiHigh.textContent = maxVal.toFixed(4);
+        kpiHighDate.textContent = `${t.kpiHighDatePrefix} ${maxValData.date}`;
+        kpiSpread.textContent = avgSpread.toFixed(4);
+      }
+    }
+
+    function updateYearlyTable(data){
+      const yearlyStats = {};
+      data.forEach(row=>{
+        const year = row.date.split("-")[0];
+        if(!yearlyStats[year]){
+          yearlyStats[year] = {sumBuy:0,sumSell:0,count:0};
+        }
+        yearlyStats[year].sumBuy += row.buying;
+        yearlyStats[year].sumSell += row.selling;
+        yearlyStats[year].count++;
+      });
+
+      statsTableBody.innerHTML = "";
+      Object.keys(yearlyStats).sort().reverse().forEach(year=>{
+        const stat = yearlyStats[year];
+        const avgBuy = stat.sumBuy/stat.count;
+        const avgSell = stat.sumSell/stat.count;
+
+        const yearData = data.filter(d=>d.date.startsWith(year));
+        const startVal = yearData[0].selling;
+        const endVal = yearData[yearData.length-1].selling;
+        const change = ((endVal-startVal)/startVal)*100;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${year}</td>
+          <td style="color:#22c55e;">${avgBuy.toFixed(4)}</td>
+          <td style="color:#38bdf8;">${avgSell.toFixed(4)}</td>
+          <td style="font-weight:600;color:${change>=0?"#22c55e":"#f97373"};">
+            ${(change>=0?"+":"")}${change.toFixed(2)}%
+          </td>
+        `;
+        statsTableBody.appendChild(tr);
+      });
+    }
+
+    // Scroll helpers
+    function scrollToAnalytics(){
+      analyticsSection.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+    function scrollToTop(){
+      headerEl.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+    function smoothScrollTop() {
+      window.scrollTo({ top: 0, behavior:"smooth" });
     }
 
     // Events
@@ -1154,21 +1674,49 @@
       });
     });
 
-    cards.addEventListener("click", (e)=>{
+    // Kart tıklanınca analitik alanı güncelle + scroll
+    cards.addEventListener("click",(e)=>{
       const card = e.target.closest(".card");
       if(!card) return;
       const code = card.getAttribute("data-code");
       if(!code) return;
-      showChartForCode(code);
+      updateDashboard(code);
+      smoothScrollToAnalytics();
     });
 
-    chartClose.addEventListener("click", ()=>{
-      chartPanel.classList.remove("show");
+    // Detay Analiz butonu
+    btnScrollAnalytics.addEventListener("click",()=>{
+      smoothScrollToAnalytics();
     });
-    chartPanel.addEventListener("click", (e)=>{
-      if(e.target===chartPanel){
-        chartPanel.classList.remove("show");
-      }
+
+    // Yukarı dön butonu
+    btnScrollTop.addEventListener("click",()=>{
+      smoothScrollTop();
+    });
+    window.addEventListener("scroll",()=>{
+      const y = window.scrollY || document.documentElement.scrollTop;
+      if(y>200) btnScrollTop.classList.remove("hide");
+      else btnScrollTop.classList.add("hide");
+    });
+
+    // Zaman aralığı butonları
+    rangeButtons.forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const mode = btn.dataset.range;
+        chartRangeMode = mode;
+        rangeButtons.forEach(b=>b.classList.toggle("active",b===btn));
+        if(mode!=="custom"){
+          applyChartRange();
+        }
+      });
+    });
+
+    // Tarih aralığı uygula
+    rangeApplyBtn.addEventListener("click",()=>{
+      chartRangeMode = "custom";
+      rangeButtons.forEach(b=>b.classList.remove("active"));
+      applyChartRange();
+      scrollToAnalytics();
     });
 
     const today = new Date();
@@ -1186,8 +1734,8 @@
     loadForCurrentDate();
   })();
   </script>
-  <script src='../lang-helper.js'></script>
-  <script src='../scroll-helper.js'></script>
-  <script src='../page-lang.js'></script>
+  <script src="../lang-helper.js"></script>
+  <script src="../scroll-helper.js"></script>
+  <script src="../page-lang.js"></script>
 </body>
 </html>

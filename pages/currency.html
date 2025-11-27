@@ -4,17 +4,113 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kur / Döviz</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg:#0b1221;
       --panel:#101a30;
-      --accent:#22d3ee;
+      --accent:#22d3ee; /* Açık Mavi */
       --accent2:#a855f7;
-      --text:#e5e7eb;
+      --text:#e5e7eb; /* Beyaz/Açık Gri */
       --muted:#94a3b8;
       --danger:#ef4444;
       --success:#22c55e;
+      --modal-bg: rgba(0, 0, 0, 0.7); /* Modal arka plan karartma */
     }
+    
+    /* MODAL (WIDGET) ÖZEL CSS STİLLERİ */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--modal-bg);
+      display: none; /* Varsayılan olarak gizli */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 18px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transform: translateY(-50px);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      border: 1px solid rgba(148,163,184,0.35);
+      color: var(--text); /* Modal içindeki genel metin rengi artık açık */
+    }
+    .modal-overlay.open .modal-content {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(148,163,184,0.3);
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--accent); /* Başlık rengi açık mavi */
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    /* Grafik ve detay alanı */
+    #chartContainer {
+      width: 100%;
+      height: 300px; /* Grafik yüksekliği */
+      margin-bottom: 15px;
+      background: rgba(15,23,42,0.8);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    
+    /* Stat Kartları CSS */
+    .stat-card {
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(15,23,42,0.95);
+        border: 1px solid rgba(148,163,184,0.2);
+    }
+    .stat-label {
+        margin: 0 0 4px;
+        font-size: 11px;
+        color: var(--muted);
+    }
+    /* Güncel kur değeri açık mavi yapıldı */
+    .stat-card #statCurrentRate {
+        color: var(--accent) !important; 
+    }
+
+    /* Orijinal CSS kodu buradan devam ediyor */
+    
     *{box-sizing:border-box;}
     body{
       margin:0;
@@ -324,6 +420,8 @@
       transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
       opacity:0;
       animation: fade-up 0.38s ease-out forwards;
+      /* Tıklanabilir kartlar için cursor ayarı */
+      cursor:pointer;
     }
     .card::before{
       content:"";
@@ -430,10 +528,9 @@
   *, *::before, *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
 }
 /* --- end mobile-shared-opt --- */
-</style>
+  </style>
 </head>
 <body>
-  <!-- arka plan glowları -->
   <div class="orb orb-a"></div>
   <div class="orb orb-b"></div>
 
@@ -481,6 +578,40 @@
     <div class="rates" id="rates"></div>
   </div>
 
+  <div class="modal-overlay" id="rateModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Detaylı Kur Analizi</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div id="chartContainer">
+        <canvas id="rateChart"></canvas>
+      </div>
+      <div id="statsSection">
+        <h4 style="color:var(--accent); margin:15px 0 10px; border-bottom:1px solid rgba(148,163,184,0.3); padding-bottom:5px;">📈 Analiz ve İstatistikler</h4>
+        <div id="statsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
+          <div class="stat-card">
+            <p class="stat-label muted">Güncel Kur</p>
+            <p class="stat-value" id="statCurrentRate" style="font-weight:bold; color:var(--accent); font-size:16px;">--</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label muted">30 Günlük Değişim</p>
+            <p class="stat-value" id="statChangePerc" style="font-weight:bold; font-size:16px; color:var(--success);">--</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label muted">En Yüksek (30G)</p>
+            <p class="stat-value" id="statHighest" style="color:var(--accent); font-size:16px;">--</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label muted">En Düşük (30G)</p>
+            <p class="stat-value" id="statLowest" style="color:var(--accent2); font-size:16px;">--</p>
+          </div>
+        </div>
+        <p class="muted" id="infoDetail" style="margin-top:10px;"></p>
+      </div>
+    </div>
+  </div>
+
   <script>
   (function(){
     // Dil tercihi (tr / en) – diğer sayfalarla uyumlu
@@ -511,7 +642,10 @@
           "1m": "1 Ay"
         },
         compareDatePrefix: "Önceki",
-        compareLabel: (refDate) => refDate + " itibarıyla"
+        compareLabel: (refDate) => refDate + " itibarıyla",
+        modalTitle: (base, target) => `${friendly(target)} (${target}) / ${friendly(base)} (${base}) Analizi`,
+        modalLoading: "Grafik verileri yükleniyor...",
+        modalNoData: "Geçmiş veri alınamadı. Grafiği görüntülemek için tarihi veya aralığı değiştirin."
       },
       en: {
         pageTitle: "FX / Currencies",
@@ -535,7 +669,10 @@
           "1m": "1M"
         },
         compareDatePrefix: "Previous",
-        compareLabel: (refDate) => "Ref: " + refDate
+        compareLabel: (refDate) => "Ref: " + refDate,
+        modalTitle: (base, target) => `${friendly(target)} (${target}) / ${friendly(base)} (${base}) Analysis`,
+        modalLoading: "Loading chart data...",
+        modalNoData: "Could not fetch historical data. Change the date or range to view the chart."
       }
     };
 
@@ -568,31 +705,34 @@
     const ratesEl = document.getElementById("rates");
     const status = document.getElementById("status");
     const rangeButtons = document.querySelectorAll(".btn-range");
+    
+    // Modal Elementleri
+    const rateModal = document.getElementById("rateModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalClose = document.getElementById("modalClose");
+    const rateChartCanvas = document.getElementById("rateChart");
+    const infoDetail = document.getElementById("infoDetail");
+    const rootStyles = getComputedStyle(document.documentElement);
+    const chartTextColor  = rootStyles.getPropertyValue('--text').trim()  || '#e5e7eb';
+    const chartMutedColor = rootStyles.getPropertyValue('--muted').trim() || '#9ca3af';
+    const chartBgColor    = 'rgba(15,23,42,0.95)';
+    // Stat Elementleri
+    const statCurrentRate = document.getElementById("statCurrentRate");
+    const statChangePerc = document.getElementById("statChangePerc");
+    const statHighest = document.getElementById("statHighest");
+    const statLowest = document.getElementById("statLowest");
+
+    let rateChartInstance = null; // Chart.js nesnesini tutmak için
 
     const today = new Date();
     const isoToday = today.toISOString().slice(0,10);
     dateEl.value = isoToday;
     dateEl.max = isoToday;
-
+    
+    // Frankfurter'ın desteklediği popüler kurları tam isimleriyle eşleştirir
     function friendly(code){
-      const mapEn = {
-        USD:"US Dollar",
-        EUR:"Euro",
-        TRY:"Turkish Lira",
-        GBP:"Pound Sterling",
-        CHF:"Swiss Franc",
-        CAD:"Canadian Dollar",
-        AUD:"Australian Dollar"
-      };
-      const mapTr = {
-        USD:"ABD Doları",
-        EUR:"Euro",
-        TRY:"Türk Lirası",
-        GBP:"İngiliz Sterlini",
-        CHF:"İsviçre Frangı",
-        CAD:"Kanada Doları",
-        AUD:"Avustralya Doları"
-      };
+      const mapEn = { USD:"US Dollar", EUR:"Euro", TRY:"Turkish Lira", GBP:"Pound Sterling", CHF:"Swiss Franc", CAD:"Canadian Dollar", AUD:"Australian Dollar" };
+      const mapTr = { USD:"ABD Doları", EUR:"Euro", TRY:"Türk Lirası", GBP:"İngiliz Sterlini", CHF:"İsviçre Frangı", CAD:"Kanada Doları", AUD:"Avustralya Doları" };
       const m = prefLang === "tr" ? mapTr : mapEn;
       return m[code] || code;
     }
@@ -601,6 +741,18 @@
       const url = date
         ? `https://api.frankfurter.app/${date}?from=${base}`
         : `https://api.frankfurter.app/latest?from=${base}`;
+      const r = await fetch(url);
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }
+    
+    async function fetchHistoricalRates(base, target, periodDays){
+      const endDate = dateEl.value || isoToday;
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - periodDays);
+      const isoStartDate = startDate.toISOString().slice(0,10);
+      
+      const url = `https://api.frankfurter.app/${isoStartDate}..${endDate}?from=${base}&to=${target}`;
       const r = await fetch(url);
       if(!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
@@ -639,11 +791,162 @@
       });
     }
 
+    // Modal Açma/Kapama Fonksiyonları
+    function openModal(){
+        rateModal.classList.add("open");
+    }
+    function closeModal(){
+        rateModal.classList.remove("open");
+        if(rateChartInstance) {
+            rateChartInstance.destroy(); // Grafiği kapatırken temizle
+            rateChartInstance = null;
+        }
+    }
+    
+    // Modal Kapatma Olayları
+    modalClose.addEventListener('click', closeModal);
+    rateModal.addEventListener('click', (e) => {
+        if (e.target === rateModal) { // Sadece overlay'e tıklanınca kapa
+            closeModal();
+        }
+    });
+
+    // Chart.js Grafiği Oluşturma Fonksiyonu
+    function createChart(labels, data, base, target){
+        if(rateChartInstance) rateChartInstance.destroy();
+
+        const ctx = rateChartCanvas.getContext('2d');
+        rateChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `${base} / ${target} Kur Değeri`,
+                    data: data,
+                    borderColor: 'rgba(34, 211, 238, 1)',
+                    backgroundColor: 'rgba(34, 211, 238, 0.2)',
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { 
+                            color: chartTextColor     // ← artık tema rengi
+                        },
+                        grid: { 
+                            color: 'rgba(148,163,184,0.1)' 
+                        }
+                    },
+                    y: {
+                        ticks: { 
+                            color: chartTextColor     // ← aynı şekilde
+                        },
+                        grid: { 
+                            color: 'rgba(148,163,184,0.1)' 
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { 
+                            color: chartTextColor     // legend yazısı
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: chartBgColor,
+                        titleColor: chartTextColor,
+                        bodyColor: chartTextColor,
+                        borderColor: chartMutedColor,
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+    }
+
+    
+    // Tıklanan kur için detaylı bilgileri getirip modalı açan fonksiyon
+    async function showRateDetails(base, target, rate, amt){
+        modalTitle.textContent = t.modalTitle(base, target);
+        
+        // Stat alanlarını sıfırla/güncelle
+        statCurrentRate.textContent = rate.toFixed(4);
+        statChangePerc.textContent = "--";
+        statHighest.textContent = "--";
+        statLowest.textContent = "--";
+        // Başlangıç rengi açık mavi (Accent)
+        statCurrentRate.style.color = "var(--accent)";
+        statChangePerc.style.color = "var(--accent)"; 
+        statHighest.style.color = "var(--accent)"; 
+        statLowest.style.color = "var(--accent2)"; // Farklı bir vurgu için mor
+        
+        infoDetail.textContent = t.modalLoading;
+        infoDetail.style.color = "var(--accent)"; // Yükleniyor yazısı açık mavi
+        
+
+        // Varsayılan 30 günlük veriyi çek
+        const periodDays = 30; 
+        try {
+            const history = await fetchHistoricalRates(base, target, periodDays);
+            
+            if (history.rates && Object.keys(history.rates).length > 0) {
+                const dates = Object.keys(history.rates).sort();
+                const ratesData = dates.map(date => history.rates[date][target]);
+                
+                createChart(dates, ratesData, base, target);
+                infoDetail.textContent = "";
+
+                // --- STAT HESAPLAMALARI VE GÖRÜNTÜLEME ---
+                
+                // En Yüksek ve En Düşük (30 Günlük)
+                const highest = Math.max(...ratesData).toFixed(4);
+                const lowest = Math.min(...ratesData).toFixed(4);
+                statHighest.textContent = highest;
+                statLowest.textContent = lowest;
+                // En yüksek ve En Düşük değerler zaten CSS ile açık renk ayarlandı.
+
+                // Değişim Yüzdesi (Grafikteki ilk veriye göre son veri)
+                if (ratesData.length > 1) {
+                    const firstRate = ratesData[0];
+                    const lastRate = ratesData[ratesData.length - 1];
+                    const diff = lastRate - firstRate;
+                    const perc = ((diff / firstRate) * 100).toFixed(2);
+                    const diffText = diff >= 0 ? `+${perc}%` : `${perc}%`;
+                    // Yeşil veya Kırmızı renk, açık mavi değil.
+                    const color = diff >= 0 ? "var(--success)" : "var(--danger)";
+                    
+                    statChangePerc.textContent = diffText;
+                    statChangePerc.style.color = color;
+                }
+                // --- STAT HESAPLAMALARI SONU ---
+
+            } else {
+                // Veri yoksa hata mesajı göster
+                infoDetail.textContent = t.modalNoData;
+                infoDetail.style.color = "var(--danger)"; // Hata yazısı kırmızı
+            }
+        } catch(e) {
+            console.error("Grafik verisi yüklenirken hata oluştu:", e);
+            infoDetail.textContent = t.errorText;
+            infoDetail.style.color = "var(--danger)"; // Hata yazısı kırmızı
+        }
+
+        openModal();
+    }
+
+
+    // run fonksiyonu
     async function run(range){
       try{
         setStatusLoading();
         activateRangeButton(range || "");
-        // küçük skeleton etkisi
+        
         resEl.innerHTML = `
           <div class="badge"><span class="badge-dot"></span><span>${t.mainBadge}</span></div>
           <div class="skeleton" style="width:55%;margin-top:8px;"></div>
@@ -681,31 +984,39 @@
             ${t.mainSub}
           </div>
         `;
+        
+        // Tüm kurları ve referans değerlerini geçici olarak saklayalım
+        const allRatesData = {};
 
         const entries = Object.entries(rates);
         const html = entries.map(([k,v], idx)=>{
           const conv = (v * amt).toFixed(4);
           let deltaHtml = "";
           let deltaColor = "var(--muted)";
+          let refV = null;
 
           if(refRates[k]){
-            const diff = v - refRates[k];
-            const perc = ((diff / refRates[k]) * 100).toFixed(2);
+            refV = refRates[k];
+            const diff = v - refV;
+            const perc = ((diff / refV) * 100).toFixed(2);
             const arrow = diff >= 0 ? "↑" : "↓";
             const color = diff >= 0 ? "var(--success)" : "var(--danger)";
             deltaColor = color;
             const labelText = t.compareLabel(refDateLabel);
             deltaHtml = `
               <div class="change-line" style="color:${color}">
-                ${labelText}: ${refRates[k].toFixed(4)} | ${arrow} ${perc}%
+                ${labelText}: ${refV.toFixed(4)} | ${arrow} ${perc}%
               </div>
             `;
           }
 
+          // Veriyi sakla
+          allRatesData[k] = { rate: v }; // Sadece güncel kuru saklamak yeterli
+
           const delay = 0.02 * idx;
 
           return `
-            <div class="card" style="animation-delay:${delay}s;">
+            <div class="card" style="animation-delay:${delay}s;" data-currency="${k}" data-base="${base}">
               <div class="card-header">
                 <div class="badge">
                   <span>${k}</span>
@@ -729,6 +1040,13 @@
 
         ratesEl.innerHTML = html;
         setStatusReady();
+        
+        // Tıklama Olay Dinleyicisi (Modal/Widget'ı Açan)
+        // Önceki dinleyiciyi temizle (run her çalıştığında tekrar eklenmesin)
+        ratesEl.removeEventListener('click', handleCardClick); 
+        // Yeni dinleyiciyi ekle
+        ratesEl.addEventListener('click', (e) => handleCardClick(e, allRatesData, amt));
+
       }catch(e){
         console.error(e);
         setStatusError();
@@ -739,6 +1057,25 @@
         `;
         ratesEl.innerHTML = "";
       }
+    }
+    
+    // Kur Kartına Tıklama İşleyicisi
+    function handleCardClick(e, allRatesData, amt){
+        const card = e.target.closest('.card');
+        if (card) {
+            const targetCurrency = card.dataset.currency;
+            const baseCurrency = card.dataset.base;
+            const rateData = allRatesData[targetCurrency];
+
+            if (rateData) {
+                showRateDetails(
+                    baseCurrency, 
+                    targetCurrency, 
+                    rateData.rate, 
+                    amt
+                );
+            }
+        }
     }
 
     document.getElementById("go").addEventListener("click", ()=>run(null));
