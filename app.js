@@ -838,6 +838,50 @@ const subtitleEl = document.getElementById("subtitle");
 
 const langSelect = document.getElementById("languageSelect");
 const langWarningEl = document.getElementById("lang-warning");
+const mobileNav = document.getElementById("mobileQuickNav");
+const mobileNavToggle = document.getElementById("mobileQuickNavToggle");
+const mobileNavList = document.getElementById("mobileQuickNavList");
+const mobileNavLabel = document.getElementById("mobileQuickNavLabel");
+const mobileNavHint = document.getElementById("mobileQuickNavHint");
+const quickNavFab = document.getElementById("quickNavFab");
+const quickNavFabText = document.getElementById("quickNavFabText");
+
+const quickNavCopy = {
+  tr: { label: "Hızlı erişim", hint: "Kart adına dokun, ilgili kareye kaydır." },
+  en: { label: "Quick jumps", hint: "Tap a card name to scroll to its spot." }
+};
+
+const appPageMap = {
+  sports: "pages/sports.html",
+  tcmb: "pages/tcmb.html",
+  weather: "pages/weather.html",
+  currency: "pages/currency.html",
+  news: "pages/news.html",
+  recipes: "pages/recipes.html",
+  books: "pages/books.html",
+  movies: "pages/shows.html",
+  space: "pages/space.html",
+  mars: "pages/mars.html",
+  neows: "pages/neows.html",
+  donki: "pages/donki.html",
+  eonet: "pages/eonet.html",
+  travel: "pages/travel.html",
+  maps: "pages/maps.html",
+  calc: "pages/calc.html",
+  travelPlan: "pages/travel.html",
+  about: "pages/about.html",
+  airquality: "pages/airquality.html",
+  earth: "pages/earth.html",
+  mealspin: "pages/mealspin.html",
+  art: "pages/art.html",
+  jokes: "pages/jokes.html",
+  anichart: "pages/anichart.html",
+  wizard: "pages/wizard.html",
+  rps: "pages/rps.html",
+  music: "pages/music.html",
+  quakes: "pages/quakes.html",
+  comicvine: "pages/comicvine.html"
+};
 
 function setLang(lang){
   state.lang = ["en","tr"].includes(lang) ? lang : "en";
@@ -847,21 +891,48 @@ function setLang(lang){
     localStorage.setItem("prefLang", state.lang);
   }
   updateLangWarning();
+  updateQuickNavText();
   applyLang();
 }
 
 function updateLangWarning(){
   if (!langWarningEl) return;
   if (state.lang === "tr") {
-    langWarningEl.textContent = "Warning: API data is in English; content stays English while UI labels follow your selection.";
+    langWarningEl.textContent = "Uyarı: API verileri İngilizce'dir. Bu yüzden içerik İngilizce kalacaktır, arayüz etiketleri seçiminize göre Türkçe'leşecektir.";
   } else {
     langWarningEl.textContent = "";
   }
 }
 
+function updateQuickNavText() {
+  if (!mobileNavLabel || !mobileNavHint) return;
+  const copyNav = quickNavCopy[state.lang] || quickNavCopy.en;
+  mobileNavLabel.textContent = copyNav.label;
+  mobileNavHint.textContent = copyNav.hint;
+  if (quickNavFabText) quickNavFabText.textContent = copyNav.label;
+  if (quickNavFab) quickNavFab.setAttribute("aria-label", copyNav.label);
+}
+
+function toggleMobileNav(forceOpen) {
+  if (!mobileNav || !mobileNavToggle) return;
+  const next = typeof forceOpen === "boolean" ? forceOpen : !mobileNav.classList.contains("open");
+  mobileNav.classList.toggle("open", next);
+  mobileNavToggle.setAttribute("aria-expanded", next ? "true" : "false");
+}
+
+function highlightCard(card) {
+  if (!card) return;
+  card.classList.add("is-target");
+  setTimeout(() => card.classList.remove("is-target"), 1400);
+}
+
 if (langSelect) {
   langSelect.value = state.lang;
   langSelect.addEventListener("change", (e) => setLang(e.target.value));
+}
+
+if (mobileNavToggle) {
+  mobileNavToggle.addEventListener("click", () => toggleMobileNav());
 }
 
 function applyLang() {
@@ -871,13 +942,55 @@ function applyLang() {
   if (grid) buildGrid(true);
 }
 
+function navigateToApp(app) {
+  const target = appPageMap[app.id];
+  if (target) {
+    window.location.href = target;
+  } else {
+    window.location.href = `index.html?app=${app.id}`;
+  }
+}
+
+function scrollCardIntoView(card) {
+  const rect = card.getBoundingClientRect();
+  // Small offset so the top of the card is visible below the nav.
+  const y = Math.max(0, rect.top + window.scrollY - 12);
+  window.scrollTo({ top: y, behavior: "smooth" });
+}
+
+function buildMobileNav() {
+  if (!mobileNavList) return;
+  mobileNavList.innerHTML = "";
+  apps.forEach(app => {
+    const btn = document.createElement("button");
+    btn.className = "mobile-quick-nav__btn";
+    btn.dataset.target = `card-${app.id}`;
+    btn.innerHTML = `<span>${app.title[state.lang]}</span><span class="mobile-quick-nav__dot"></span>`;
+    btn.addEventListener("click", () => {
+      const target = document.getElementById(btn.dataset.target);
+      const wasOpen = mobileNav?.classList.contains("open");
+      toggleMobileNav(false);
+      if (target) {
+        const delay = wasOpen ? 420 : 40; // wait for collapse transition to finish
+        setTimeout(() => {
+          scrollCardIntoView(target);
+          highlightCard(target);
+        }, delay);
+      }
+    });
+    mobileNavList.appendChild(btn);
+  });
+}
+
 function buildGrid(reset = false) {
   if (reset) {
     grid.innerHTML = "";
+    if (mobileNavList) mobileNavList.innerHTML = "";
   }
   apps.forEach(app => {
     const card = document.createElement("article");
     card.className = "card";
+    card.id = `card-${app.id}`;
     card.dataset.id = app.id;
     card.style.setProperty("--img", `url(${app.image})`);
     card.style.setProperty("background", `var(--card) url(${app.image}) center/cover no-repeat`);
@@ -892,53 +1005,28 @@ function buildGrid(reset = false) {
     title.textContent = app.title[state.lang];
     content.appendChild(title);
 
+    const cta = document.createElement("button");
+    cta.type = "button";
+    cta.className = "card-cta";
+    cta.textContent = state.lang === "tr" ? "Git" : "Open";
+    cta.addEventListener("click", (e) => {
+      e.stopPropagation();
+      navigateToApp(app);
+    });
+    content.appendChild(cta);
+
     card.appendChild(pulse);
     card.appendChild(content);
     card.setAttribute("title", app.subtitle[state.lang]);
     card.addEventListener("mouseenter", () => card.animate([{ transform: "translateY(0)" }, { transform: "translateY(-4px)" }], { duration: 300, fill: "forwards" }));
     card.addEventListener("mouseleave", () => card.animate([{ transform: "translateY(-4px)" }, { transform: "translateY(0)" }], { duration: 250, fill: "forwards" }));
     card.addEventListener("click", () => {
-      const pageMap = {
-        sports: "pages/sports.html",
-        tcmb: "pages/tcmb.html",
-        weather: "pages/weather.html",
-        currency: "pages/currency.html",
-        news: "pages/news.html",
-        recipes: "pages/recipes.html",
-        books: "pages/books.html",
-        movies: "pages/shows.html",
-        space: "pages/space.html",
-        mars: "pages/mars.html",
-        neows: "pages/neows.html",
-        donki: "pages/donki.html",
-        eonet: "pages/eonet.html",
-        travel: "pages/travel.html",
-        maps: "pages/maps.html",
-        calc: "pages/calc.html",
-        travelPlan: "pages/travel.html",
-        about: "pages/about.html",
-        airquality: "pages/airquality.html",
-        earth: "pages/earth.html",
-        mealspin: "pages/mealspin.html",
-        art: "pages/art.html",
-        jokes: "pages/jokes.html",
-        anichart: "pages/anichart.html",
-        wizard: "pages/wizard.html",
-        rps: "pages/rps.html",
-        music: "pages/music.html",
-        quakes: "pages/quakes.html",
-        comicvine: "pages/comicvine.html"
-      };
-      const target = pageMap[app.id];
-      if (target) {
-        window.location.href = target;
-      } else {
-        window.location.href = `index.html?app=${app.id}`;
-      }
+      navigateToApp(app);
     });
 
     grid.appendChild(card);
   });
+  buildMobileNav();
 }
 
 setLang(state.lang);
@@ -1778,3 +1866,20 @@ if (aboutAnchor) {
 
 closeBtn.addEventListener("click", () => modal.classList.remove("active"));
 modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
+
+if (quickNavFab) {
+  quickNavFab.addEventListener("click", () => {
+    const navSection = document.getElementById("mobileQuickNav");
+    if (navSection) {
+      const rect = navSection.getBoundingClientRect();
+      const y = Math.max(0, rect.top + window.scrollY - 10);
+      window.scrollTo({ top: y, behavior: "smooth" });
+      toggleMobileNav(true);
+    }
+  });
+  window.addEventListener("scroll", () => {
+    const showAt = 380;
+    const shouldShow = (window.scrollY || 0) > showAt;
+    quickNavFab.classList.toggle("show", shouldShow);
+  });
+}
