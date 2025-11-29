@@ -118,8 +118,8 @@ async function ensureCurrencyNames() {
 
 const copy = {
   tr: {
-    title: "MFA API's",
-    subtitle: "Mehmet Faruk Akbulut's Website",
+    title: "Apidemia",
+    subtitle: "API koleksiyonu ve deneyler.",
     search: "Ara",
     placeholders: {
       weather: "Sehir veya koordinat (orn: Istanbul)",
@@ -176,8 +176,8 @@ const copy = {
     }
   },
   en: {
-    title: "MFA API's",
-    subtitle: "Mehmet Faruk Akbulut's Website",
+    title: "Apidemia",
+    subtitle: "API ideas and experiments.",
     search: "Search",
     placeholders: {
       weather: "City or coords (e.g. Istanbul)",

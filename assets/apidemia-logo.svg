@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Apidemia logo">
+  <defs>
+    <linearGradient id="apidemia-core" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="50%" stop-color="#7c6ff3"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <radialGradient id="apidemia-glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0fd1e7" stop-opacity="0.9"/>
+      <stop offset="45%" stop-color="#7f7df2" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#0f1229" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g fill="none" stroke="url(#apidemia-core)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" filter="url(#softGlow)">
+    <circle cx="256" cy="256" r="86" fill="url(#apidemia-glow)" stroke-width="10"/>
+    <g>
+      <path d="M256 48v64"/>
+      <path d="M256 400v64"/>
+      <path d="M48 256h64"/>
+      <path d="M400 256h64"/>
+      <path d="M121 121l45 45"/>
+      <path d="M346 346l45 45"/>
+      <path d="M121 391l45-45"/>
+      <path d="M346 166l45-45"/>
+      <path d="M196 84v42l-42 42H112"/>
+      <path d="M316 84v42l42 42h42"/>
+      <path d="M196 428v-42l-42-42H112"/>
+      <path d="M316 428v-42l42-42h42"/>
+      <path d="M84 196h42l42 42v42"/>
+      <path d="M84 316h42l42-42v-42"/>
+      <path d="M428 196h-42l-42 42v42"/>
+      <path d="M428 316h-42l-42-42v-42"/>
+    </g>
+    <g>
+      <circle cx="256" cy="112" r="12"/>
+      <circle cx="256" cy="400" r="12"/>
+      <circle cx="112" cy="256" r="12"/>
+      <circle cx="400" cy="256" r="12"/>
+      <circle cx="156" cy="156" r="10"/>
+      <circle cx="356" cy="356" r="10"/>
+      <circle cx="156" cy="356" r="10"/>
+      <circle cx="356" cy="156" r="10"/>
+    </g>
+  </g>
+</svg>
