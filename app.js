@@ -242,7 +242,7 @@ const apps = [
         id: "tcmb",
         title: { tr: "TCMB Kurlari", en: "TCMB Rates" },
         subtitle: { tr: "Populer: Bugun", en: "Popular: Today" },
-        image: "https://albyatirim.com.tr/uploads/analyzes/1744872383_31dcd3cf19fa010ecb20.jpg",
+        image: "assets/app-images/tcmb.webp",
         popularQuery: "",
           fetcher: async () => {
             const appRef = apps.find(a => a.id === "tcmb");
@@ -367,7 +367,7 @@ const apps = [
     id: "airquality",
     title: { tr: "Hava Kalitesi", en: "Air Quality" },
     subtitle: { tr: "Populer: Istanbul", en: "Popular: Istanbul" },
-    image: "https://meersens.com/wp-content/uploads/2022/03/VISUEL-BLOG-Meteo.jpg",
+    image: "assets/app-images/airquality.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -375,7 +375,7 @@ const apps = [
     id: "mealspin",
     title: { tr: "Rastgele Tarif", en: "Random Meal" },
     subtitle: { tr: "TheMealDB", en: "TheMealDB" },
-    image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80",
+    image: "assets/app-images/mealspin.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -383,7 +383,7 @@ const apps = [
     id: "art",
     title: { tr: "Sanat Galerisi", en: "Art Gallery" },
     subtitle: { tr: "Harvard", en: "Harvard" },
-    image: "https://artistsgallery.co.za/wp-content/uploads/2025/02/mobile.jpg",
+    image: "assets/app-images/art.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -391,7 +391,7 @@ const apps = [
     id: "anichart",
     title: { tr: "Anime Takvimi", en: "Anime Schedule" },
     subtitle: { tr: "AniList sezon listesi", en: "AniList seasonal list" },
-    image: "https://i0.wp.com/highschool.latimes.com/wp-content/uploads/2021/02/anime-small-1000x667-1.jpg?fit=1000%2C667&ssl=1&w=640",
+    image: "assets/app-images/anichart.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -399,7 +399,7 @@ const apps = [
     id: "wizard",
     title: { tr: "Wizard World", en: "Wizard World" },
     subtitle: { tr: "Büyüler, iksirler", en: "Spells, elixirs" },
-    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQMYGdfDFEcGJ4-wSz6wMbDc7WwCWhmRXHAeyZ08wt6MXN9IwS7Z1f0GUw9wLnn9O00RISujsuoNOZUNQR5JkVLrkwbclridmWc-7rXAXFRDp0AJEbwgJvUIz-E6sjA2.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=cobeVLePq8yR_UlyrsYKYQ&_nc_cat=111&_nc_oc=Adk3ccG9kHkLJotR8y_lDu6j0Db_sHCQ0XGVvif19n85HhuT4NyNeaO4ibs-NE0BaCU&ccb=9-4&oh=00_Afi1DvZ2Do5q1pwPavredbDTTlgQLuRuuy0qtleWE1RTzg&oe=692820F8&_nc_sid=5b3566",
+    image: "assets/app-images/wizard.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -407,7 +407,7 @@ const apps = [
     id: "rps",
     title: { tr: "RPS-25 Lokal", en: "RPS-25 Local" },
     subtitle: { tr: "API yok, 25 hamle", en: "Offline 25-move game" },
-    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQPj_OsU7YpE9XPdzkuMeMyNq3eumEJEi6MYqyhE5RbvoDcfB2bylAG83e7wPw2ysCi0225SQmTy-466gOdVO1dQUbZ5MxF5NQNQmwD0fcKXj8JBnViFywND9mRq4_g.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=zNTbqmt1efSCYWjODJqnkw&_nc_cat=100&_nc_oc=AdlZKHGTd0nxW4tR8xjkcN9xq-2n3K9hBJThPjKMeLST55La9zYcbJrygr9YCc2PR7U&ccb=9-4&oh=00_AfiLOFPbrSTg1QgK0f6h1JeooIlHdyxXaIdeASy9cILdXw&oe=692807F6&_nc_sid=5b3566",
+    image: "assets/app-images/rps.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -415,7 +415,7 @@ const apps = [
     id: "music",
     title: { tr: "Müzik Çalar", en: "Music" },
     subtitle: { tr: "iTunes preview", en: "iTunes preview" },
-    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m340/AQNLbfs0fX0z2dYctKUGtxppTB1nue39GomWmtOGBQbeLL4gmSV8Rz28e8shfzH-yJ0ncxiO3uw6G5wQkJv0NB2eLuBDr8KbllQttbqwImY2mm_JUl8e-_qjd6dUL1WRFyP9FcCIKKQTmj77sG-Qs8Je7wAYrg.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=tRMeSii4SslqdAoFTbM23Q&_nc_cat=111&_nc_oc=AdkaH_s_rq4x1UKkXET9Q2HsCjtAIXq8fuNTpgBXFPgKaJ8uwR_4Od9HUOQJG-RbAqw&ccb=9-4&oh=00_AfiXKPF79_7ir0nYF3IbUjJzxvPevDtKImKoBdWQuEmOIw&oe=6928111A&_nc_sid=5b3566",
+    image: "assets/app-images/music.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -423,7 +423,7 @@ const apps = [
     id: "news",
     title: { tr: "Haber + Trend", en: "News + Trends" },
     subtitle: { tr: "Populer: bitcoin", en: "Popular: bitcoin" },
-    image: "https://newscorp.com/app/uploads/2021/04/homepage-wallstreetjournal.jpg",
+    image: "assets/app-images/news.webp",
     popularQuery: "bitcoin",
     fetcher: async (query) => {
       const q = query || "bitcoin";
@@ -454,7 +454,7 @@ const apps = [
     id: "recipes",
     title: { tr: "Tarif + Besin", en: "Recipes" },
     subtitle: { tr: "Populer: chicken", en: "Popular: chicken" },
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+    image: "assets/app-images/recipes.webp",
     popularQuery: "chicken",
     fetcher: async (query) => {
       const q = query || "chicken";
@@ -507,7 +507,7 @@ const apps = [
     id: "movies",
     title: { tr: "Dizi Gezgini", en: "Shows" },
     subtitle: { tr: "Populer: Lost", en: "Popular: Lost" },
-    image: "https://preview.redd.it/please-recommend-me-some-good-tv-series-v0-bti4zwzgziac1.jpeg?width=1080&crop=smart&auto=webp&s=3c883c1e074374a88543d902742dbd06e05192e0",
+    image: "assets/app-images/movies.webp",
     popularQuery: "",
     fetcher: async (query) => {
       const q = (query || "").trim();
@@ -543,7 +543,7 @@ const apps = [
     id: "books",
     title: { tr: "Kitap Kesfi", en: "Books" },
     subtitle: { tr: "Populer: python", en: "Popular: python" },
-    image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80",
+    image: "assets/app-images/books.webp",
     popularQuery: "",
     fetcher: async (query) => {
       const q = (query || "").trim();
@@ -581,7 +581,7 @@ const apps = [
     id: "space",
     title: { tr: "NASA APOD", en: "NASA APOD" },
     subtitle: { tr: "Gunluk astronomi gorseli", en: "Astronomy Picture of the Day" },
-    image: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1000&q=80",
+    image: "assets/app-images/space.webp",
     popularQuery: "",
     fetcher: async () => ({})
   },
@@ -589,7 +589,7 @@ const apps = [
     id: "travel",
     title: { tr: "Seyahat Planlayici", en: "Travel Planner" },
     subtitle: { tr: "Populer: Europe", en: "Popular: Europe" },
-    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m248/AQPSSz2_zOB2b1itaTIIXoUVdXY0nHaD19_XD9N7OQKrTuOSwRCmBNnB7injObsP7FXTLWhTTNGPXXChY4UmkXKf2QhLTZ5HccGManq7A2UHi1hVcF344tLytVAaEzUs.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=vwklIYYiASZr8aig15BGGA&_nc_cat=111&_nc_oc=AdlxjNOLMDBARLtEAQZYhGbN0QHKR7Jwz8RKMPjoqigqbH-THG8XP9xiOMjqQEnh1Qg&ccb=9-4&oh=00_Afhlnezk4-Vk5eRjbrxPxWRTAcKIW7P4uU8cLlMDu2AvjA&oe=69283418&_nc_sid=5b3566",
+    image: "assets/app-images/travel.webp",
     popularQuery: "Istanbul -> Berlin",
     fetcher: async (query, lang) => {
       const labels = copy[state.lang].labels;
@@ -635,7 +635,7 @@ const apps = [
     id: "weather",
     title: { tr: "Hava Durumu", en: "Weather" },
     subtitle: { tr: "Populer: Istanbul", en: "Popular: Istanbul" },
-    image: "https://static.independent.co.uk/2023/04/24/06/WEATHER%20Spring%20%2014550538.jpg",
+    image: "assets/app-images/weather.webp",
     popularQuery: "Istanbul",
     fetcher: async (query, lang) => {
       const q = query || "Istanbul";
@@ -681,7 +681,7 @@ const apps = [
     id: "maps",
     title: { tr: "Harita / Yer Servisi", en: "Map / Places" },
     subtitle: { tr: "Populer: Berlin", en: "Popular: Berlin" },
-    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQOL7V3D_MctQyyM1MJhYrb9t78jJBCFpF-_D7E87VssFJ_X7QAJufD93VhulN9E066mTHQNz_rcpSNY5L3SydSb0jVbvRiuRScIrTQSIt5-y6n97H1a3IyIFKAIkVbB.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=lfWTpmNdFXqNv1j-OADRzg&_nc_cat=106&_nc_oc=AdnYOJPI7HJ67Y7kUKOBsogm9NLHIin1c6nTl1Crw-txypZEsBFZu0sjlpbVvTdoAhs&ccb=9-4&oh=00_AfgO1TOHMtYuQhc7Dt2wIYuuPmL8jq2V4q18Z9UkqO0QMQ&oe=69282D1F&_nc_sid=5b3566",
+    image: "assets/app-images/maps.webp",
     popularQuery: "Berlin",
     fetcher: async (query, lang) => {
       const q = query || "Berlin";
@@ -705,7 +705,7 @@ const apps = [
   id: "sports",
   title: { tr: "Mac Skorlari", en: "Match Scores" },
   subtitle: { tr: "Bugun: Avrupa + TR", en: "Today: Europe + TR" },
-  image: "https://cdn.britannica.com/51/190751-050-147B93F7/soccer-ball-goal.jpg",
+  image: "assets/app-images/sports.webp",
   popularQuery: "soccer",
   fetcher: async () => {
     const appRef = apps.find(a => a.id === "sports");
@@ -779,7 +779,7 @@ const apps = [
     id: "currency",
     title: { tr: "Kur / Doviz", en: "FX Rates" },
     subtitle: { tr: "Populer: USD baz", en: "Popular: USD base" },
-    image: "https://stratejikortak.com/wp-content/uploads/2020/05/doviz-kurlari-nasil-belirlenir.jpg",
+    image: "assets/app-images/currency.webp",
     popularQuery: "USD",
     fetcher: async (query) => {
           const base = (query || "USD").toUpperCase();
@@ -812,7 +812,7 @@ const apps = [
     id: "calc",
     title: { tr: "Hesaplamalar", en: "Calculators" },
     subtitle: { tr: "", en: "" },
-    image: "https://www.freshbooks.com/wp-content/uploads/2022/04/calculate-depreciation.jpg",
+    image: "assets/app-images/calc.webp",
     popularQuery: "",
     fetcher: async () => ({ date: new Date().toISOString().split("T")[0] })
   },
@@ -821,7 +821,7 @@ const apps = [
     id: "quakes",
     title: { tr: "Depremler", en: "Earthquakes" },
     subtitle: { tr: "USGS son depremler", en: "USGS latest" },
-    image: "https://scontent.fist20-2.fna.fbcdn.net/o1/v/t0/f2/m421/AQNX5UXJMHcy-tPClwKVDMMm4YkShEYchwIb_hWt8D1mCErxf1IzORrHnoi4sPViPTPBSK7z3IUNfK_Vs57qyNQ6fFbs5QY1RwphweZxfgj78KzpIBoWQiQyJZg9_Pu0.jpeg?_nc_ht=scontent.fist20-2.fna.fbcdn.net&_nc_gid=ojXcK9xRDM6_1VvQDtNnCw&_nc_cat=103&_nc_oc=AdlPoe9gWPqeyqEpTdhNJfJUb5z0893rHZ6rIRjiJMQF6ivL-pzdIzfGo8WKsBFowHo&ccb=9-4&oh=00_AfigrqRcFvBNaqRgcZnCXDoOfbUGC5R8j1CWPUuzJnI11A&oe=6928322C&_nc_sid=5b3566",
+    image: "assets/app-images/quakes.webp",
     popularQuery: "",
     fetcher: async () => ({})
   }
