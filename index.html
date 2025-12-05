@@ -35,6 +35,17 @@
 
     * { box-sizing: border-box; }
 
+    /* Performans düşürme modu */
+    .reduce-motion * {
+      animation-duration: 0.001s !important;
+      animation-iteration-count: 1 !important;
+      transition: none !important;
+    }
+    .reduce-motion .orb { display: none !important; }
+    .reduce-motion body { background-position: center top !important; }
+    .reduce-motion .site-header { transform: none !important; }
+    .reduce-motion .card { opacity: 1 !important; transform: none !important; }
+
     html {
       scroll-behavior: smooth;
     }
@@ -1352,39 +1363,26 @@
   <script>
 
     (function () {
-
       const root = document.documentElement;
+      const reduceMotion = true;
+      if (reduceMotion) root.classList.add("reduce-motion");
 
 
 
       // Hero parallax (CriticalDanger benzeri hafif tilt)
-
       const hero = document.querySelector(".site-header");
-
-      if (hero) {
-
+      if (hero && !reduceMotion) {
         hero.addEventListener("pointermove", (e) => {
-
           const rect = hero.getBoundingClientRect();
-
           const x = (e.clientX - rect.left) / rect.width - 0.5;
-
           const y = (e.clientY - rect.top) / rect.height - 0.5;
-
           root.style.setProperty("--tiltX", (y * -4).toFixed(2) + "deg");
-
           root.style.setProperty("--tiltY", (x * 6).toFixed(2) + "deg");
-
         });
-
         hero.addEventListener("pointerleave", () => {
-
           root.style.setProperty("--tiltX", "0deg");
-
           root.style.setProperty("--tiltY", "0deg");
-
         });
-
       }
 
 
@@ -1392,22 +1390,16 @@
       // Scrollâ€™a gÃ¶re hafif arkaplan parallax
 
       let lastScrollY = 0;
-
-      window.addEventListener("scroll", () => {
-
-        const y = window.scrollY || window.pageYOffset;
-
-        if (Math.abs(y - lastScrollY) < 8) return;
-
-        lastScrollY = y;
-
-        const intensity = Math.min(1, y / 800);
-
-        document.body.style.backgroundPosition =
-
-          "0px " + (-intensity * 40).toFixed(1) + "px";
-
-      });
+      if (!reduceMotion) {
+        window.addEventListener("scroll", () => {
+          const y = window.scrollY || window.pageYOffset;
+          if (Math.abs(y - lastScrollY) < 8) return;
+          lastScrollY = y;
+          const intensity = Math.min(1, y / 800);
+          document.body.style.backgroundPosition =
+            "0px " + (-intensity * 40).toFixed(1) + "px";
+        });
+      }
 
 
 
@@ -1415,7 +1407,11 @@
 
       const grid = document.getElementById("grid");
 
-      if (grid) {
+      if (grid && reduceMotion) {
+        grid.querySelectorAll(".card").forEach((card) => card.classList.add("is-visible"));
+      }
+
+      if (grid && !reduceMotion) {
 
         const io = new IntersectionObserver(
 
@@ -1481,7 +1477,7 @@
 
       const modal = document.getElementById("modal");
 
-      if (modal) {
+      if (modal && !reduceMotion) {
 
         const observer = new MutationObserver(() => {
 
